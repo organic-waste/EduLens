@@ -1,6 +1,4 @@
-import { defineManifest } from '@crxjs/vite-plugin'
-
-export default defineManifest({
+export default {
   manifest_version: 3,
   name: 'EduLens 鼠标增强',
   version: '1.0.0',
@@ -9,24 +7,24 @@ export default defineManifest({
   action: {
     default_popup: 'src/popup/index.html',
     default_icon: {
-      16: 'icons/icon16.png',
-      48: 'icons/icon48.png',
-      128: 'icons/icon128.png'
+      16: 'icons/icon.png',
+      48: 'icons/icon.png',
+      128: 'icons/icon.png'
     }
   },
   content_scripts: [
     {
       matches: ['<all_urls>'],
-      js: ['src/content-scripts/main.ts'],
+      js: ['src/content-scripts/main.js'],
       css: ['src/assets/styles/main.scss']
     }
   ],
   background: {
-    service_worker: 'src/background/background.ts'
+    service_worker: 'src/background/background.js'
   },
   icons: {
-    16: 'icons/icon16.png',
-    48: 'icons/icon48.png',
-    128: 'icons/icon128.png'
+    16: 'icons/icon.png',
+    48: 'icons/icon.png',
+    128: 'icons/icon.png'
   }
-})
+};
