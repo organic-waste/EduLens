@@ -79,9 +79,58 @@ chrome.storage.sync.get('settings', (data) => {
 ```
 
 
+### 加载扩展时scss文件报错
+
+> `无法为脚本加载重叠样式表“src/assets/styles/main.scss”`
+
+浏览器扩展**不能直接加载 `.scss` 文件**，也**不能使用 `src/...` 这样的源码路径**，它只能读取打包后 `dist/` 目录里的**最终构建产物**（如 `.css`、`.js` 等）。
+
+---
+错误写法：
+```json
+"content_scripts": [
+  {
+    "matches": ["<all_urls>"],
+    "js": ["src/content.js"],
+    "css": ["src/assets/styles/main.scss"]
+  }
+]
+```
+
+应该用 Vite 或 CRXJS 插件去**处理 `.scss` 并输出为 `.css`**，然后引用打包后的路径。
+
+**正确写法示例（ CRXJS）：**
+
+```json
+"content_scripts": [
+  {
+    "matches": ["<all_urls>"],
+    "js": ["content.js"],
+    "css": ["assets/main.css"]
+  }
+]
+```
+
+> 注意：`content.js` 和 `assets/main.css` 是**构建后 dist 目录中的路径**，不是源码。
+
+---
+
+#### ✅ 3. 如何配置 Vite（CRXJS）来处理 `.scss`
+
+如果你用 CRXJS，它会自动处理 `.scss`，你只需要：
+
+- 在 `content.js` 里引入 `.scss` 文件：
+
+  ```ts
+  import './assets/styles/main.scss';
+  ```
+
+- 然后在 `manifest.json` 中**不要手动写 `css` 字段**，CRXJS 会自动注入。
 
 
-## Typescript相关
+
+
+## JavaScript相关
 
 
 

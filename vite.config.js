@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import manifest from './src/manifest.js';
+import manifest from './src/manifest.json';
 import { crx } from '@crxjs/vite-plugin';
+import { resolve } from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -15,6 +16,18 @@ export default defineConfig({
         popup: 'src/popup/index.html',
         content: 'src/content-scripts/main.js',
         background: 'src/background/background.js'
+      },
+      output: {
+        entryFileNames: (chunkInfo) => {
+          // 只为内容脚本定制输出路径
+          if (chunkInfo.name === 'content') {
+            return 'content-scripts/main.js';
+          }
+          // 其他入口按需处理
+          return '[name].js';
+        },
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name].[ext]'
       }
     }
   },
