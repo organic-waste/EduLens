@@ -23,7 +23,7 @@ service_worker相当于是插件的后端，也就是一个在后台运行的脚
 
 extension page是插件内部的一些页面。有一些页面是插件规定的，比如popup、options、devtools、sidePanel等；还有一些页面是插件自定义的页面，可以通过browser api打开这些页面。在extension page也可以使用所有的browser api
 
-### 
+
 
 ### 开发流程
 
@@ -66,7 +66,7 @@ chrome.runtime.sendMessage({action: 'toggleFeature', feature: 'highlight'})
 
 1. 打开 chrome://extensions/
 
-2. 找到插件，点击"检查视图"中的 background page
+2. 找到插件，点击"检查视图"中的 Service Worker 
 
 #### 日志调试
 
@@ -77,6 +77,7 @@ chrome.storage.sync.get('settings', (data) => {
   console.log('当前设置:', data)
 })
 ```
+
 
 
 ### 加载扩展时scss文件报错
@@ -115,7 +116,7 @@ chrome.storage.sync.get('settings', (data) => {
 
 ---
 
-#### ✅ 3. 如何配置 Vite（CRXJS）来处理 `.scss`
+**3. 如何配置 Vite（CRXJS）来处理 `.scss`**
 
 如果你用 CRXJS，它会自动处理 `.scss`，你只需要：
 
@@ -137,10 +138,70 @@ chrome.storage.sync.get('settings', (data) => {
 ## 项目发布与部署
 
 
+
+------
+
+
 #### 提交项目时github连接失败
+
+**原因：**
+使用clash代理导致github代理出错
 
 **解决：**
 ```
 git config --global http.proxy  http://127.0.0.1:7890
 git config --global https.proxy http://127.0.0.1:7890
 ```
+
+------
+
+#### 打包后路径依赖问题
+
+**问题：**
+Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdoadlkpbpfcnfgkanf/content-scripts/main.js
+
+
+**原因：**
+没有自定义 output.entryFileNames，所以 Vite 默认会输出为 content.js，而不是 dist/content-scripts/main.js
+
+**解决：**
+在vite.config.js文件中添加
+```js
+  output: {
+    entryFileNames: (chunkInfo) => {
+      if (chunkInfo.name === 'content') {
+        return 'content-scripts/main.js';
+      }
+      if (chunkInfo.name === 'background') {
+        return 'background.js';
+      }
+      return '[name].js';
+    },
+    chunkFileNames: 'assets/[name].js',
+    assetFileNames: 'assets/[name].[ext]'
+  }
+```
+自行指定输出的文件结构
+
+------
+
+#### Popup窗口闪烁问题
+
+**原因：**
+- crxjs 在开发模式下会自动生成一个 loading 页面，等待 Vite Dev Server 连接。如果 Vite 没有正常启动或 popup 入口配置不对，就会一直显示这个页面。
+- Vite 的 client 脚本（如热重载、错误覆盖层）在 Chrome 扩展环境下经常不兼容，容易报错。
+
+
+**解决：**
+直接访问 Vite Dev Server 的 popup 页面（ http://localhost:5173/src/popup/index.html）
+
+
+
+
+------
+
+**问题：**
+
+**原因：**
+
+**解决：**

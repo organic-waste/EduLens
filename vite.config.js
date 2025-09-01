@@ -25,7 +25,6 @@ export default defineConfig({
           if (chunkInfo.name === 'background') {
             return 'background.js';
           }
-          // 其他入口按需处理
           return '[name].js';
         },
         chunkFileNames: 'assets/[name].js',
