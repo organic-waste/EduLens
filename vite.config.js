@@ -19,9 +19,11 @@ export default defineConfig({
       },
       output: {
         entryFileNames: (chunkInfo) => {
-          // 只为内容脚本定制输出路径
           if (chunkInfo.name === 'content') {
             return 'content-scripts/main.js';
+          }
+          if (chunkInfo.name === 'background') {
+            return 'background.js';
           }
           // 其他入口按需处理
           return '[name].js';
