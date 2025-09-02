@@ -6,6 +6,9 @@ function Highlight(e) {
   if (!highlightDiv) {
     highlightDiv = document.createElement('div');
     highlightDiv.className = 'mouse-highlight';
+    //记得写明初始top和left值，否则fixed定位错乱
+    highlightDiv.style.left = 0+ 'px';
+    highlightDiv.style.top = 0 + 'px';
     document.body.appendChild(highlightDiv);
   }
   highlightDiv.style.transform = `translate(${e.clientX - 20}px, ${e.clientY - 20}px)`;

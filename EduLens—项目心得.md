@@ -213,6 +213,8 @@ Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdo
 - 不要在 rollupOptions.input 里加入 CSS 文件入口，只保留 JS/HTML 入口即可。
 - 将css移动到public文件夹，并manifest.json 里 css 路径设置为 "style.css"（ style.css 构建后会自动复制到 dist 根目录）。
 
+
+
 ------
 
 
@@ -226,9 +228,63 @@ Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdo
 
 ## JavaScript相关
 
+------
+
+#### 获取滚动距离
+
+```js
+  const scrollTop  = window.scrollY;
+  const docHeight  = document.documentElement.scrollHeight;
+  const winHeight  = window.innerHeight;
+  //docHeight - winHeight 才能得到需要滚动才能到底的剩余距离
+  const progressPct = (scrollTop / (docHeight - winHeight)) * 100;
+```
+
+1. `const scrollTop = window.scrollY;`
+
+- 当前页面**已经向上滚动的像素值**。
+
+2. `const docHeight = document.documentElement.scrollHeight;`
+
+- 整个网页的**总高度**（包括可视区域 + 隐藏区域）。
+
+3. `const winHeight = window.innerHeight;`
+
+- 浏览器窗口的**可视区域高度**（即“一屏”的高度）。
+
+4. `const progressPct = (scrollTop / (docHeight - winHeight)) * 100;`
+
+- 计算当前滚动进度占总可滚动距离的百分比。
+- **关键点**：`docHeight - winHeight` 表示**真正需要滚动的距离**。
+- **公式**：已滚动距离 ÷ 可滚动总距离 × 100%
+
+------
+
+####  鼠标追踪元素定位错乱
+
+**原因：**使用transform来追踪鼠标位置，只设置了`position:fixed;`，没有设置`top/left`值，导致元素跟随文档流生成在网站最底
+
+**解决：**
+
+```js
+//记得写明初始top和left值，否则fixed定位错乱
+  highlightDiv.style.left = 0+ 'px';
+  highlightDiv.style.top = 0 + 'px';
+```
+
+
+
+------
+
 
 
 ## 项目发布与部署
+
+
+
+
+
+
 
 
 

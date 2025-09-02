@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>滚动进度指示器 Demo</title>
+
+    <!-- 内联样式，不再额外引入 styles.css -->
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            background: #161616;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        .content p {
+            color: rgba(255, 255, 255, 0.12);
+            font-family: Helvetica, sans-serif;
+            font-size: 100px;
+            font-weight: 200;
+            line-height: 1.2;
+            margin: 60px 0;
+        }
+
+        /* 进度条容器 */
+        .percent {
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.2);
+            height: 140px;
+            width: 1px;
+            margin: -60px 0 0 40px;
+            pointer-events: none;   /* 避免遮挡鼠标事件 */
+        }
+
+        /* 进度条填充 */
+        .fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: #fff;
+            transition: height 0.15s ease;
+        }
+
+        /* 百分比数字 */
+        .counter h1 {
+            position: absolute;
+            font-family: Helvetica, sans-serif;
+            font-size: 16px;
+            font-weight: lighter;
+            color: #fff;
+            margin: 20px;
+            top: -30px;
+            left: 0;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 滚动进度指示器 -->
+    <div class="percent">
+        <div class="fill"></div>
+        <div class="counter"><h1>0%</h1></div>
+    </div>
+
+    <!-- 正文内容（仅作占位） -->
+    <div class="container">
+        <div class="content">
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus possimus enim dolorem quod asperiores quam. Itaque obcaecati blanditiis ut. Nobis vel illo amet fugiat rerum distinctio placeat ratione et! Adipisci voluptates est nulla, nostrum nesciunt nisi placeat recusandae! Consequatur, rem.</p>
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Alias, minima accusamus odit voluptas cumque et maxime. Non nam minima tempora nemo assumenda fugit illum repellendus facilis. Placeat possimus tempora sapiente, pariatur nisi rem voluptatibus quaerat nulla, dolorem sunt maiores, itaque illum nam neque! Inventore optio repellat fugit vel odit ea.</p>
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Impedit inventore quam est, illo rem voluptatem neque incidunt quos eos? Quis ex minima quam autem et odit at dolores officia modi.</p>
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus possimus enim dolorem quod asperiores quam. Itaque obcaecati blanditiis ut. Nobis vel illo amet fugiat rerum distinctio placeat ratione et! Adipisci voluptates est nulla, nostrum nesciunt nisi placeat recusandae! Consequatur, rem.</p>
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Alias, minima accusamus odit voluptas cumque et maxime. Non nam minima tempora nemo assumenda fugit illum repellendus facilis. Placeat possimus tempora sapiente, pariatur nisi rem voluptatibus quaerat nulla, dolorem sunt maiores, itaque illum nam neque! Inventore optio repellat fugit vel odit ea.</p>
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Impedit inventore quam est, illo rem voluptatem neque incidunt quos eos? Quis ex minima quam autem et odit at dolores officia modi.</p>
+        </div>
+    </div>
+
+    <!-- 引入外部库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <!-- 交互脚本 -->
+    <script>
+        // 让进度指示器跟随鼠标
+        const counter = document.querySelector(".percent");
+        gsap.set(counter, { xPercent: -5, yPercent: -5 });
+        window.addEventListener("mousemove", e => {
+            gsap.to(counter, { x: e.clientX, y: e.clientY, duration: 0.4 });
+        });
+
+        // 计算并更新滚动进度
+        function updateProgress() {
+            const scrollTop   = $(window).scrollTop();
+            const docHeight   = $(document).height();
+            const winHeight   = $(window).height();
+            const progressPct = (scrollTop / (docHeight - winHeight)) * 100;
+
+            const percent = Math.round(progressPct);
+            $(".counter h1").text(percent + "%");
+            $(".fill").height(percent + "%");
+        }
+
+        $(window).on("scroll", updateProgress);
+        updateProgress(); // 首次加载时先算一次
+    </script>
+</body>
+</html>

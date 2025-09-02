@@ -1,5 +1,6 @@
 
 import store from './store.js';
+import {createScrollProgressIndicator} from './features/scrollProgress.js'
 
 
 //统一的键盘管理
@@ -18,4 +19,5 @@ window.addEventListener('keydown', (e) => {
 	keydown(e,'s','spotlight')
 });
 
+createScrollProgressIndicator()
 

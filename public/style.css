@@ -1,3 +1,42 @@
+/* 滚动进度指示器 */
+.scroll-percent {
+	position: fixed;
+	top: 24px;
+	right: 32px;
+	display: flex;
+	flex-direction: column;
+	background: rgba(255, 255, 255, 0.2);
+	height: 140px;
+	width: 8px;
+	border-radius: 4px;
+	pointer-events: none;
+	z-index: 9999;
+}
+
+.scroll-fill {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	background: #fff;
+	border-radius: 4px;
+	transition: height 0.15s ease;
+}
+
+.scroll-counter {
+	position: absolute;
+	top: -32px;
+	left: 50%;
+	transform: translateX(-50%);
+	white-space: nowrap;
+}
+
+.scroll-counter h1 {
+	font-family: Helvetica, sans-serif;
+	font-size: 16px;
+	font-weight: lighter;
+	color: #fff;
+	margin: 0;
+}
 
 .mouse-highlight {
 		position: fixed;
