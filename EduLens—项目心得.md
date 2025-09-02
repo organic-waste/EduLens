@@ -78,9 +78,13 @@ chrome.storage.sync.get('settings', (data) => {
 })
 ```
 
+------
 
+### 错误解决：
 
-### 加载扩展时scss文件报错
+------
+
+#### 加载扩展时scss文件报错
 
 > `无法为脚本加载重叠样式表“src/assets/styles/main.scss”`
 
@@ -131,14 +135,6 @@ chrome.storage.sync.get('settings', (data) => {
 
 
 
-## JavaScript相关
-
-
-
-## 项目发布与部署
-
-
-
 ------
 
 
@@ -148,10 +144,13 @@ chrome.storage.sync.get('settings', (data) => {
 使用clash代理导致github代理出错
 
 **解决：**
+
 ```
 git config --global http.proxy  http://127.0.0.1:7890
 git config --global https.proxy http://127.0.0.1:7890
 ```
+
+
 
 ------
 
@@ -166,6 +165,7 @@ Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdo
 
 **解决：**
 在vite.config.js文件中添加
+
 ```js
   output: {
     entryFileNames: (chunkInfo) => {
@@ -181,19 +181,99 @@ Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdo
     assetFileNames: 'assets/[name].[ext]'
   }
 ```
+
 自行指定输出的文件结构
+
+
 
 ------
 
 #### Popup窗口闪烁问题
 
 **原因：**
+
 - crxjs 在开发模式下会自动生成一个 loading 页面，等待 Vite Dev Server 连接。如果 Vite 没有正常启动或 popup 入口配置不对，就会一直显示这个页面。
 - Vite 的 client 脚本（如热重载、错误覆盖层）在 Chrome 扩展环境下经常不兼容，容易报错。
 
-
 **解决：**
 直接访问 Vite Dev Server 的 popup 页面（ http://localhost:5173/src/popup/index.html）
+
+
+
+
+------
+
+#### Css文件打包后不存在或出错
+
+**原因：**
+在 vite.config.js 的 rollupOptions.input 中加入了 styles: 'public/style.css'，导致 Vite/rollup 试图将 style.css 作为 JS/HTML 入口处理，所以报错
+
+**解决：**
+
+- 不要在 rollupOptions.input 里加入 CSS 文件入口，只保留 JS/HTML 入口即可。
+- 将css移动到public文件夹，并manifest.json 里 css 路径设置为 "style.css"（ style.css 构建后会自动复制到 dist 根目录）。
+
+------
+
+
+
+
+
+
+
+
+
+
+## JavaScript相关
+
+
+
+## 项目发布与部署
+
+
+
+
+
+
+## 性能优化
+
+### 动画优化
+
+------
+
+**改动：**
+将 left/top 的定位方式替换为 transform，并在 CSS 中类添加 will-change: transform
+
+**原因：**
+- 使用 transform 替代 left/top：可以让浏览器只在合成层上移动元素，而不需要触发布局（reflow）和重绘（repaint），大幅减少计算量，动画更流畅。
+- will-change: transform 告诉浏览器该属性会频繁变化，浏览器会提前为该元素分配独立的合成层，进一步避免不必要的重排和重绘，提升响应速度和动画性能。
+
+### 合成层
+
+**定义：**
+合成层（Compositor Layer）是浏览器渲染管线里的一个独立画布，简单说：
+浏览器把网页拆成若干层，每层单独画好，再像 PS 一样一次性合成到屏幕上。
+只要这一层里的内容不改变，后续帧就直接复用这张小画布，只移动/缩放/淡入淡出这张画布，从而跳过重新绘制和布局。
+
+**特点：**
+
+1. **减少重绘区域**
+   只重绘变化的那一层，其他层复用。
+2. **GPU 加速**
+   每层都可以上传到 GPU 作为纹理，变换（translate/scale/rotate/opacity）由 GPU 直接完成，CPU 不参与。
+3. **60 fps 平滑动画**
+   避免主线程阻塞，动画在合成线程独立进行。
+
+**常见自动提升为合成层的情况：**
+
+- 3D transform：`transform: translateZ(0)`、`rotateY(45deg)`
+- 视频、Canvas、WebGL
+- `position: fixed`、`sticky`
+- `will-change: transform / opacity`
+- `filter`、`backdrop-filter`
+- `iframe`、`overflow: scroll`（部分浏览器）
+
+
 
 
 

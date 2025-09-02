@@ -3,28 +3,19 @@ import store from './store.js';
 
 
 //统一的键盘管理
+function keydown(e,key,name){
+		if (e.altKey && e.key === key) {
+		if (store.active === name) {
+			store.setActive(null);
+		} else {
+			store.setActive(name);
+		}
+	}
+}
+
 window.addEventListener('keydown', (e) => {
-	if (e.altKey && e.key === 'h') {
-		if (store.active === 'mouseHighlight') {
-			store.setActive(null);
-		} else {
-			store.setActive('mouseHighlight');
-		}
-	}
-	if (e.altKey && e.key === 's') {
-		if (store.active === 'spotlight') {
-			store.setActive(null);
-		} else {
-			store.setActive('spotlight');
-		}
-	}
-	if (e.altKey && e.key === 'm') {
-		if (store.active === 'magnifier') {
-			store.setActive(null);
-		} else {
-			store.setActive('magnifier');
-		}
-	}
+	keydown(e,'h','mouseHighlight')
+	keydown(e,'s','spotlight')
 });
 
 

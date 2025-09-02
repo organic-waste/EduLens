@@ -10,7 +10,7 @@ export default defineConfig({
         content: 'src/content-script.js',
         background: 'src/background.js',
         popup: 'src/popup.html',
-        styles: 'src/style.css'
+
       },
     }
   }

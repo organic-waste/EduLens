@@ -8,8 +8,7 @@ function Highlight(e) {
     highlightDiv.className = 'mouse-highlight';
     document.body.appendChild(highlightDiv);
   }
-  highlightDiv.style.left = (e.clientX - 20) + 'px';
-  highlightDiv.style.top = (e.clientY - 20) + 'px';
+  highlightDiv.style.transform = `translate(${e.clientX - 20}px, ${e.clientY - 20}px)`;
 }
 
 export function activateHighlight() {

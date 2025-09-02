@@ -8,8 +8,7 @@ function Spotlight(e) {
     spotlightDiv.className = 'spotlight';
     document.body.appendChild(spotlightDiv);
   }
-  spotlightDiv.style.left = (e.clientX - 60) + 'px';
-  spotlightDiv.style.top = (e.clientY - 60) + 'px';
+  spotlightDiv.style.transform = `translate(${e.clientX - 60}px, ${e.clientY - 60}px)`;
 }
 
 export function activateSpotlight() {

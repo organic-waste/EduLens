@@ -2,25 +2,17 @@
 
 import { activateHighlight, deactivateHighlight } from './features/mouseHighlight.js';
 import { activateSpotlight, deactivateSpotlight } from './features/spotlight.js';
-import { activateMagnifier, deactivateMagnifier } from './features/magnifier.js';
 
 function changeFunction(name){
 
     if(name=='mouseHighlight'){
         activateHighlight()
-        deactivateMagnifier()
         deactivateSpotlight()
     }else if(name=='spotlight'){
         activateSpotlight()
-        deactivateMagnifier()
         deactivateHighlight()
-    }else if(name=='magnifier'){
-        activateMagnifier()
-        deactivateHighlight()
-        deactivateSpotlight()
     }else{
         deactivateHighlight()
-        deactivateMagnifier()
         deactivateSpotlight()
     }
         
