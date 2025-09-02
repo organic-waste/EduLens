@@ -1,8 +1,8 @@
 /* 滚动进度指示器 */
 .scroll-percent {
 	position: fixed;
-	top: 24px;
-	right: 32px;
+	top: 4vh;
+	right: 3vw;
 	display: flex;
 	flex-direction: column;
 	background: rgba(255, 255, 255, 0.2);
@@ -24,7 +24,7 @@
 
 .scroll-counter {
 	position: absolute;
-	top: -32px;
+	top: 3vh;
 	left: 50%;
 	transform: translateX(-50%);
 	white-space: nowrap;

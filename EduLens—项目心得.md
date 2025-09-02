@@ -262,7 +262,7 @@ Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdo
 
 ####  鼠标追踪元素定位错乱
 
-**原因：**使用transform来追踪鼠标位置，只设置了`position:fixed;`，没有设置`top/left`值，导致元素跟随文档流生成在网站最底
+**原因：**使用transform来追踪鼠标位置，只设置了`position:fixed;`，没有设置`top/left`值，导致元素跟随文档流生成在网站最底部
 
 **解决：**
 
