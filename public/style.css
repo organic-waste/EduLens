@@ -89,6 +89,7 @@
   z-index: 10000;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   user-select: none;
+  transition: left top 0.6s ease-in-out;
 }
 
 .draggable-card {

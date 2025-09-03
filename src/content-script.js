@@ -1,7 +1,7 @@
 
 import store from './store.js';
 import {activateScrollProgress} from './features/scrollProgress.js'
-import {activateDraggableButton} from './features/draggablePanel.js'
+import {activateDraggablePanel} from './features/draggablePanel.js'
 
 
 //统一的键盘管理
@@ -21,5 +21,5 @@ window.addEventListener('keydown', (e) => {
 });
 
 activateScrollProgress()
-activateDraggableButton()
+activateDraggablePanel()
 
