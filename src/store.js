@@ -22,7 +22,7 @@ function changeFunction(name){
 
 
 const store = {
-  active: null, // 'mouseHighlight' | 'spotlight' | 'magnifier' | null
+  active: null, // 'mouseHighlight' | 'spotlight' | null
   setActive(name) {
     this.active = name;
     changeFunction(name)

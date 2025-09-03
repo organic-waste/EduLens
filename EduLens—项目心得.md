@@ -276,6 +276,85 @@ Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdo
 
 ------
 
+#### 可拖动元素
+
+**方法一：HTML5 原生拖放 API（`draggable=true`）**
+
+- 简单的拖拽排序、拖拽上传、拖拽到回收站等。
+- 不需要实时控制元素位置。
+- 拖动前后元素位置不变
+
+```html
+<div id="draggable" draggable="true">拖动我</div>
+
+<script>
+  const el = document.getElementById('draggable');
+
+  el.addEventListener('dragstart', (e) => {
+    e.dataTransfer.setData('text/plain', 'dragging');
+  });
+
+  document.addEventListener('dragover', (e) => {
+    e.preventDefault(); // 必须阻止默认行为才允许放置
+  });
+
+  document.addEventListener('drop', (e) => {
+    e.preventDefault();
+    alert('你把我放下了！');
+  });
+</script>
+```
+
+**方法二：鼠标事件实现自定义拖动（更灵活，常用于浮动窗口、拖拽组件）**
+
+- 实现可自由拖动的浮动面板、弹窗、图表节点等。
+- 需要实时控制元素的位置。
+- 拖动前后元素位置会改变并保持
+
+```html
+<div id="box" style="position: absolute; width: 100px; height: 100px; background: skyblue; cursor: move;">
+  拖动我
+</div>
+
+<script>
+  const box = document.getElementById('box');
+  let isDragging = false;
+  let offsetX = 0, offsetY = 0;
+
+  box.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    //e.clientX —— 鼠标相对于视口的横坐标。
+    //box.offsetLeft —— 方块相对于定位祖先的横坐标
+    //二者相减得到“鼠标点击点距离方块左边框”的距离,这样拖动时按钮不会瞬间跳到鼠标位置
+    offsetX = e.clientX - box.offsetLeft;
+    offsetY = e.clientY - box.offsetTop;
+    //防止拖动时选中文本
+    box.style.userSelect = 'none';
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return; //确保在拖动状态下才能移动
+    box.style.left = (e.clientX - offsetX) + 'px';
+    box.style.top = (e.clientY - offsetY) + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    box.style.userSelect = '';// 恢复文字可选中
+  });
+</script>
+```
+
+**为什么`mousemove`事件监听 `document` 而不是 `box`？**
+
+如果用户鼠标移动得快，可能一瞬间就离开了方块本身，`box` 就再也收不到事件了。绑在 `document` 上，无论鼠标在哪都能继续拖动。
+
+
+
+------
+
+
+
 
 
 ## 项目发布与部署

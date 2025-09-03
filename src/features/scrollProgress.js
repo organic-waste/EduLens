@@ -12,6 +12,7 @@ function ScrollProgress() {
   const progressPct = (scrollTop / (docHeight - winHeight)) * 100;
   const percent = Math.round(progressPct);
   h1.textContent = percent + '%';
+  // fillDiv.style.height = (100-percent) + '%';
   fillDiv.style.height = percent + '%';
 }
 
