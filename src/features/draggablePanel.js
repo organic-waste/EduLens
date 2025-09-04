@@ -4,6 +4,7 @@ import {activateScrollProgress} from './scrollProgress.js'
 let panelDiv=null;
 let cardDiv=null;
 let isOpen=false;
+let isMoved=false;
 let isDragging = false;
 let offsetX = 0, offsetY = 0;
 let Position = { left: 0, top: 0 };
@@ -26,18 +27,6 @@ function DraggablePanel(){
 
     document.body.appendChild(panelDiv);
     let btn=document.getElementsByClassName('toggle-btn')[0]
-
-    // 拖动逻辑
-    panelDiv.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    //e.clientX —— 鼠标相对于视口的横坐标。
-    //box.offsetLeft —— 方块相对于定位祖先的横坐标
-    //二者相减得到“鼠标点击点距离方块左边框”的距离,这样拖动时按钮不会瞬间跳到鼠标位置
-    offsetX = e.clientX - panelDiv.offsetLeft;
-    offsetY = e.clientY - panelDiv.offsetTop;
-    //防止拖动时选中文本
-    document.body.style.userSelect = 'none';
-    });
 
     cardDiv = document.createElement('div');
     cardDiv.className = 'draggable-card';
@@ -64,27 +53,40 @@ function DraggablePanel(){
     //     cardDiv.style.top = (Position.top- 5- cardDiv.offsetHeight) + 'px';
     // }
 
+    // 拖动逻辑
+    panelDiv.addEventListener('mousedown', (e) => {
+        isMoved=false;
+        isDragging = true;
+        //e.clientX —— 鼠标相对于视口的横坐标。
+        //box.offsetLeft —— 方块相对于定位祖先的横坐标
+        //二者相减得到“鼠标点击点距离方块左边框”的距离,这样拖动时按钮不会瞬间跳到鼠标位置
+        offsetX = e.clientX - panelDiv.offsetLeft;
+        offsetY = e.clientY - panelDiv.offsetTop;
+        //防止拖动时选中文本
+        document.body.style.userSelect = 'none';
+    });
+
     document.addEventListener('mousemove', (e) => {
+        isMoved=true;
         //确保在拖动状态下才能移动
-    if (isDragging) {
-        //将拖动范围限制在窗口内
-        const left = Math.max(0, Math.min(window.innerWidth - panelDiv.offsetWidth, e.clientX - offsetX));
-        const top = Math.max(0, Math.min(window.innerHeight - panelDiv.offsetHeight, e.clientY - offsetY));
-        panelDiv.style.left = left + 'px';
-        panelDiv.style.top = top + 'px';
-        Position.left = left;
-        Position.top = top;
+        if (isDragging) {
+            //将拖动范围限制在窗口内
+            const left = Math.max(0, Math.min(window.innerWidth - panelDiv.offsetWidth, e.clientX - offsetX));
+            const top = Math.max(0, Math.min(window.innerHeight - panelDiv.offsetHeight, e.clientY - offsetY));
+            panelDiv.style.left = left + 'px';
+            panelDiv.style.top = top + 'px';
+            Position.left = left;
+            Position.top = top;
 
-
-        // if(left<cardDiv.offsetWidth+20||top<cardDiv.offsetHeight+10){
-        //     console.log('reposition');
-        //     cardDiv.style.left = (left + 60) + 'px';
-        //     cardDiv.style.top = (top + 10) + 'px';
-        // }else{
-        //     cardDiv.style.left = (left - 10-cardDiv.offsetWidth) + 'px';
-        //     cardDiv.style.top = (top - 5-cardDiv.offsetHeight) + 'px';
-        // }
-    }
+            // if(left<cardDiv.offsetWidth+20||top<cardDiv.offsetHeight+10){
+            //     console.log('reposition');
+            //     cardDiv.style.left = (left + 60) + 'px';
+            //     cardDiv.style.top = (top + 10) + 'px';
+            // }else{
+            //     cardDiv.style.left = (left - 10-cardDiv.offsetWidth) + 'px';
+            //     cardDiv.style.top = (top - 5-cardDiv.offsetHeight) + 'px';
+            // }
+        }
     });
 
     document.addEventListener('mouseup', () => {
@@ -94,16 +96,18 @@ function DraggablePanel(){
 
     btn.addEventListener('click', (e) => {
         console.log(isDragging)
-        if (isDragging) return; // 确保拖动时不弹窗
+        if (isMoved) return; // 确保拖动过后不弹窗
 
         if(!isOpen){
             isOpen=true;
             btn.classList.add('open-panel');
             cardDiv.style.display='block';
+            panelDiv.classList.add('open-panel');
         }else{
             isOpen=false;
             btn.classList.remove('open-panel');
             cardDiv.style.display='none';
+            panelDiv.classList.remove('open-panel');
         }
 
     });
