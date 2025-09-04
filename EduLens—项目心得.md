@@ -463,15 +463,32 @@ observer.observe(element);
 
 #### `.offsetWidth` `.offsetHeight`无法获取到正确宽高
 
+**原因：**
+
 因为在打印 `cardDiv.offsetWidth` 和 `cardDiv.offsetHeight` 时，`cardDiv` 还没有被插入到 `document.body`，此时它**还未渲染**，宽高为 0。**（计算依据为布局时的元素宽高）**
 
 只有当元素被添加到 DOM 并渲染后，浏览器才会计算其实际尺寸。
-正确做法是：先 `document.body.appendChild(cardDiv)`，再读取 `offsetWidth` 和 `offsetHeight`。
+
+**解决：**
+
+先 `document.body.appendChild(cardDiv)`，再读取 `offsetWidth` 和 `offsetHeight`。
 
 ```js
-//正解
 document.body.appendChild(cardDiv);
 console.log(cardDiv.offsetWidth, cardDiv.offsetHeight);
+```
+
+------
+
+#### 报错`HierarchyRequestError: Only one element on document allowed`
+
+**原因：**当前页面里已经有 `<html>`（或 `<body>`、`<head>`）这类顶级节点，而又试图再往 `document` 上 `appendChild` 一次，于是浏览器直接报错**（浏览器只接受一个 `document.documentElement`）**
+
+**解决：**
+
+```js
+document.appendChild(panel);   // 错误写法
+document.body.appendChild(panel);  // 正确写法
 ```
 
 ------
@@ -479,6 +496,25 @@ console.log(cardDiv.offsetWidth, cardDiv.offsetHeight);
 
 
 
+
+## Html和Css相关
+
+### `.classList`和`.className`对比
+
+| 特性     | `.className`                                                 | `.classList`                          |
+| -------- | ------------------------------------------------------------ | ------------------------------------- |
+| **本质** | 字符串（`"foo bar baz"`）                                    | DOMTokenList 对象，带专用方法         |
+| **读取** | 一次性拿到完整字符串，需要自行 `split(" ")` 才能得到数组     | 直接像数组一样读取：`el.classList[0]` |
+| **写入** | 整体覆盖：`el.className = "foo bar"`，容易误删原有类         | 精准增删：`add/remove/toggle/replace` |
+| **追加** | 手动拼串 & 判重：`if(!/foo/.test(cls)) el.className += " foo"` | `el.classList.add("foo")`，自动去重   |
+| **删除** | 正则替换或 `replace` 字符串                                  | `el.classList.remove("foo")`          |
+| **切换** | 自己写逻辑                                                   | `el.classList.toggle("foo")`          |
+| **检查** | 正则或 `includes`                                            | `el.classList.contains("foo")`        |
+| **性能** | 小项目无差异，大量类批量赋值时略快                           | 单次操作略慢，但可链式调用，易读      |
+
+**注意：**  `.classList`得到的是 **DOMTokenList 对象**，不能直接运用数组方法，需要使用特定的方法进行增添修改
+
+------
 
 
 
@@ -501,14 +537,14 @@ console.log(cardDiv.offsetWidth, cardDiv.offsetHeight);
 
 ### 动画优化
 
-------
-
 **改动：**
 将 left/top 的定位方式替换为 transform，并在 CSS 中类添加 will-change: transform
 
 **原因：**
 - 使用 transform 替代 left/top：可以让浏览器只在合成层上移动元素，而不需要触发布局（reflow）和重绘（repaint），大幅减少计算量，动画更流畅。
 - will-change: transform 告诉浏览器该属性会频繁变化，浏览器会提前为该元素分配独立的合成层，进一步避免不必要的重排和重绘，提升响应速度和动画性能。
+
+
 
 ### 合成层
 
@@ -525,6 +561,8 @@ console.log(cardDiv.offsetWidth, cardDiv.offsetHeight);
    每层都可以上传到 GPU 作为纹理，变换（translate/scale/rotate/opacity）由 GPU 直接完成，CPU 不参与。
 3. **60 fps 平滑动画**
    避免主线程阻塞，动画在合成线程独立进行。
+
+------
 
 **常见自动提升为合成层的情况：**
 

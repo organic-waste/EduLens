@@ -20,6 +20,6 @@ window.addEventListener('keydown', (e) => {
 	keydown(e,'s','spotlight')
 });
 
-activateScrollProgress()
+
 activateDraggablePanel()
 

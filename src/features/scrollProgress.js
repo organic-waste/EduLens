@@ -32,7 +32,10 @@ export function activateScrollProgress() {
     counterDiv.appendChild(h1);
     scrollDiv.appendChild(counterDiv);
 
-    document.body.appendChild(scrollDiv);
+    if(cardDiv){
+      cardDiv.appendChild(scrollDiv);
+    }
+
   }
   window.addEventListener('scroll', ScrollProgress);
   ScrollProgress();

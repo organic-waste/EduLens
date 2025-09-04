@@ -4,11 +4,6 @@
 
 }
 
-
-
-
-
-
 /* 滚动进度指示器 */
 .scroll-percent {
 	position: fixed;
@@ -74,31 +69,56 @@
 }
 
 /* 可拉动面板 */
-.draggable-btn {
+.draggable-panel{
   position: fixed;
-  width: 48px;
-  height: 48px;
+  min-width: 5vh;
+  min-height: 5vh;
   border-radius: 50%;
   background:var(--main-color);
-  color: #fff;
-  font-size: 32px;
+  color: #fff;;
+  /* display: flex;
+  align-items: center;
+  justify-content: center; */
+  cursor: grab;
+  z-index: 9998;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  user-select: none;
+  transition: width height 0.4s ease-in-out;
+}
+.toggle-btn{
+  z-index: 10001;
+  position: absolute;
+  top:	0;
+  right: 0;
+  width: 5vh; 
+  height: 5vh;
+  border: none; 
+  background: var(--main-color);
+  border-radius: 50%;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: grab;
-  z-index: 10000;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  user-select: none;
-  transition: left top 0.6s ease-in-out;
 }
 
+.icon{
+  width: 70%;
+  height: 70%;
+  stroke: #fff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+.toggle-btn.open-panel .icon { transform: rotate(45deg); }
+
 .draggable-card {
-  position: fixed;
+  position: relative;
   width: 320px;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.18);
-  z-index: 10001;
+  z-index: 10000;
   padding: 0;
   overflow: hidden;
 }
@@ -113,15 +133,8 @@
   font-size: 18px;
 }
 
-.card-close {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 22px;
-  cursor: pointer;
-}
 
 .card-content {
   padding: 16px;
-  min-height: 80px;
+  min-height: 80px; 
 }
