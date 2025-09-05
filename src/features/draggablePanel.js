@@ -38,7 +38,7 @@ function DraggablePanel(){
         <!-- 后续功能 -->
     </div>
     `;
-
+    
     cardDiv.style.display='none'
     // 初始弹窗位置跟随按钮且隐藏
     panelDiv.appendChild(cardDiv);
@@ -95,7 +95,6 @@ function DraggablePanel(){
     });
 
     btn.addEventListener('click', (e) => {
-        console.log(isDragging)
         if (isMoved) return; // 确保拖动过后不弹窗
 
         if(!isOpen){
@@ -103,6 +102,8 @@ function DraggablePanel(){
             btn.classList.add('open-panel');
             cardDiv.style.display='block';
             panelDiv.classList.add('open-panel');
+            //确保面板打开后在视窗内
+
         }else{
             isOpen=false;
             btn.classList.remove('open-panel');
@@ -125,7 +126,7 @@ function DraggablePanel(){
 
 export function activateDraggablePanel() {
     DraggablePanel();
-    // activateScrollProgress()
+    activateScrollProgress()
 }
 
 export function deactivateDraggablePanel() {

@@ -545,6 +545,19 @@ document.body.appendChild(panel);  // 正确写法
 
 **解决：**将长宽改为设定的已知值
 
+**注意：**若有多者都需过渡需要将多者分开写：
+
+```css
+transition: width height 1.4s ease-in-out; //错误写法
+transition: width 0.4s ease-in-out, height 0.4s ease-in-out; //正确写法
+```
+
+**注意：** **transform-origin 不生效问题**：面板打开时没有使用 transform 变换，而是直接改变 width/height，所以 transform-origin 不会影响动画效果
+
+
+
+
+
 
 
 
