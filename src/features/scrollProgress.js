@@ -2,7 +2,8 @@
 
 let scrollDiv = null;
 let fillDiv = null;
-let h1 = null;
+// let h1 = null;
+let cardDiv=null;
 
 function ScrollProgress() {
   if (!scrollDiv) return;
@@ -16,6 +17,8 @@ function ScrollProgress() {
   fillDiv.style.height = percent + '%';
 }
 
+
+
 export function activateScrollProgress() {
   if (!scrollDiv) {
     scrollDiv = document.createElement('div');
@@ -25,6 +28,8 @@ export function activateScrollProgress() {
     fillDiv.className = 'scroll-fill';
     scrollDiv.appendChild(fillDiv);
 
+    cardDiv=document.getElementsByClassName("card-content")[0]
+
     // const counterDiv = document.createElement('div');
     // counterDiv.className = 'scroll-counter';
     // h1 = document.createElement('h1');
@@ -32,7 +37,6 @@ export function activateScrollProgress() {
     // counterDiv.appendChild(h1);
     // scrollDiv.appendChild(counterDiv);
 
-    const cardDiv=document.getElementsByClassName("card-content")[0]
     if(cardDiv){
       cardDiv.appendChild(scrollDiv);
     }

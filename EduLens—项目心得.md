@@ -230,6 +230,8 @@ Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdo
 
 ### 获取滚动距离
 
+------
+
 ```js
   const scrollTop  = window.scrollY;
   const docHeight  = document.documentElement.scrollHeight;
@@ -260,6 +262,8 @@ Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdo
 
 ###  鼠标追踪元素定位错乱
 
+------
+
 **原因：**使用transform来追踪鼠标位置，只设置了`position:fixed;`，没有设置`top/left`值，导致元素跟随文档流生成在网站最底部
 
 **解决：**
@@ -273,6 +277,8 @@ Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdo
 
 
 ### 获取元素的位置方法
+
+------
 
 1.**相对于视口（Viewport）的位置**
 
@@ -357,17 +363,9 @@ observer.observe(element);
 
 
 
-
-
-
-
-
-
-
-
-
-
 ### 可拖动元素
+
+------
 
 **方法一：HTML5 原生拖放 API（`draggable=true`）**
 
@@ -455,6 +453,232 @@ observer.observe(element);
 
 
 
+### 创建唯一ID方式
+
+------
+
+1. 自增计数器（最简单，适合单页内）
+
+```js
+// 模块级闭包，页面刷新后重新从 0 开始
+const genId = (() => {
+  let count = 0;
+  return prefix => `${prefix || 'uid'}-${++count}`;
+})();
+
+const btn = document.createElement('button');
+btn.id = genId('btn');          // "btn-1"
+document.body.appendChild(btn);
+```
+
+------
+
+1. 时间戳 + 随机数（适合短时内批量创建）
+
+```js
+const genId = (prefix = 'id') =>
+  `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+
+const div = document.createElement('div');
+div.id = genId('card');         // "card-lxgrn-6f3d2"
+document.body.appendChild(div);
+```
+
+------
+
+1. 全局计数器 + 时间戳（几乎 100% 唯一）
+
+```js
+const genId = (() => {
+  let c = 0;
+  return (p = 'auto') =>
+    `${p}_${Date.now()}_${++c}_${Math.random().toString(36).slice(2, 6)}`;
+})();
+
+const input = document.createElement('input');
+input.id = genId('input');
+document.body.appendChild(input);
+```
+
+
+
+### `toString(36)`用法
+
+`toString(36)` 是 Number 原型上的方法，作用：  **“把数字用 36 进制字符形式打印出来”**。
+
+------------------------------------------------
+1. **36 进制**
+
+   数字 0–9（10 个） + 字母 a–z（26 个） → 共 36 个符号。  
+   因此 36 是最大的“字母 + 数字”混合进制，再大就要引入标点符号了。
+------------------------------------------------
+2. **`toString()`语法**
+```js
+(num).toString([radix])   // radix ∈ 2 ~ 36，省略时默认 10
+```
+返回值：**字符串**  
+若 radix 不在 2–36 范围，抛 `RangeError`。
+
+------------------------------------------------
+3. **时间戳压缩用法**
+
+`toString(36)` 相对于“用英文字母当数字”把整数拼成更短的字符串，常用来生成紧凑、可读、URL 友好的随机 ID。
+
+```js
+Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
+```
+1. 把时间戳变短：13 位数字 → 8–9 位字符串，省空间。  
+2. 把 0–1 随机小数继续用 36 进制“压缩”并取 5 位，增加随机熵。  
+3. 最终得到**短、可读、区分大小写、无特殊符号**的 ID，如  
+   `ixc6uj9h3xk`（共 14 位左右），比原生 13 位时间戳 + 17 位随机数短得多。
+
+4. ```js
+   (35).toString(36)      // "z"   → 35 是 36 进制里最后一位
+   (36).toString(36)      // "10"  → 进位
+   (16796159).toString(36) // "zzzz"  4 位 36 进制全是 z
+   Date.now()             // 1710166123456 （13 位毫秒时间戳）
+   Date.now().toString(36) // "ixc6uj9"  长度立刻缩到 8–9 位
+   ```
+
+5. 注意：结果都是小写字母 + 数字，不会有大写。 且返回字符串，别当成数字用 `+` 运算，否则会先被转回 10 进制
+
+
+
+
+
+
+
+
+
+### 客户端本地存储形式
+
+**定义：**把数据以“键值对”的形式保存在用户自己的浏览器里，刷新页面、关闭标签甚至重启浏览器后仍能读取，从而实现“离线可用、状态恢复、减少请求”等目的。 
+
+------------------------------------------------
+1. **Cookie：经典“背包客”**
+
+- 1980s 老协议，天生「随请求自动携带」；  
+- 大小受限（4 KB）、域名/path 隔离；  
+- 默认不可跨域，需 SameSite/Secure 防 CSRF；  
+- 只能存字符串。
+
+```javascript
+// 存
+document.cookie = 'uid=123; max-age=86400; path=/; SameSite=Strict';
+// 读
+console.log(document.cookie); // "uid=123; theme=dark"
+// 删：把过期时间设成过去
+document.cookie = 'uid=; expires=' + new Date(0).toUTCString();
+```
+
+适用场景  
+- 服务端必须读取的登录态（sessionId、refreshToken）；  
+- 多页面共享且<4 KB 的“标记位”（A/B 测试分组）。
+
+------------------------------------------------
+2. **localStorage：极简“永久仓库”**
+
+- 同源策略，协议+主机+端口一致即可共享；  
+- 容量 5 MB 左右；  
+- 同步 API，阻塞主线程，勿存超大 JSON；  
+- 只能存字符串，对象需 `JSON.stringify/parse`。
+
+```javascript
+// 存
+localStorage.setItem('theme', 'dark');
+localStorage.setItem('user', JSON.stringify({id:1,name:'Tom'}));
+
+// 读
+const theme = localStorage.getItem('theme');
+const user  = JSON.parse(localStorage.getItem('user'));
+
+// 删
+localStorage.removeItem('theme');
+localStorage.clear(); // 清掉当前源下所有键
+```
+
+监听变化（跨标签页通信）
+```javascript
+window.addEventListener('storage', e => {
+  // 触发条件：同一域名下其它标签页修改 localStorage
+  console.log(e.key, e.oldValue, e.newValue);
+});
+```
+
+适用场景  
+- 不会随请求发送、且需要长期留存的“偏好”数据：深色模式、国际化语言、在线草稿箱。
+
+------------------------------------------------
+3. **sessionStorage：会话级“便签”**
+
+API 与 localStorage 完全一致，区别只是  
+- 生命周期 = 页面会话；  
+- 每个标签页独立，不可共享；  
+- 刷新页面仍在，关闭标签即销毁。
+
+适用场景  
+- 单页面多步骤流程：注册分步表单、购物车（非持久化）；  
+- 防止意外刷新丢失的中间状态。
+
+------------------------------------------------
+4. **IndexedDB：浏览器里的“NoSQL”**
+
+- 异步、事务、索引、大文件二进制（Blob/ArrayBuffer）；  
+- 容量弹性（浏览器会根据磁盘/配额自动协商，通常 ≥250 MB）；  
+- 支持同域多库、多表、主键、游标、版本升级；  
+- 原生 Promise 包裹较繁琐，可装 `idb`（Google 出品）或 Dexie.js。
+
+最小可运行示例（原生 API）
+```javascript
+const open = indexedDB.open('AppDB', 1);
+
+open.onupgradeneeded = e => {
+  const db = e.target.result;
+  if (!db.objectStoreNames.contains('users')) {
+    db.createObjectStore('users', {keyPath: 'id'});
+  }
+};
+
+open.onsuccess = e => {
+  const db = e.target.result;
+
+  // 增
+  const tx = db.transaction('users', 'readwrite');
+  tx.objectStore('users').add({id: 1, name: 'Tom'});
+
+  // 查
+  tx.objectStore('users').get(1).onsuccess = e =>
+    console.log(e.target.result); // {id:1, name:'Tom'}
+};
+```
+
+适用场景  
+- 真正的“离线优先”：Gmail 离线邮件、Notion 离线笔记、抖音离线视频缓存；  
+- 大文件本地缓存：PDF、图片、SQLite 导出包；  
+- 数据量超 5 MB、需要索引/分页/事务。
+
+------------------------------------------------
+5. **能力对比速查表**
+| 特性             | cookie    | localStorage | sessionStorage | IndexedDB          |
+| ---------------- | --------- | ------------ | -------------- | ------------------ |
+| 最大容量         | 4 KB      | 5 MB         | 5 MB           | 250 MB~∞           |
+| 是否随 HTTP 发送 | ✔         | ✘            | ✘              | ✘                  |
+| 跨标签页共享     | ✔ 同域    | ✔ 同域       | ✘ 仅限当前标签 | ✔ 同域             |
+| 生命周期         | 手动/过期 | 永久         | 会话           | 手动               |
+| 数据类型         | string    | string       | string         | *任意*（含二进制） |
+| 同步/异步        | 同步      | 同步         | 同步           | 异步               |
+| 索引/查询        | ✘         | ✘            | ✘              | ✔ 高级             |
+
+
+
+
+
+
+
+
+
+
+
 
 
 ### 错误解决：
@@ -530,6 +754,66 @@ document.body.appendChild(panel);  // 正确写法
 
 
 
+### `.textContent`和`.innerText`对比
+
+| 特性                                  | `.textContent`       | `.innerText`                          |
+| ------------------------------------- | -------------------- | ------------------------------------- |
+| 是否受 CSS 隐藏影响（`display:none`） | ❌ 不受影响，仍会获取 | ✅ 受影响，隐藏元素不获取              |
+| 是否保留 `<script>`、`<style>` 内容   | ✅ 会获取             | ❌ 会忽略                              |
+| 是否保留换行符（`\n`）                | ✅ 保留原始格式       | ✅ 会模拟渲染后的换行                  |
+| 是否触发重排（reflow）                | ❌ 不会               | ✅ 会（因为要计算可见性）              |
+| 性能                                  | ⚡ 更快               | 🐌 更慢                                |
+| 兼容性                                | ✅ 所有现代浏览器     | ✅ 所有现代浏览器（IE 旧版支持差异大） |
+
+
+
+### `data-*`自定义数据
+
+`data-*` 是 HTML5 引入的一个**全局属性（global attribute）**，用于在 HTML 元素上**存储自定义数据**。这些数据不会被浏览器渲染，也不会影响页面行为，但可以被 JavaScript 或 CSS 访问，从而实现更灵活的交互和样式控制。
+
+**基本语法**
+
+```html
+<div id="user" data-user-id="123" data-role="admin">张三</div>
+```
+
+- 属性名必须以 `data-` 开头。
+- 属性值必须是字符串。
+- 多个 `data-*` 属性可以共存。
+
+------
+
+**访问方式**
+
+1. **JavaScript 访问**
+
+​	1.使用 `dataset`（推荐）
+
+```javascript
+const userDiv = document.getElementById('user');
+
+console.log(userDiv.dataset.userId); // "123"
+console.log(userDiv.dataset.role);   // "admin"
+```
+
+> 注意：HTML 中的 `data-user-id` 对应 JS 中的 `dataset.userid`。
+
+​	2.使用 `getAttribute`
+
+```javascript
+console.log(userDiv.getAttribute('data-user-id')); // "123"
+```
+
+2. **CSS 访问**
+
+```css
+div[data-role="admin"] {
+  border: 2px solid red;
+}
+```
+
+
+
 
 
 ### 错误解决：
@@ -552,7 +836,27 @@ transition: width height 1.4s ease-in-out; //错误写法
 transition: width 0.4s ease-in-out, height 0.4s ease-in-out; //正确写法
 ```
 
-**注意：** **transform-origin 不生效问题**：面板打开时没有使用 transform 变换，而是直接改变 width/height，所以 transform-origin 不会影响动画效果
+------
+
+#### `transform-origin `不生效问题
+
+**解决：**面板打开时没有使用 transform 变换，而是直接改变 width/height，所以 transform-origin 不会影响动画效果
+
+------
+
+#### `addEventListener`传参出错
+
+**解决：**
+
+```js
+element.addEventListener('click', handleClick()); 
+// 错误，这样会立即执行 handleClick，并把返回值（undefined）作为监听器
+// 不需要在函数名后面加上括号
+```
+
+------
+
+
 
 
 
@@ -627,3 +931,174 @@ transition: width 0.4s ease-in-out, height 0.4s ease-in-out; //正确写法
 **原因：**
 
 **解决：**
+
+
+
+
+
+
+
+
+
+```js
+// bookmark.js
+
+let addDiv = null;
+let btnDiv = null;
+let cardDiv = null;
+let inputDiv = null;
+const bookmarks = []; // 存储当前页面的书签对象
+
+// 生成唯一标识符
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}
+
+// 获取当前页面标识符（使用 URL）
+function getPageKey() {
+  return window.location.origin + window.location.pathname;
+}
+
+// 创建书签元素
+function createBookmarkElement(scrollTop, text, id) {
+  const bookmarkDiv = document.createElement('div');
+  bookmarkDiv.className = 'bookmark-marker';
+  bookmarkDiv.style.top = `${(scrollTop / (document.documentElement.scrollHeight - window.innerHeight)) * 100}%`;
+  bookmarkDiv.dataset.id = id;
+
+  // 悬停弹窗
+  const tooltip = document.createElement('div');
+  tooltip.className = 'bookmark-tooltip';
+  tooltip.textContent = text;
+
+  const deleteBtn = document.createElement('span');
+  deleteBtn.className = 'bookmark-delete';
+  deleteBtn.innerHTML = '&times;';
+  deleteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    removeBookmark(id, bookmarkDiv);
+  });
+
+  tooltip.appendChild(deleteBtn);
+  bookmarkDiv.appendChild(tooltip);
+
+  // 点击跳转
+  bookmarkDiv.addEventListener('click', () => {
+    window.scrollTo({ top: scrollTop, behavior: 'smooth' });
+  });
+
+  return bookmarkDiv;
+}
+
+// 保存书签到 storage
+function saveBookmark(scrollTop, text) {
+  const id = generateId();
+  const pageKey = getPageKey();
+
+  chrome.storage.local.get({ bookmarks: {} }, (result) => {
+    const bookmarks = result.bookmarks;
+    if (!bookmarks[pageKey]) bookmarks[pageKey] = [];
+
+    bookmarks[pageKey].push({ id, scrollTop, text });
+    chrome.storage.local.set({ bookmarks });
+
+    // 创建并插入 DOM 元素
+    const scrollDiv = document.querySelector('.scroll-percent');
+    const fillDiv = scrollDiv.querySelector('.scroll-fill');
+    const bookmarkEl = createBookmarkElement(scrollTop, text, id);
+    scrollDiv.insertBefore(bookmarkEl, fillDiv.nextSibling);
+  });
+}
+
+// 删除书签
+function removeBookmark(id, element) {
+  const pageKey = getPageKey();
+
+  chrome.storage.local.get({ bookmarks: {} }, (result) => {
+    const bookmarks = result.bookmarks;
+    if (bookmarks[pageKey]) {
+      bookmarks[pageKey] = bookmarks[pageKey].filter(b => b.id !== id);
+      chrome.storage.local.set({ bookmarks });
+    }
+    element.remove();
+  });
+}
+
+// 加载书签
+export function loadBookmarks() {
+  const pageKey = getPageKey();
+  chrome.storage.local.get({ bookmarks: {} }, (result) => {
+    const bookmarks = result.bookmarks[pageKey] || [];
+    const scrollDiv = document.querySelector('.scroll-percent');
+    const fillDiv = scrollDiv.querySelector('.scroll-fill');
+
+    bookmarks.forEach(b => {
+      const bookmarkEl = createBookmarkElement(b.scrollTop, b.text, b.id);
+      scrollDiv.insertBefore(bookmarkEl, fillDiv.nextSibling);
+    });
+  });
+}
+
+// 添加书签按钮点击事件
+function createBookmark() {
+  const val = inputDiv.value.trim();
+  if (!val) return;
+  const scrollTop = window.scrollY;
+  saveBookmark(scrollTop, val);
+  inputDiv.value = '';
+}
+
+export function activateBookmark() {
+  addDiv = document.createElement('div');
+  addDiv.className = 'add-bookmark';
+
+  inputDiv = document.createElement('input');
+  inputDiv.type = 'text';
+  inputDiv.placeholder = '添加书签备注';
+  inputDiv.className = 'bookmark-input';
+  addDiv.appendChild(inputDiv);
+
+  btnDiv = document.createElement('button');
+  btnDiv.className = 'bookmark-button';
+  btnDiv.textContent = '添加书签';
+  btnDiv.addEventListener('click', createBookmark);
+  addDiv.appendChild(btnDiv);
+
+  cardDiv = document.getElementsByClassName('card-content')[0];
+  if (cardDiv) cardDiv.appendChild(addDiv);
+
+  loadBookmarks(); // 页面加载时恢复书签
+}
+
+```
+
+
+
+
+
+```
+  const scrollTop   = window.scrollY;
+  const docHeight   = document.documentElement.scrollHeight;
+  const winHeight   = window.innerHeight;
+  const progressPct = (scrollTop / (docHeight - winHeight)) * 100;
+  const percent = Math.round(progressPct);
+```
+
+
+
+
+
+```
+// 生成唯一id标识符
+function getId(){
+  let date=Date.now().toString(36);
+  let random=Math.random().toString(36).slice(0,3);
+  return date+random;
+}
+
+//用页面URL来作为切换页面时的key
+function getPageId(){
+  return window.location.origin+window.location.pathname;
+}
+```
+

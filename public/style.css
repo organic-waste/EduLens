@@ -1,6 +1,8 @@
 /* 颜色变量 */
 :root{
 	--main-color:#76859a;
+  --secondary-color:#c1cbce;
+  --emphasis-color:#5484c9;
 
 }
 
@@ -13,8 +15,7 @@
 	flex-direction: column;
 	background: rgba(255, 255, 255, 0.2);
 	height: 100%;
-	width: 8px;
-	pointer-events: none;
+	width: 1vh;
 	z-index: 9999;
 }
 
@@ -22,7 +23,7 @@
 	position: absolute;
 	top: 0;
 	width: 100%;
-	background:var(--main-color);
+	background:var(--secondary-color);
 	border-radius: 0 0 3px 3px;
 	transition: height 0.15s ease;
 }
@@ -81,7 +82,7 @@
   z-index: 9998;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   user-select: none;
-  overflow: hidden;
+  /* overflow: hidden; */
   transition: width 0.3s ease-in-out, height 0.3s ease-in-out,border-radius 0.3s ease-in-out;
 }
 .draggable-panel.open-panel{
@@ -122,14 +123,14 @@
 
 .draggable-card {
   position: relative;
-  width: 100%;
-  height: 100%;
+  width: 30vh;
+  height: 40vh;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.18);
   z-index: 10000;
   padding: 0;
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 .card-header {
@@ -148,5 +149,48 @@
 .card-content {
   position: relative;
   height: 35vh;
+  padding-left: 1vh;
+}
+
+/* 书签样式 */
+.bookmark-marker {
+  position: absolute;
+  left: 0;
+  width: 1vh;
+  height: 1vh;
+	border-radius:3px;
+  background: var(--main-color);
+  cursor: pointer;
+  z-index: 10001;
+  transition: background 0.2s ease-in-out,width 0.2s ease-in-out;
   
+}
+
+.bookmark-marker:hover {
+  background: var(--emphasis-color);
+  /* transform: scale(1.5); */
+  width: 1.5vh;
+}
+
+.bookmark-tooltip {
+  position: absolute;
+  left:0;
+  transform: translateX(-110%);
+  background: #fff;
+  color: #333;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  font-size: 14px;
+  display: none;
+  z-index: 10002;
+}
+
+
+.bookmark-delete {
+  margin-left: 6px;
+  color: rgb(164, 58, 58);
+  font-weight: bold;
+  cursor: pointer;
 }

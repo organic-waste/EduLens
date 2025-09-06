@@ -1,5 +1,6 @@
 // 可拖动卡片面板
 import {activateScrollProgress} from './scrollProgress.js'
+import {activateBookmark} from './bookmark.js'
 
 let panelDiv=null;
 let cardDiv=null;
@@ -26,7 +27,7 @@ function DraggablePanel(){
         `
 
     document.body.appendChild(panelDiv);
-    let btn=document.getElementsByClassName('toggle-btn')[0]
+    let btnDiv=document.getElementsByClassName('toggle-btn')[0]
 
     cardDiv = document.createElement('div');
     cardDiv.className = 'draggable-card';
@@ -94,19 +95,19 @@ function DraggablePanel(){
         document.body.style.userSelect = '';// 恢复文字可选中
     });
 
-    btn.addEventListener('click', (e) => {
+    btnDiv.addEventListener('click', (e) => {
         if (isMoved) return; // 确保拖动过后不弹窗
 
         if(!isOpen){
             isOpen=true;
-            btn.classList.add('open-panel');
+            btnDiv.classList.add('open-panel');
             cardDiv.style.display='block';
             panelDiv.classList.add('open-panel');
             //确保面板打开后在视窗内
 
         }else{
             isOpen=false;
-            btn.classList.remove('open-panel');
+            btnDiv.classList.remove('open-panel');
             cardDiv.style.display='none';
             panelDiv.classList.remove('open-panel');
         }
@@ -126,7 +127,8 @@ function DraggablePanel(){
 
 export function activateDraggablePanel() {
     DraggablePanel();
-    activateScrollProgress()
+    activateScrollProgress();
+    activateBookmark();
 }
 
 export function deactivateDraggablePanel() {
