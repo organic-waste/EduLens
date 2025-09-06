@@ -3,6 +3,7 @@
 	--main-color:#76859a;
   --secondary-color:#c1cbce;
   --emphasis-color:#5484c9;
+  --error-color:#b26464;
 
 }
 
@@ -190,7 +191,73 @@
 
 .bookmark-delete {
   margin-left: 6px;
-  color: rgb(164, 58, 58);
+  color:var(--error-color);
   font-weight: bold;
   cursor: pointer;
+}
+
+.add-bookmark {
+    display: flex;
+    align-items: center;
+    gap: 1vh;
+    width: 29vh;
+    justify-content: space-between;
+    padding: 1vh;
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.bookmark-input {
+    flex: 1;
+    min-width: 0; 
+    padding:1vh;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+    font-size: 1.6vh;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.bookmark-input:focus {
+    border-color: var(--emphasis-color);
+    box-shadow: 0 0 0 2px rgba(84, 132, 201, 0.2);
+}
+
+.bookmark-button {
+    padding: 0.6vh 1.1vh;
+    background: var(--main-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 2vh;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+}
+
+.bookmark-button:hover {
+    background: var(--emphasis-color);
+}
+
+.bookmark-tooltip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: none;
+}
+
+.bookmark-delete {
+    margin-left: 8px;
+    padding: 2px 6px;
+    background:var(--error-color);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.bookmark-delete:hover {
+    background: rgb(212, 67, 67);
 }

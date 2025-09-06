@@ -30,7 +30,7 @@ function createBookmarkEle(scrollTop,text,id){
 
   const deleteBtn=document.createElement('button');
   deleteBtn.className='bookmark-delete';
-  deleteBtn.textContent='删除书签';
+  deleteBtn.textContent='删除';
   deleteBtn.addEventListener('click',(e)=>{
     e.stopPropagation(); //防止冒泡被面板上的其他事件捕获
     removeBookmark(bookmarkDiv);
@@ -46,7 +46,7 @@ function createBookmarkEle(scrollTop,text,id){
   bookmarkDiv.addEventListener('mouseleave',()=>{
     setTimeout(()=>{
       tooltip.style.display="none";
-    },500)
+    },800)
   })
 
   bookmarkDiv.addEventListener('click',()=>{

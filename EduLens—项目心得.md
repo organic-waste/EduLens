@@ -838,13 +838,13 @@ transition: width 0.4s ease-in-out, height 0.4s ease-in-out; //正确写法
 
 ------
 
-#### `transform-origin `不生效问题
+#### `transform-origin` 不生效问题
 
 **解决：**面板打开时没有使用 transform 变换，而是直接改变 width/height，所以 transform-origin 不会影响动画效果
 
 ------
 
-#### `addEventListener`传参出错
+#### `addEventListener` 传参出错
 
 **解决：**
 
@@ -856,9 +856,18 @@ element.addEventListener('click', handleClick());
 
 ------
 
+#### `flex:1` 没有自动占据剩余空间
 
+**原因：**`.bookmark-input` 写了 `flex: 1` 并不代表它“只能占剩余空间”，它还受到 `min-width: auto` 的默认行为影响. input 的默认最小尺寸 是 `min-width: auto`，也就是说：它不会缩小到比自身内容还窄。
 
+**解决：**给 `.bookmark-input` 显式写一个 最小宽度 0 即可：
 
+```js
+.bookmark-input {
+  flex: 1;
+  min-width: 0;   // 关键 
+}
+```
 
 
 
