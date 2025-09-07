@@ -27,7 +27,7 @@ function DraggablePanel(){
         `
 
     document.body.appendChild(panelDiv);
-    let btnDiv=document.getElementsByClassName('toggle-btn')[0]
+    let btnDiv=document.getElementsByClassName('toggle-btn')[0];
 
     cardDiv = document.createElement('div');
     cardDiv.className = 'draggable-card';

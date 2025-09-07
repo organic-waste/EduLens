@@ -67,10 +67,15 @@ function createBookmarkEle(scrollTop,text,id){
   scrollDiv.appendChild(bookmarkDiv);
 }
 
-async function saveBookmark(scrollTop,text,id,pageKey){
-  // 传递 {} 作为默认值
+async function getBookmark(){
+    // 传递 {} 作为默认值
   const result = await chrome.storage.local.get({bookmarks: {}});
-  let bookmarks = result.bookmarks;
+  return result.bookmarks;
+}
+
+async function saveBookmark(scrollTop,text,id){
+  let bookmarks= await getBookmark();
+  const pageKey = getPageKey();
   
   if(!bookmarks[pageKey]){
     bookmarks[pageKey]=[];
@@ -85,13 +90,10 @@ async function saveBookmark(scrollTop,text,id,pageKey){
 }
 
 
-
 async function removeBookmark(el){
   const id=el.dataset.id;
   const pageKey=getPageKey();
-
-  const result = await chrome.storage.local.get({bookmarks: {}});
-  let bookmarks = result.bookmarks;
+  let bookmarks= await getBookmark();
   
   if(bookmarks[pageKey]){
     bookmarks[pageKey]=bookmarks[pageKey].filter(item=>{
@@ -102,16 +104,23 @@ async function removeBookmark(el){
   el.remove();
 }
 
+export async function loadBookmarks(){
+  const pageKey=getPageKey();
+  let bookmarks= await getBookmark();
+  if(bookmarks[pageKey]){
+    bookmarks[pageKey].forEach(item=>createBookmarkEle(item.scrollTop,item.text,item.id));
+  }
+}
+
+
 function createBookmark() {
   const val = inputDiv.value.trim(); 
   if(!val) return;  //当输入为空的时候直接返回，不创建新的书签
   inputDiv.value = '';
 
   const id=getId();
-  const pageKey = getPageKey()
   const scrollTop=window.scrollY;
-  saveBookmark(scrollTop,val,id,pageKey);
-
+  saveBookmark(scrollTop,val,id);
 }
 
 
@@ -130,7 +139,7 @@ export function activateBookmark() {
   btnDiv.addEventListener('click', createBookmark); 
   addDiv.appendChild(btnDiv)
 
-  cardDiv = document.getElementsByClassName('card-content')[0];
+  cardDiv = document.getElementsByClassName('functions')[0];
   cardDiv.appendChild(addDiv);
 
 }

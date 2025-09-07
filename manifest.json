@@ -3,7 +3,7 @@
   "name": "EduLens 鼠标增强",
   "version": "1.0.0",
   "description": "网课辅助教学浏览器插件",
-  "permissions": ["storage", "activeTab"],
+  "permissions": ["storage", "activeTab","tabs"],
   "background": {
     "service_worker": "src/background.js"
   },

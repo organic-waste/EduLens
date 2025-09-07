@@ -7,43 +7,6 @@
 
 }
 
-/* 滚动进度指示器 */
-.scroll-percent {
-	position: absolute;
-	top: 0;
-	left:0;
-	display: flex;
-	flex-direction: column;
-	background: rgba(255, 255, 255, 0.2);
-	height: 100%;
-	width: 1vh;
-	z-index: 9999;
-}
-
-.scroll-fill {
-	position: absolute;
-	top: 0;
-	width: 100%;
-	background:var(--secondary-color);
-	border-radius: 0 0 3px 3px;
-	transition: height 0.15s ease;
-}
-
-.scroll-counter {
-	position: absolute;
-	top: -2vh;
-	left: 50%;
-	transform: translateX(-50%);
-	white-space: nowrap;
-}
-
-.scroll-counter h1 {
-	font-family: Helvetica, sans-serif;
-	font-size: 16px;
-	font-weight: lighter;
-	color: #fff;
-	margin: 0;
-}
 
 .mouse-highlight {
 		position: fixed;
@@ -83,13 +46,12 @@
   z-index: 9998;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   user-select: none;
-  /* overflow: hidden; */
   transition: width 0.3s ease-in-out, height 0.3s ease-in-out,border-radius 0.3s ease-in-out;
 }
 .draggable-panel.open-panel{
   width: 30vh;
   height: 40vh;
-  border-radius: 5%;
+  border-radius: 10px;
 }
 
 .toggle-btn{
@@ -123,15 +85,14 @@
 }
 
 .draggable-card {
+  border-radius: 10px;
   position: relative;
   width: 30vh;
   height: 40vh;
   background: #fff;
-  border-radius: 12px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.18);
   z-index: 10000;
   padding: 0;
-  /* overflow: hidden; */
 }
 
 .card-header {
@@ -143,6 +104,7 @@
   height: 5vh;
   padding-left: 3vh;
   font-size:2.5vh;
+  border-radius: 10px 10px 0 0;
   white-space: nowrap;
 }
 
@@ -150,8 +112,51 @@
 .card-content {
   position: relative;
   height: 35vh;
-  padding-left: 1vh;
+  border-radius:0 0 10px 10px;
 }
+
+.functions{
+  padding-left: 1vh;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 滚动进度指示器 */
+.scroll-percent {
+	position: absolute;
+	top:0;
+	left:0;
+	background: rgba(82, 102, 109, 0.2);
+	height: 35vh;
+	width: 1vh;
+	z-index: 9999;
+}
+
+.scroll-fill {
+	position: absolute;
+	top: 0;
+	width: 100%;
+	background:var(--secondary-color);
+	border-radius: 0 0 3px 3px;
+	transition: height 0.15s ease;
+}
+
+/* .scroll-counter {
+	position: absolute;
+	top: -2vh;
+	left: 50%;
+	transform: translateX(-50%);
+	white-space: nowrap;
+}
+
+.scroll-counter h1 {
+	font-family: Helvetica, sans-serif;
+	font-size: 16px;
+	font-weight: lighter;
+	color: #fff;
+	margin: 0;
+} */
+
 
 /* 书签样式 */
 .bookmark-marker {

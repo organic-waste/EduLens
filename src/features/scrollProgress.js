@@ -28,7 +28,7 @@ export function activateScrollProgress() {
     fillDiv.className = 'scroll-fill';
     scrollDiv.appendChild(fillDiv);
 
-    cardDiv=document.getElementsByClassName("card-content")[0]
+    cardDiv=document.getElementsByClassName("card-content")[0];
 
     // const counterDiv = document.createElement('div');
     // counterDiv.className = 'scroll-counter';
@@ -38,7 +38,10 @@ export function activateScrollProgress() {
     // scrollDiv.appendChild(counterDiv);
 
     if(cardDiv){
-      cardDiv.appendChild(scrollDiv);
+      const funcDiv=document.createElement('div');
+      funcDiv.className='functions';
+      funcDiv.appendChild(scrollDiv);
+      cardDiv.appendChild(funcDiv);
     }
 
   }
