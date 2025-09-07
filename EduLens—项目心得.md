@@ -42,7 +42,36 @@ extension page是插件内部的一些页面。有一些页面是插件规定的
 
 
 
+### "permissions"权限配置
+
+| 权限字符串                                                | 作用一句话                                                   | 备注                                         |
+| --------------------------------------------------------- | ------------------------------------------------------------ | -------------------------------------------- |
+| `activeTab`                                               | 临时访问当前活动标签页（注入脚本、获取 url/title/favIconUrl） | 无需 host，用户点击/命令触发才生效           |
+| `scripting`                                               | 动态向页面注入 JS/CSS（`chrome.scripting.executeScript/insertCSS`） | MV3 新增，替代旧 `tabs.executeScript`        |
+| `tabs`                                                    | 查询/创建/更新/关闭任意标签页（`chrome.tabs.*`）             | 仍需配合 host_permissions 才能读敏感字段     |
+| `contextMenus`                                            | 创建右键菜单（`chrome.contextMenus.create`）                 |                                              |
+| `cookies`                                                 | 读写 cookie（`chrome.cookies.*`）                            | 必须再声明对应 host_permissions              |
+| `history`                                                 | 读写浏览历史（`chrome.history.*`）                           |                                              |
+| `bookmarks`                                               | 读写书签（`chrome.bookmarks.*`）                             |                                              |
+| `downloads`                                               | 管理下载（`chrome.downloads.*`）                             |                                              |
+| `notifications`                                           | 发出系统级通知（`chrome.notifications.*`）                   |                                              |
+| `clipboardWrite` / `clipboardRead`                        | 写入/读取剪贴板                                              |                                              |
+| `alarms`                                                  | 创建定时闹钟（`chrome.alarms.*`）                            | ServiceWorker 被干掉后也能唤醒               |
+| `unlimitedStorage`                                        | 移除 local/storage.local 的 10 MB 上限                       | 仅对 `chrome.storage.local` 与扩展包体积生效 |
+| `nativeMessaging`                                         | 与本地二进制进程通信                                         | 需额外配置原生清单文件                       |
+| `topSites`                                                | 读取用户“最常访问”的新标签页站点                             |                                              |
+| `system.cpu / system.memory / system.storage`             | 读取 CPU/内存/存储信息                                       |                                              |
+| `processes`                                               | 访问 chrome:processes 页面信息                               |                                              |
+| `proxy`                                                   | 设置 PAC 代理                                                |                                              |
+| `vpnProvider`                                             | 实现 VPN 扩展                                                |                                              |
+| `declarativeNetRequest` / `declarativeNetRequestFeedback` | 拦截/修改请求，替代 MV2 的 webRequest                        |                                              |
+| `webNavigation`                                           | 监听页面导航事件（`chrome.webNavigation.*`）                 |                                              |
+
+
+
 ### 调试方法
+
+------
 
 #### 内容脚本调试
 
@@ -56,11 +85,15 @@ extension page是插件内部的一些页面。有一些页面是插件规定的
 chrome.runtime.sendMessage({action: 'toggleFeature', feature: 'highlight'})
 ```
 
+------
+
 #### Popup 调试
 
 1. 点击插件图标打开 popup
 
 2. 右键 popup 窗口选择"检查"
+
+------
 
 #### Background 调试
 
@@ -68,23 +101,56 @@ chrome.runtime.sendMessage({action: 'toggleFeature', feature: 'highlight'})
 
 2. 找到插件，点击"检查视图"中的 Service Worker 
 
-#### 日志调试
-
-​	使用 chrome.storage 调试：
-
-```js
-chrome.storage.sync.get('settings', (data) => {
-  console.log('当前设置:', data)
-})
-```
-
 ------
+
+#### `chrome.storage`调试
+
+1. **Chrome 内置面板 → “应用”→“存储”→“扩展存储”**
+
+步骤：  
+1. 打开**开发者工具**（F12）  
+2. 顶部切到 **Application（应用）** 面板  
+3. 左侧树依次展开  
+   **Storage → Extension Storage → chrome-extension://<你的扩展ID>**  
+4. 右侧会出现一个**表格视图**  
+   - Key 列 = 你存的键  
+   - Value 列 = 自动反序列化后的 JSON（可折叠）  
+
+> 如果没看到“Extension Storage”，说明当前页面不是扩展上下文（content/popup/background）。  
+> 解决：  
+> - 打开扩展的 **popup** 再按 F12  
+> - 或者进入 `chrome://extensions` → 打开**“背景页”/“Service Worker”** → 在弹出的 DevTools 里按上面步骤查看
+
+2. **/snippets 面板手写一行命令（调试任何上下文）**
+
+在 DevTools → **Sources → Snippets** 新建 snippet，粘贴并运行：
+
+```javascript
+// 查看 local 区全部内容
+chrome.storage.local.get(null, console.log);
+
+// 查看 sync 区
+chrome.storage.sync.get(null, console.log);
+```
+运行后结果会直接出现在 **Console** 里，展开即可。
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### 错误解决：
 
-------
-
 #### 加载扩展时scss文件报错
+
+------
 
 > `无法为脚本加载重叠样式表“src/assets/styles/main.scss”`
 
@@ -134,11 +200,9 @@ chrome.storage.sync.get('settings', (data) => {
 
 
 
+#### 提交项目时github连接失败
 
 ------
-
-
-#### 提交项目时github连接失败
 
 **原因：**
 使用clash代理导致github代理出错
@@ -152,9 +216,9 @@ git config --global https.proxy http://127.0.0.1:7890
 
 
 
-------
-
 #### 打包后路径依赖问题
+
+------
 
 **问题：**
 Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdoadlkpbpfcnfgkanf/content-scripts/main.js
@@ -186,9 +250,9 @@ Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdo
 
 
 
-------
-
 #### Popup窗口闪烁问题
+
+------
 
 **原因：**
 
@@ -200,10 +264,9 @@ Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdo
 
 
 
+#### Css文件打包后不存在或出错
 
 ------
-
-#### Css文件打包后不存在或出错
 
 **原因：**
 在 vite.config.js 的 rollupOptions.input 中加入了 styles: 'public/style.css'，导致 Vite/rollup 试图将 style.css 作为 JS/HTML 入口处理，所以报错
@@ -215,9 +278,27 @@ Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdo
 
 
 
+#### `chrome.storage`传递参数出错
+
 ------
 
+**原因：**`chrome.storage.local.get()` 期望接收一个键名或键名数组作为参数，而不是一个值
 
+**解决：**
+
+```js
+// 错误用法 - bookmarks 是未定义的变量
+let bookmarks = await chrome.storage.local.get(bookmarks);
+
+// 正确用法：
+// 方式1：获取特定键
+let result = await chrome.storage.local.get('bookmarks');
+let bookmarks = result.bookmarks || {};
+
+// 方式2：使用默认值
+let result = await chrome.storage.local.get({bookmarks: {}});
+let bookmarks = result.bookmarks;
+```
 
 
 
@@ -671,6 +752,76 @@ open.onsuccess = e => {
 
 
 
+### `chrome.storage`  Chrome 扩展本地存储
+
+------------------------------------------------
+1. **核心概念与存储分区**
+
+`chrome.storage` 一共分为 4 个“桶”（StorageArea），每个桶的可见性、生命周期、配额都不同：
+
+| 分区            | 数据存放位置 | 生命周期                  | 默认配额                       | 是否同步到账号     | 参与上下文                        |
+| --------------- | ------------ | ------------------------- | ------------------------------ | ------------------ | --------------------------------- |
+| storage.local   | 本地磁盘     | 卸载扩展即清空            | 10 MB（可申 unlimitedStorage） | ×                  | background、popup、content_script |
+| storage.sync    | 先本地再上传 | 卸载扩展即清空            | ≈ 100 KB（单条 8 KB）          | √（需登录 Chrome） | 同上                              |
+| storage.session | 内存         | 扩展重载/浏览器退出即清空 | 10 MB                          | ×                  | 主要用于 ServiceWorker            |
+| storage.managed | 企业策略     | 只读                      | 不限                           | ×                  | 管理员预配                        |
+
+------------------------------------------------
+2. **快速上手**
+
+步骤 1：在 `manifest.json` 声明权限  
+```json
+"permissions": ["storage"]
+```
+
+步骤 2：读写代码（Promise 风格）  
+```javascript
+// 写
+await chrome.storage.local.set({uiLang: 'zh-CN', theme: 'dark'});
+
+// 读
+const {uiLang, theme} = await chrome.storage.local.get(['uiLang', 'theme']);
+console.log(uiLang, theme);          // zh-CN dark
+
+// 删
+await chrome.storage.local.remove('theme');
+
+// 清空
+await chrome.storage.local.clear();
+```
+
+​	批量操作同样支持：  
+```javascript
+await chrome.storage.local.set({
+  user: {name: 'Tom', age: 18},
+  visits: 100
+});
+const res = await chrome.storage.local.get(['user', 'visits']);
+```
+
+------------------------------------------------
+3. **与 Web 本地存储的差异**
+| 特性               | chrome.storage.local  | window.localStorage        |
+| ------------------ | --------------------- | -------------------------- |
+| 容量               | 10 MB（可 unlimited） | 5-10 MB 且不可申请更大     |
+| 异步               | ✅（Promise & 回调）   | ❌（同步阻塞）              |
+| 扩展 ServiceWorker | 直接可用              | ❌ 无法访问                 |
+| content_script     | 直接可用              | 与宿主页面共享，需消息中转 |
+| 清除浏览数据       | 不会被“清理缓存”删掉  | 会被一键清空               |
+| 数据格式           | JSON 可序列化即可     | 仅字符串                   |
+
+------------------------------------------------
+4. **开发Tips & 常见坑**
+
+1. **容量超限**  
+   写操作一定要 `try…catch`；超出配额时 Promise 会 reject，并带 `runtime.lastError`。  
+2. **无痕模式**  
+   `storage.local/sync` 数据在拆分式无痕窗口依旧保留，但无痕窗口对扩展来说是独立“会话”，需要把 `setAccessLevel()` 打开才能访问。  
+3. **不能直接存 Blob/File**  
+   先转 ArrayBuffer → base64 或借 IndexedDB 存二进制，路径/ID 再放进 chrome.storage。  
+4. **同步延迟**  
+   `storage.sync` 会择机上传，断网时先落本地，在线后自动合并；不要把它当实时数据库。  
+
 
 
 
@@ -1092,22 +1243,3 @@ export function activateBookmark() {
   const progressPct = (scrollTop / (docHeight - winHeight)) * 100;
   const percent = Math.round(progressPct);
 ```
-
-
-
-
-
-```
-// 生成唯一id标识符
-function getId(){
-  let date=Date.now().toString(36);
-  let random=Math.random().toString(36).slice(0,3);
-  return date+random;
-}
-
-//用页面URL来作为切换页面时的key
-function getPageId(){
-  return window.location.origin+window.location.pathname;
-}
-```
-

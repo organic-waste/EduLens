@@ -12,6 +12,11 @@ function getId(){
   return date+random;
 }
 
+//用页面URL来作为切换页面时的key
+function getPageKey(){
+  return window.location.origin+window.location.pathname;
+}
+
 
 function createBookmarkEle(scrollTop,text,id){
   const bookmarkDiv=document.createElement('div');
@@ -40,12 +45,14 @@ function createBookmarkEle(scrollTop,text,id){
   bookmarkDiv.appendChild(tooltip);
 
   bookmarkDiv.addEventListener('mouseenter',()=>{
-    tooltip.style.display='block';
+    tooltip.style.opacity='1';
+    tooltip.style.pointerEvents='all';
   })
 
   bookmarkDiv.addEventListener('mouseleave',()=>{
     setTimeout(()=>{
-      tooltip.style.display="none";
+      tooltip.style.opacity="0";
+      tooltip.style.pointerEvents='none';
     },800)
   })
 
@@ -60,16 +67,51 @@ function createBookmarkEle(scrollTop,text,id){
   scrollDiv.appendChild(bookmarkDiv);
 }
 
-function removeBookmark(el){
+async function saveBookmark(scrollTop,text,id,pageKey){
+  // 传递 {} 作为默认值
+  const result = await chrome.storage.local.get({bookmarks: {}});
+  let bookmarks = result.bookmarks;
+  
+  if(!bookmarks[pageKey]){
+    bookmarks[pageKey]=[];
+  }
+  bookmarks[pageKey].push({
+    "scrollTop":scrollTop,
+    "text":text,
+    "id":id
+  });
+  await chrome.storage.local.set({bookmarks});
+  createBookmarkEle(scrollTop,text,id) ;
+}
+
+
+
+async function removeBookmark(el){
+  const id=el.dataset.id;
+  const pageKey=getPageKey();
+
+  const result = await chrome.storage.local.get({bookmarks: {}});
+  let bookmarks = result.bookmarks;
+  
+  if(bookmarks[pageKey]){
+    bookmarks[pageKey]=bookmarks[pageKey].filter(item=>{
+      return item.id !== id;
+    });
+    await chrome.storage.local.set({bookmarks});
+  }
   el.remove();
 }
 
 function createBookmark() {
   const val = inputDiv.value.trim(); 
   if(!val) return;  //当输入为空的时候直接返回，不创建新的书签
-  console.log('输入的内容：', val);
-  createBookmarkEle(window.scrollY,val,getId()) ;
   inputDiv.value = '';
+
+  const id=getId();
+  const pageKey = getPageKey()
+  const scrollTop=window.scrollY;
+  saveBookmark(scrollTop,val,id,pageKey);
+
 }
 
 
@@ -90,6 +132,5 @@ export function activateBookmark() {
 
   cardDiv = document.getElementsByClassName('card-content')[0];
   cardDiv.appendChild(addDiv);
+
 }
-
-

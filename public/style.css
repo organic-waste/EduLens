@@ -170,7 +170,7 @@
 .bookmark-marker:hover {
   background: var(--emphasis-color);
   /* transform: scale(1.5); */
-  width: 1.5vh;
+  width: 1.8vh;
 }
 
 .bookmark-tooltip {
@@ -184,7 +184,9 @@
   white-space: nowrap;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   font-size: 14px;
-  display: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out; 
   z-index: 10002;
 }
 
