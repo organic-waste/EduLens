@@ -138,6 +138,163 @@ chrome.storage.sync.get(null, console.log);
 
 
 
+### 前后端通信原理
+
+------
+
+#### 架构概述
+
+浏览器插件采用分层架构：
+- **Background Script**：后端，常驻内存，管理全局状态
+- **Content Script**：前端，注入到每个页面中，与页面DOM交互
+- **Popup**：弹出窗口，用户界面
+- **Options Page**：设置页面
+
+------
+
+#### 通信方式分类
+
+1. **单向通信（发送消息）**
+
+```javascript
+// 发送方 → 接收方
+chrome.runtime.sendMessage({
+  type: 'MESSAGE_TYPE',
+  data: { key: 'value' }
+});
+
+// Popup/Options → Background
+chrome.runtime.sendMessage({ type: 'GET_DATA' });
+
+// Content Script → Background
+chrome.runtime.sendMessage({ type: 'PAGE_LOADED' });
+```
+
+2. **双向通信（发送并等待响应）**
+
+```javascript
+// 发送请求并等待响应
+chrome.runtime.sendMessage(
+  { type: 'GET_USER_DATA' },
+  (response) => {
+    console.log('收到响应:', response);
+  }
+);
+
+// Background 返回响应
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'GET_USER_DATA') {
+    sendResponse({ user: 'John', age: 30 }); // 同步响应
+    return true; // 保持通道开放用于异步响应
+  }
+});
+```
+
+3. **长连接通信（Port）**
+
+```javascript
+// 建立长连接
+const port = chrome.runtime.connect({ name: 'data-channel' });
+
+// 发送消息
+port.postMessage({ type: 'DATA_UPDATE', data: payload });
+
+// 接收消息
+port.onMessage.addListener((msg) => {
+  console.log('收到消息:', msg);
+});
+
+// 断开连接
+port.disconnect();
+```
+
+------
+
+#### 通信规则和最佳实践
+
+1. **消息结构规范**
+
+```javascript
+// 标准消息格式
+const message = {
+  type: 'ACTION_TYPE',      // 必填：消息类型
+  data: { /* 数据 */ },     // 可选：负载数据
+  timestamp: Date.now(),    // 可选：时间戳
+  source: 'content-script'  // 可选：消息来源
+};
+```
+
+2. **错误处理**
+
+```javascript
+// 添加超时机制
+function sendMessageWithTimeout(message, timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error('Message timeout'));
+    }, timeout);
+
+    chrome.runtime.sendMessage(message, (response) => {
+      clearTimeout(timer);
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        resolve(response);
+      }
+    });
+  });
+}
+```
+
+3. **安全性规则**
+
+```javascript
+// 验证消息来源
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // 检查发送方是否是插件本身
+  if (sender.id !== chrome.runtime.id) {
+    sendResponse({ error: 'Unauthorized' });
+    return;
+  }
+  
+  // 检查必要的消息字段
+  if (!message.type) {
+    sendResponse({ error: 'Missing message type' });
+    return;
+  }
+});
+```
+
+4. **性能优化**
+
+```javascript
+// 批量处理消息
+let messageQueue = [];
+let processing = false;
+
+async function processQueue() {
+  if (processing) return;
+  processing = true;
+  
+  while (messageQueue.length > 0) {
+    const message = messageQueue.shift();
+    await handleMessage(message);
+  }
+  
+  processing = false;
+}
+
+// 节流高频消息
+function throttleMessage(type, data, delay = 100) {
+  if (!this.throttleTimers) this.throttleTimers = {};
+  
+  clearTimeout(this.throttleTimers[type]);
+  this.throttleTimers[type] = setTimeout(() => {
+    chrome.runtime.sendMessage({ type, data });
+  }, delay);
+}
+```
+
 
 
 
@@ -1092,154 +1249,3 @@ element.addEventListener('click', handleClick());
 
 **解决：**
 
-
-
-
-
-
-
-
-
-```js
-// bookmark.js
-
-let addDiv = null;
-let btnDiv = null;
-let cardDiv = null;
-let inputDiv = null;
-const bookmarks = []; // 存储当前页面的书签对象
-
-// 生成唯一标识符
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-}
-
-// 获取当前页面标识符（使用 URL）
-function getPageKey() {
-  return window.location.origin + window.location.pathname;
-}
-
-// 创建书签元素
-function createBookmarkElement(scrollTop, text, id) {
-  const bookmarkDiv = document.createElement('div');
-  bookmarkDiv.className = 'bookmark-marker';
-  bookmarkDiv.style.top = `${(scrollTop / (document.documentElement.scrollHeight - window.innerHeight)) * 100}%`;
-  bookmarkDiv.dataset.id = id;
-
-  // 悬停弹窗
-  const tooltip = document.createElement('div');
-  tooltip.className = 'bookmark-tooltip';
-  tooltip.textContent = text;
-
-  const deleteBtn = document.createElement('span');
-  deleteBtn.className = 'bookmark-delete';
-  deleteBtn.innerHTML = '&times;';
-  deleteBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    removeBookmark(id, bookmarkDiv);
-  });
-
-  tooltip.appendChild(deleteBtn);
-  bookmarkDiv.appendChild(tooltip);
-
-  // 点击跳转
-  bookmarkDiv.addEventListener('click', () => {
-    window.scrollTo({ top: scrollTop, behavior: 'smooth' });
-  });
-
-  return bookmarkDiv;
-}
-
-// 保存书签到 storage
-function saveBookmark(scrollTop, text) {
-  const id = generateId();
-  const pageKey = getPageKey();
-
-  chrome.storage.local.get({ bookmarks: {} }, (result) => {
-    const bookmarks = result.bookmarks;
-    if (!bookmarks[pageKey]) bookmarks[pageKey] = [];
-
-    bookmarks[pageKey].push({ id, scrollTop, text });
-    chrome.storage.local.set({ bookmarks });
-
-    // 创建并插入 DOM 元素
-    const scrollDiv = document.querySelector('.scroll-percent');
-    const fillDiv = scrollDiv.querySelector('.scroll-fill');
-    const bookmarkEl = createBookmarkElement(scrollTop, text, id);
-    scrollDiv.insertBefore(bookmarkEl, fillDiv.nextSibling);
-  });
-}
-
-// 删除书签
-function removeBookmark(id, element) {
-  const pageKey = getPageKey();
-
-  chrome.storage.local.get({ bookmarks: {} }, (result) => {
-    const bookmarks = result.bookmarks;
-    if (bookmarks[pageKey]) {
-      bookmarks[pageKey] = bookmarks[pageKey].filter(b => b.id !== id);
-      chrome.storage.local.set({ bookmarks });
-    }
-    element.remove();
-  });
-}
-
-// 加载书签
-export function loadBookmarks() {
-  const pageKey = getPageKey();
-  chrome.storage.local.get({ bookmarks: {} }, (result) => {
-    const bookmarks = result.bookmarks[pageKey] || [];
-    const scrollDiv = document.querySelector('.scroll-percent');
-    const fillDiv = scrollDiv.querySelector('.scroll-fill');
-
-    bookmarks.forEach(b => {
-      const bookmarkEl = createBookmarkElement(b.scrollTop, b.text, b.id);
-      scrollDiv.insertBefore(bookmarkEl, fillDiv.nextSibling);
-    });
-  });
-}
-
-// 添加书签按钮点击事件
-function createBookmark() {
-  const val = inputDiv.value.trim();
-  if (!val) return;
-  const scrollTop = window.scrollY;
-  saveBookmark(scrollTop, val);
-  inputDiv.value = '';
-}
-
-export function activateBookmark() {
-  addDiv = document.createElement('div');
-  addDiv.className = 'add-bookmark';
-
-  inputDiv = document.createElement('input');
-  inputDiv.type = 'text';
-  inputDiv.placeholder = '添加书签备注';
-  inputDiv.className = 'bookmark-input';
-  addDiv.appendChild(inputDiv);
-
-  btnDiv = document.createElement('button');
-  btnDiv.className = 'bookmark-button';
-  btnDiv.textContent = '添加书签';
-  btnDiv.addEventListener('click', createBookmark);
-  addDiv.appendChild(btnDiv);
-
-  cardDiv = document.getElementsByClassName('card-content')[0];
-  if (cardDiv) cardDiv.appendChild(addDiv);
-
-  loadBookmarks(); // 页面加载时恢复书签
-}
-
-```
-
-
-
-
-
-```
-  const scrollTop   = window.scrollY;
-  const docHeight   = document.documentElement.scrollHeight;
-  const winHeight   = window.innerHeight;
-  const progressPct = (scrollTop / (docHeight - winHeight)) * 100;
-  const percent = Math.round(progressPct);
-```

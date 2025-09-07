@@ -5,7 +5,8 @@
   "description": "网课辅助教学浏览器插件",
   "permissions": ["storage", "activeTab","tabs"],
   "background": {
-    "service_worker": "src/background.js"
+    "service_worker": "src/background.js",
+    "type": "module"
   },
   "content_scripts": [
     {

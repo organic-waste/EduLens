@@ -142,4 +142,11 @@ export function activateBookmark() {
   cardDiv = document.getElementsByClassName('functions')[0];
   cardDiv.appendChild(addDiv);
 
+  chrome.runtime.onMessage.addListener((message)=>{
+    if(message.type==='LOAD_BOOKMARK'){
+      loadBookmarks();
+      console.log('load bookmarks');
+    }
+  })
+
 }
