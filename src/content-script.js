@@ -1,6 +1,7 @@
 
 import store from './store.js';
 import {activateDraggablePanel} from './features/draggablePanel.js'
+import { activateCountdown } from './features/countdownTimer.js';
 
 
 //统一的键盘管理
@@ -21,7 +22,8 @@ window.addEventListener('keydown', (e) => {
 });
 
 
-activateDraggablePanel()
+activateDraggablePanel();
+activateCountdown();
 
 
 

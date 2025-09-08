@@ -287,3 +287,97 @@
 .bookmark-delete:hover {
     background: rgb(212, 67, 67);
 }
+
+/* 倒计时组件样式 */
+.countdown-container {
+  width: 100%;
+  margin-bottom: 1vh;
+}
+
+.countdown-input-area {
+  display: flex;
+  align-items: center;
+  gap: 1vh;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.countdown-input {
+  flex: 1;
+  min-width: 0;
+  padding: 1vh;
+  border: 1px solid var(--secondary-color);
+  border-radius: 4px;
+  font-size: 1.6vh;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.countdown-input:focus {
+  border-color: var(--emphasis-color);
+  box-shadow: 0 0 0 2px rgba(84, 132, 201, 0.2);
+}
+
+.countdown-button {
+  padding: 0.6vh 1.1vh;
+  background: var(--main-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1.6vh;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.countdown-button:hover {
+  background: var(--emphasis-color);
+}
+
+.countdown-display-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1vh;
+}
+
+.countdown-display {
+  flex: 1;
+  font-size: 1.6vh;
+  color: var(--main-color);
+  font-weight: bold;
+  text-align: center;
+  padding: 1vh;
+  background: rgba(118, 133, 154, 0.1);
+  border-radius: 4px;
+  min-height: 2.8vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.countdown-cancel {
+  background: var(--error-color);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 2.5vh;
+  height: 2.5vh;
+  font-size: 1.8vh;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.countdown-cancel:hover {
+  background: rgb(212, 67, 67);
+}
+
+.countdown-display {
+  transition: all 0.3s ease;
+}
