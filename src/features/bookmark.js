@@ -79,16 +79,37 @@ function createBookmarkEle(scrollTop,text,id){
   tooltip.appendChild(deleteBtn);
   bookmarkDiv.appendChild(tooltip);
 
+  let closePanel=null;
+
+  function switchPanel(method){
+    if(!method){
+      closePanel=setTimeout(()=>{
+        tooltip.style.opacity="0";
+        tooltip.style.pointerEvents='none';
+      },500)
+    }else{
+      if(closePanel){
+        clearTimeout(closePanel);
+      }
+    }
+  }
+
   bookmarkDiv.addEventListener('mouseenter',()=>{
     tooltip.style.opacity='1';
     tooltip.style.pointerEvents='all';
+    switchPanel(true);
   })
 
   bookmarkDiv.addEventListener('mouseleave',()=>{
-    setTimeout(()=>{
-      tooltip.style.opacity="0";
-      tooltip.style.pointerEvents='none';
-    },800)
+    switchPanel(false);
+  })
+
+  tooltip.addEventListener('mouseover',()=>{
+    switchPanel(true);
+  })
+  
+  tooltip.addEventListener('mouseleave',()=>{
+    switchPanel(false);
   })
 
   bookmarkDiv.addEventListener('click',()=>{
