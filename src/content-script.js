@@ -1,6 +1,5 @@
 
 import store from './store.js';
-import {activateScrollProgress} from './features/scrollProgress.js'
 import {activateDraggablePanel} from './features/draggablePanel.js'
 
 
@@ -22,4 +21,7 @@ window.addEventListener('keydown', (e) => {
 
 
 activateDraggablePanel()
+
+
+
 

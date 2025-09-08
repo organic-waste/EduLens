@@ -297,7 +297,19 @@ function throttleMessage(type, data, delay = 100) {
 
 
 
+#### `chrome.tabs`和`chrome.runtime`对比
 
+------
+
+**定义：**
+
+- `chrome.tabs.sendMessage` 是“定向投递”，只往**某个具体标签页里的 content-script**发消息；第一个参数 `activeInfo.tabId` 就是“收件人地址”——告诉浏览器“把这封信投进哪个标签页”。  
+- `chrome.runtime.sendMessage` 是“广播”，只能发到**扩展自身上下文**（background/popup/devtools 等），**到不了页面**。  
+
+**示例：**
+
+- background ↔ popup：用 `runtime`  
+- background ↔ 某个页面：用 `tabs`（必须带 tabId）
 
 
 
@@ -458,6 +470,83 @@ let bookmarks = result.bookmarks;
 ```
 
 
+
+#### 无法监测到SPA页面的路由跳转
+
+------
+
+**原因：**SPA 换页 = 浏览器地址栏变 → 不重新加载文档 → 不走网络 → `chrome.tabs.onActivated`，`chrome.tabs.onUpdated`，`chrome.webNavigation.onCommitted`等方法都不能监测到路由改变。
+
+页面里实际发生的是：`history.pushState/replaceState` 或 `location.hash = 'xxx'`
+
+**解决：**
+
+**方法一：重写History API（最可靠）**
+
+```js
+// 监听SPA的pushState和replaceState
+function monitorSPANavigation() {
+  // 保存原始方法
+  const originalPushState = history.pushState;
+  const originalReplaceState = history.replaceState;
+
+  // 重写pushState
+  history.pushState = function (...args) {
+    originalPushState.apply(this, args);
+    handleRouteChange('pushState');
+  };
+
+  // 重写replaceState
+  history.replaceState = function (...args) {
+    originalReplaceState.apply(this, args);
+    handleRouteChange('replaceState');
+  };
+
+  // 监听popstate事件（浏览器前进后退）
+  window.addEventListener('popstate', () => {
+    handleRouteChange('popstate');
+  });
+
+  // 监听hashchange（如果SPA使用hash路由）
+  window.addEventListener('hashchange', () => {
+    handleRouteChange('hashchange');
+  });
+}
+
+function handleRouteChange(source) {
+  console.log('路由改变 detected from:', source);
+  console.log('新URL:', window.location.href);
+  
+  // 在这里调用你的书签加载逻辑
+  loadBookmarks();
+}
+```
+
+------
+
+**方法二：MutationObserver监听DOM变化**
+
+```js
+function monitorDOMForSPA() {
+  let lastURL = window.location.href;
+  
+  const observer = new MutationObserver((mutations) => {
+    const currentURL = window.location.href;
+    
+    if (currentURL !== lastURL) {
+      lastURL = currentURL;
+      console.log('URL变化:', currentURL);
+      loadBookmarks();
+    }
+  });
+
+  // 监听整个document的变化
+  observer.observe(document, {
+    subtree: true,
+    childList: true,
+  });
+}
+```
 
 
 

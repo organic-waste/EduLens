@@ -1,9 +1,44 @@
+
 //创建定位书签
+
+// 监听 SPA 路由变化
+(function initSPAMonitoring() {
+
+  let lastURL = window.location.href;
+
+  const observer = new MutationObserver((mutations) => {
+    const currentURL = window.location.href;
+    
+    if (currentURL !== lastURL) {
+      lastURL = currentURL;
+      console.log('URL变化:', currentURL);
+      loadBookmarks();
+    }
+  });
+
+  // 监听整个document的变化
+  observer.observe(document, {
+    subtree: true,
+    childList: true,
+  });
+
+  window.addEventListener('popstate', () => {
+    console.log('popstate');
+    setTimeout(loadBookmarks, 0);
+  });
+
+  window.addEventListener('hashchange', () => {
+    console.log('hashchange');
+    setTimeout(loadBookmarks, 0);
+  });
+})();
+
 
 let addDiv = null;
 let btnDiv = null;
 let cardDiv = null;
-let inputDiv = null;         
+let inputDiv = null; 
+let oldPageKey=null;        
 
 // 生成唯一id标识符
 function getId(){
@@ -106,12 +141,13 @@ async function removeBookmark(el){
 
 export async function loadBookmarks(){
   const pageKey=getPageKey();
+  if(pageKey===oldPageKey) return;
   let bookmarks= await getBookmark();
   if(bookmarks[pageKey]){
     bookmarks[pageKey].forEach(item=>createBookmarkEle(item.scrollTop,item.text,item.id));
+    oldPageKey=pageKey;
   }
 }
-
 
 function createBookmark() {
   const val = inputDiv.value.trim(); 
@@ -122,6 +158,8 @@ function createBookmark() {
   const scrollTop=window.scrollY;
   saveBookmark(scrollTop,val,id);
 }
+
+
 
 
 export function activateBookmark() {
@@ -142,10 +180,12 @@ export function activateBookmark() {
   cardDiv = document.getElementsByClassName('functions')[0];
   cardDiv.appendChild(addDiv);
 
+  loadBookmarks();
+
   chrome.runtime.onMessage.addListener((message)=>{
     if(message.type==='LOAD_BOOKMARK'){
       loadBookmarks();
-      console.log('load bookmarks');
+      console.log('load bookmarks from service_worker');
     }
   })
 
