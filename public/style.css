@@ -20,6 +20,7 @@
 		will-change: transform;
 }
 
+/* 圆形聚光灯 */
 .spotlight {
 		position: fixed;
 		width: 120px;
@@ -30,6 +31,24 @@
 		z-index: 9999;
 		transition: box-shadow 0.2s;
 		will-change: transform;
+    transition: transform 0.05s ease;
+}
+
+/* 阅读聚光灯 */
+.reading-spotlight {
+  position: fixed;
+  width: 100vw;
+  height: 6vh;
+  background: transparent;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  transition: transform 0.05s ease;
+  display: none;
+  border-radius: 0;
 }
 
 /* 可拉动面板 */

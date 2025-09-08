@@ -11,7 +11,7 @@
     
     if (currentURL !== lastURL) {
       lastURL = currentURL;
-      console.log('URL变化:', currentURL);
+      // console.log('URL变化:', currentURL);
       loadBookmarks();
     }
   });
@@ -23,12 +23,12 @@
   });
 
   window.addEventListener('popstate', () => {
-    console.log('popstate');
+    // console.log('popstate');
     setTimeout(loadBookmarks, 0);
   });
 
   window.addEventListener('hashchange', () => {
-    console.log('hashchange');
+    // console.log('hashchange');
     setTimeout(loadBookmarks, 0);
   });
 })();
@@ -206,7 +206,7 @@ export function activateBookmark() {
   chrome.runtime.onMessage.addListener((message)=>{
     if(message.type==='LOAD_BOOKMARK'){
       loadBookmarks();
-      console.log('load bookmarks from service_worker');
+      // console.log('load bookmarks from service_worker');
     }
   })
 

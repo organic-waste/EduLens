@@ -2,31 +2,35 @@
 
 import { activateHighlight, deactivateHighlight } from './features/mouseHighlight.js';
 import { activateSpotlight, deactivateSpotlight } from './features/spotlight.js';
+import { activateReadingSpotlight, deactivateReadingSpotlight } from './features/readingSpotlight.js';
 
 function changeFunction(name){
-
-    if(name=='mouseHighlight'){
-        activateHighlight()
-        deactivateSpotlight()
-    }else if(name=='spotlight'){
-        activateSpotlight()
-        deactivateHighlight()
-    }else{
-        deactivateHighlight()
-        deactivateSpotlight()
+    if(name === 'mouseHighlight'){
+        activateHighlight();
+        deactivateSpotlight();
+        deactivateReadingSpotlight();
+    } else if(name === 'spotlight'){
+        activateSpotlight();
+        deactivateHighlight();
+        deactivateReadingSpotlight();
+    } else if(name === 'readingSpotlight') {
+        activateReadingSpotlight();
+        deactivateHighlight();
+        deactivateSpotlight();
+    } else {
+        deactivateHighlight();
+        deactivateSpotlight();
+        deactivateReadingSpotlight();
     }
-        
-    
 }
 
-
-
 const store = {
-  active: null, // 'mouseHighlight' | 'spotlight' | null
+  active: null, // 'mouseHighlight' | 'spotlight' | 'readingSpotlight' | null
   setActive(name) {
     this.active = name;
-    changeFunction(name)
-    console.log("目前启用的功能是",name)
+    changeFunction(name);
+    console.log("目前启用的功能是", name);
   },
 };
+
 export default store;

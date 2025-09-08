@@ -15,8 +15,9 @@ function keydown(e,key,name){
 }
 
 window.addEventListener('keydown', (e) => {
-	keydown(e,'h','mouseHighlight')
-	keydown(e,'s','spotlight')
+	keydown(e,'h','mouseHighlight');
+	keydown(e,'s','spotlight');
+	keydown(e, 'r', 'readingSpotlight');
 });
 
 
