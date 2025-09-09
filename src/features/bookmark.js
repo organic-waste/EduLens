@@ -1,5 +1,11 @@
-
 //创建定位书签
+
+
+let addDiv = null;
+let btnDiv = null;
+let cardDiv = null;
+let inputDiv = null; 
+let oldPageKey=null;        
 
 // 监听 SPA 路由变化
 (function initSPAMonitoring() {
@@ -34,12 +40,6 @@
 })();
 
 
-let addDiv = null;
-let btnDiv = null;
-let cardDiv = null;
-let inputDiv = null; 
-let oldPageKey=null;        
-
 // 生成唯一id标识符
 function getId(){
   let date=Date.now().toString(36);
@@ -69,8 +69,8 @@ function createBookmarkEle(scrollTop,text,id){
   tooltip.style.top=percent-2+'%';
 
   const deleteBtn=document.createElement('button');
-  deleteBtn.className='bookmark-delete';
-  deleteBtn.textContent='删除';
+  deleteBtn.className='delete-button';
+  deleteBtn.textContent='×';
   deleteBtn.addEventListener('click',(e)=>{
     e.stopPropagation(); //防止冒泡被面板上的其他事件捕获
     removeBookmark(bookmarkDiv);
@@ -185,15 +185,15 @@ function createBookmark() {
 
 export function activateBookmark() {
   addDiv = document.createElement('div');
-  addDiv.className = 'add-bookmark';
+  addDiv.className = 'function';
 
   inputDiv = document.createElement('input'); 
   inputDiv.type = 'text';
-  inputDiv.className = 'bookmark-input';
+  inputDiv.className = 'input';
   addDiv.appendChild(inputDiv);
 
   btnDiv = document.createElement('button');
-  btnDiv.className = 'bookmark-button';
+  btnDiv.className = 'button';
   btnDiv.textContent = '添加书签';
   btnDiv.addEventListener('click', createBookmark); 
   addDiv.appendChild(btnDiv)

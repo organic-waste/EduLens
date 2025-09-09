@@ -4,34 +4,94 @@
   --secondary-color:#c1cbce;
   --emphasis-color:#5484c9;
   --error-color:#b26464;
+  --emphasis-error-color:#d44343;
+}
 
+/* 通用样式 */
+.delete-button {
+  margin-left: 8px;
+  padding: 2px 6px;
+  background: var(--error-color);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.delete-button:hover {
+  background: var(--emphasis-error-color);
+}
+
+.input{
+  flex: 1;
+  min-width: 0; 
+  padding:1vh;
+  border: 1px solid var(--secondary-color);
+  border-radius: 4px;
+  font-size: 1.6vh;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.input:focus{
+  border-color: var(--emphasis-color);
+  box-shadow: 0 0 0 2px rgba(84, 132, 201, 0.2);
+}
+
+.button {
+  padding: 0.6vh 1.1vh;
+  background: var(--main-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 2vh;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.button:hover {
+  background: var(--emphasis-color);
+}
+
+.function{
+  display: flex;
+  align-items: center;
+  gap: 1vh;
+  width: 29vh;
+  justify-content: space-between;
+  /* padding:0.5vh 1vh; */
+  height: 5vh;
 }
 
 
+
+
 .mouse-highlight {
-		position: fixed;
-		width: 40px;
-		height: 40px;
-		border-radius: 50%;
-		background: rgba(255,255,0,0.5);
-		pointer-events: none;
-		z-index: 9999;
-		box-shadow: 0 0 8px 4px rgba(255,255,0,0.7);
-		will-change: transform;
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,0,0.5);
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 0 8px 4px rgba(255,255,0,0.7);
+  will-change: transform;
 }
 
 /* 圆形聚光灯 */
 .spotlight {
-		position: fixed;
-		width: 120px;
-		height: 120px;
-		border-radius: 50%;
-		box-shadow: 0 0 0 9999px rgba(0,0,0,0.7);
-		pointer-events: none;
-		z-index: 9999;
-		transition: box-shadow 0.2s;
-		will-change: transform;
-    transition: transform 0.05s ease;
+  position: fixed;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.7);
+  pointer-events: none;
+  z-index: 9999;
+  transition: box-shadow 0.2s;
+  will-change: transform;
+  transition: transform 0.05s ease;
 }
 
 /* 阅读聚光灯 */
@@ -214,55 +274,11 @@
   z-index: 10002;
 }
 
-
 .bookmark-delete {
   margin-left: 6px;
   color:var(--error-color);
   font-weight: bold;
   cursor: pointer;
-}
-
-.add-bookmark {
-    display: flex;
-    align-items: center;
-    gap: 1vh;
-    width: 29vh;
-    justify-content: space-between;
-    padding: 1vh;
-    background: #f5f5f5;
-    border-radius: 4px;
-}
-
-.bookmark-input {
-    flex: 1;
-    min-width: 0; 
-    padding:1vh;
-    border: 1px solid var(--secondary-color);
-    border-radius: 4px;
-    font-size: 1.6vh;
-    outline: none;
-    transition: border-color 0.2s ease;
-}
-
-.bookmark-input:focus {
-    border-color: var(--emphasis-color);
-    box-shadow: 0 0 0 2px rgba(84, 132, 201, 0.2);
-}
-
-.bookmark-button {
-    padding: 0.6vh 1.1vh;
-    background: var(--main-color);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 2vh;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    white-space: nowrap;
-}
-
-.bookmark-button:hover {
-    background: var(--emphasis-color);
 }
 
 .bookmark-tooltip {
@@ -272,112 +288,27 @@
     max-width: none;
 }
 
-.bookmark-delete {
-    margin-left: 8px;
-    padding: 2px 6px;
-    background:var(--error-color);
-    color: white;
-    border: none;
-    border-radius: 3px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.bookmark-delete:hover {
-    background: rgb(212, 67, 67);
-}
-
 /* 倒计时组件样式 */
 .countdown-container {
   width: 100%;
   margin-bottom: 1vh;
 }
 
-.countdown-input-area {
-  display: flex;
-  align-items: center;
-  gap: 1vh;
-  width: 100%;
-  justify-content: space-between;
-}
-
-.countdown-input {
-  flex: 1;
-  min-width: 0;
-  padding: 1vh;
-  border: 1px solid var(--secondary-color);
-  border-radius: 4px;
-  font-size: 1.6vh;
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-
-.countdown-input:focus {
-  border-color: var(--emphasis-color);
-  box-shadow: 0 0 0 2px rgba(84, 132, 201, 0.2);
-}
-
-.countdown-button {
-  padding: 0.6vh 1.1vh;
-  background: var(--main-color);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 1.6vh;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  white-space: nowrap;
-}
-
-.countdown-button:hover {
-  background: var(--emphasis-color);
-}
-
-.countdown-display-area {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 1vh;
+.countdown-display-area{
+  gap:0;
 }
 
 .countdown-display {
   flex: 1;
-  font-size: 1.6vh;
+  font-size: 2vh;
+  height: 100%;
   color: var(--main-color);
   font-weight: bold;
   text-align: center;
-  padding: 1vh;
-  background: rgba(118, 133, 154, 0.1);
   border-radius: 4px;
-  min-height: 2.8vh;
+  background-color:#fdfdfd;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.countdown-cancel {
-  background: var(--error-color);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 2.5vh;
-  height: 2.5vh;
-  font-size: 1.8vh;
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease;
-  flex-shrink: 0;
-}
-
-.countdown-cancel:hover {
-  background: rgb(212, 67, 67);
-}
-
-.countdown-display {
   transition: all 0.3s ease;
 }

@@ -11,12 +11,11 @@ function createCountdown() {
   if (!countdownInput.value.trim()) return;
   
   const minutes = parseFloat(countdownInput.value);
-  if (isNaN(minutes) || minutes <= 0) return;
+  if (isNaN(minutes) || minutes <= 0) return; //排除错误的输入
   
   // 转换为毫秒
   remainingTime = minutes * 60 * 1000;
   
-  // 隐藏输入区域，显示倒计时区域
   const inputArea = countdownContainer.querySelector('.countdown-input-area');
   const displayArea = countdownContainer.querySelector('.countdown-display-area');
   
@@ -86,34 +85,32 @@ export function activateCountdown() {
   countdownContainer = document.createElement('div');
   countdownContainer.className = 'countdown-container';
   
-  // 输入区域
   const inputArea = document.createElement('div');
-  inputArea.className = 'countdown-input-area';
+  inputArea.className = 'function countdown-input-area';
   
   countdownInput = document.createElement('input');
   countdownInput.type = 'text';
-  countdownInput.className = 'countdown-input';
-  countdownInput.placeholder = '输入分钟数（如1.5）';
+  countdownInput.className = 'input';
+  countdownInput.placeholder = '输入分钟数';
   
   countdownButton = document.createElement('button');
-  countdownButton.className = 'countdown-button';
+  countdownButton.className = 'button';
   countdownButton.textContent = '开始倒计时';
   countdownButton.addEventListener('click', createCountdown);
   
   inputArea.appendChild(countdownInput);
   inputArea.appendChild(countdownButton);
   
-  // 倒计时显示区域
   const displayArea = document.createElement('div');
-  displayArea.className = 'countdown-display-area';
-  displayArea.style.display = 'none'; // 初始隐藏
+  displayArea.className = 'function countdown-display-area';
+  displayArea.style.display = 'none'; 
   
   countdownDisplay = document.createElement('div');
   countdownDisplay.className = 'countdown-display';
   
   countdownCancel = document.createElement('button');
-  countdownCancel.className = 'countdown-cancel';
-  countdownCancel.innerHTML = '×';
+  countdownCancel.className = 'delete-button';
+  countdownCancel.textContent = '×';
   countdownCancel.addEventListener('click', cancelCountdown);
   
   displayArea.appendChild(countdownDisplay);
@@ -121,17 +118,16 @@ export function activateCountdown() {
   
   countdownContainer.appendChild(inputArea);
   countdownContainer.appendChild(displayArea);
-  
-  // 添加到功能区域
+
   const functionsDiv = document.querySelector('.functions');
   if (functionsDiv) {
     functionsDiv.appendChild(countdownContainer);
   }
   
-  // 输入验证
+  // 正则输入验证
   countdownInput.addEventListener('input', (e) => {
     const value = e.target.value;
-    if (!/^[0-9]*([.][0-9]?)?$/.test(value)) {
+    if (!/^[0-9]*([.][0-9]{0,1})?$/.test(value)) {
       e.target.value = value.slice(0, -1);
     }
   });
