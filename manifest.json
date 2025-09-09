@@ -12,7 +12,14 @@
     {
       "matches": ["<all_urls>"],
       "js": ["src/content-script.js"],
-      "css": ["style.css"]  
+      "css": [
+        "styles/draggable-panel.css",
+        "styles/base.css",
+        "styles/scroll-progress.css",
+        "styles/bookmark.css",
+        "styles/countdown.css",
+        "styles/mouse-enhance.css"
+      ]  
     }
   ],
   "action": {

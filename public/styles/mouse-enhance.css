@@ -1,0 +1,45 @@
+
+/* 鼠标强调 */
+.mouse-highlight {
+    position: fixed;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,0,0.5);
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 0 8px 4px rgba(255,255,0,0.7);
+    will-change: transform;
+}
+
+/* 圆形聚光灯 */
+.spotlight {
+    position: fixed;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.7);
+    pointer-events: none;
+    z-index: 9999;
+    transition: box-shadow 0.2s;
+    will-change: transform;
+    transition: transform 0.05s ease;
+}
+
+/* 阅读聚光灯 */
+.reading-spotlight {
+    position: fixed;
+    width: 100vw;
+    height: 6vh;
+    background: transparent;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+    z-index: 9999;
+    top: 0;
+    left: 0;
+    will-change: transform;
+    transition: transform 0.05s ease;
+    display: none;
+    border-radius: 0;
+}
+

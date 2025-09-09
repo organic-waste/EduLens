@@ -128,6 +128,7 @@ export function activateCountdown() {
   countdownInput.addEventListener('input', (e) => {
     const value = e.target.value;
     if (!/^[0-9]*([.][0-9]{0,1})?$/.test(value)) {
+      console.log("正则不匹配");
       e.target.value = value.slice(0, -1);
     }
   });

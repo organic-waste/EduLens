@@ -1,0 +1,66 @@
+/* 颜色变量 */
+:root{
+    --main-color:#76859a;
+    --secondary-color:#c1cbce;
+    --emphasis-color:#5484c9;
+    --error-color:#b26464;
+    --emphasis-error-color:#d44343;
+}
+
+/* 通用样式 */
+.delete-button {
+    margin-left: 6px;
+    padding: 2px 6px;
+    background: var(--error-color);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    font-size: 2.4vh;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.delete-button:hover {
+    background: var(--emphasis-error-color);
+}
+
+.input{
+    flex: 1;
+    min-width: 0; 
+    padding:1vh;
+    border: 1px solid var(--secondary-color);
+    border-radius: 4px;
+    font-size: 1.6vh;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+.input:focus{
+    border-color: var(--emphasis-color);
+    box-shadow: 0 0 0 2px rgba(84, 132, 201, 0.2);
+}
+
+.button {
+    padding: 0.6vh 1.1vh;
+    background: var(--main-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 2vh;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    white-space: nowrap;
+}
+
+.button:hover {
+    background: var(--emphasis-color);
+}
+
+.function{
+    display: flex;
+    align-items: center;
+    gap: 1vh;
+    padding: 0 0.5vh;
+    width: 29vh;
+    justify-content: space-evenly;
+    height: 5vh;
+}
