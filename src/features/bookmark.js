@@ -1,6 +1,7 @@
 //创建定位书签
 import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
 
+
 let addDiv = null;
 let btnDiv = null;
 let cardDiv = null;

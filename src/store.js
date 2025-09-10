@@ -25,12 +25,16 @@ function changeFunction(name){
 }
 
 const store = {
+  //关于鼠标增强相关功能
   active: null, // 'mouseHighlight' | 'spotlight' | 'readingSpotlight' | null
   setActive(name) {
     this.active = name;
     changeFunction(name);
     console.log("目前启用的功能是", name);
   },
+  //关于面板相关功能
+  isDraging:false,
+
 };
 
 export default store;

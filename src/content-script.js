@@ -1,8 +1,8 @@
-
+import loadIcon from './utils/loadIcon.js';
 import store from './store.js';
 import {activateDraggablePanel} from './features/draggablePanel.js'
 
-
+loadIcon();
 
 //统一的键盘管理
 function keydown(e,key,name){

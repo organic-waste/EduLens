@@ -390,7 +390,7 @@ git config --global https.proxy http://127.0.0.1:7890
 ------
 
 **问题：**
-Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdoadlkpbpfcnfgkanf/content-scripts/main.js
+`Failed to fetch dynamically imported module: chrome-extension://apkjdjeifklnkjdoadlkpbpfcnfgkanf/content-scripts/main.js`
 
 
 **原因：**
@@ -546,6 +546,88 @@ function monitorDOMForSPA() {
     childList: true,
   });
 }
+```
+
+
+
+#### `chrome.storage.session` 权限不够
+
+------
+
+**问题：**`278 Error: Access to storage is not allowed from this context.`
+
+**原因：**`chrome.storage.session` 的可用上下文：
+
+- Service Worker（后台脚本）
+- 扩展的弹出窗口（popup）
+- 扩展的选项页（options page）
+
+不包含内容脚本（content script）
+
+**解决：**通过 Background 中转或者改为`chrome.storage.local` 。
+
+
+
+#### Font Awesome 图标加载失败
+
+> content-script 的 JS 运行在 **隔离上下文**，  
+> 它**不会自动继承页面已经加载的 Font Awesome CSS**，  
+> 所以你**必须自己把 Font Awesome 的 CSS 注入到页面 DOM**，否则图标显示成方框或空白。
+
+---
+
+**最小改动方案（动态注入 CDN）**
+
+把下面这段代码 **插到你的 content-script 顶部**（只执行一次即可）：
+
+```js
+// 1. 注入 Font Awesome 6 免费 CSS
+if (!document.querySelector('#fa-content-script')) {
+  const fa = document.createElement('link');
+  fa.id = 'fa-content-script'; //加 `id` 是为了避免重复注入
+  fa.rel = 'stylesheet';
+  fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
+  (document.head || document.documentElement).appendChild(fa);
+}
+```
+
+---
+
+**本地扩展包方案（无 CDN，离线可用）**
+
+可以把 `all.min.css` 下载到扩展本地，用 `chrome.runtime.getURL` 引入
+
+1. 把 [font-awesome zip](https://fontawesome.com/download) 解压后  
+   放进扩展目录，比如  
+   
+   ```
+   extension/
+     ├─ assets/
+     │   └─ fontawesome/
+     │       ├─ css/all.min.css
+     │       └─ webfonts/*
+     ├─ manifest.json
+     └─ src/...
+   ```
+   
+2. 在 `manifest.json` 里声明 **Web 可访问资源**：
+
+```json
+"web_accessible_resources": [
+  {
+    "resources": ["assets/fontawesome/css/all.min.css"],
+    "matches": ["<all_urls>"]
+  }
+]
+```
+
+3. 在 content-script 里注入：
+
+```js
+const link = document.createElement('link');
+link.rel = 'stylesheet';
+link.href = chrome.runtime.getURL('assets/fontawesome/css/all.min.css');
+(document.head || document.documentElement).appendChild(link);
 ```
 
 
@@ -1070,6 +1152,53 @@ const res = await chrome.storage.local.get(['user', 'visits']);
 
 
 
+### `ResizeObserver` 监听元素
+
+`ResizeObserver` 是一个浏览器原生提供的 JavaScript API，用于**异步监听一个或多个 DOM 元素的尺寸变化**（包括内容区域、边框、滚动条等）。它比 `window.resize` 更精细，只监听元素本身的变化，不依赖窗口大小变化。
+
+---
+
+**使用场景**
+
+- 监听某个 `div` 的宽高变化，动态调整子元素布局
+- 图表（如 ECharts、Canvas）随容器尺寸变化自动重绘
+- 响应式组件内部逻辑（比 CSS 媒体查询更细粒度）
+- 替代旧的 `window.resize + reflow` 方案，性能更好
+
+---
+
+**基本用法**
+
+```js
+// 1. 创建观察者
+const resizeObserver = new ResizeObserver(entries => {
+  for (let entry of entries) {
+    const { width, height } = entry.contentRect;
+    console.log(`元素尺寸变化：${width} x ${height}`);
+  }
+});
+
+// 2. 监听目标元素
+const box = document.querySelector('#my-box');
+resizeObserver.observe(box);
+
+// 3. 停止监听
+// resizeObserver.unobserve(box);
+// resizeObserver.disconnect();
+```
+
+---
+
+**参数详解**
+
+| 属性                              | 说明                                                         |
+| --------------------------------- | ------------------------------------------------------------ |
+| `entry.contentRect`               | 返回一个 `DOMRectReadOnly`，包含 `x/y/width/height/top/right/bottom/left` |
+| `entry.target`                    | 被监听的 DOM 元素                                            |
+| `entry.borderBoxSize`             | 包含 `inlineSize` 和 `blockSize`（CSS 逻辑像素）             |
+| `entry.contentBoxSize`            | 内容区域尺寸                                                 |
+| `entry.devicePixelContentBoxSize` | 物理像素级尺寸（用于 Canvas 高清绘制）                       |
+
 
 
 
@@ -1270,15 +1399,170 @@ element.addEventListener('click', handleClick());
 
 
 
+## Canvas相关
+
+### `ctx` 属性配置
+
+---
+
+ **1. 样式相关（颜色与描边）**
+
+| 属性名        | 说明                                              |
+| ------------- | ------------------------------------------------- |
+| `fillStyle`   | 设置填充颜色/渐变/图案                            |
+| `strokeStyle` | 设置描边颜色/渐变/图案                            |
+| `lineWidth`   | 线条宽度（默认 1）                                |
+| `lineCap`     | 线条端点样式：`butt`（默认）、`round`、`square`   |
+| `lineJoin`    | 线条连接处样式：`miter`（默认）、`round`、`bevel` |
+| `miterLimit`  | 斜接面限制比例（默认 10）                         |
+
+---
+
+ **2. 阴影属性**
+
+| 属性名          | 说明                   |
+| --------------- | ---------------------- |
+| `shadowColor`   | 阴影颜色（默认透明黑） |
+| `shadowBlur`    | 模糊级别（默认 0）     |
+| `shadowOffsetX` | 水平偏移（默认 0）     |
+| `shadowOffsetY` | 垂直偏移（默认 0）     |
+
+---
+
+ **3. 字体与文本对齐**
+
+| 属性名         | 说明                                                         |
+| -------------- | ------------------------------------------------------------ |
+| `font`         | 字体样式（如 `"16px Arial"`）                                |
+| `textAlign`    | 水平对齐：`start`（默认）、`end`、`left`、`center`、`right`  |
+| `textBaseline` | 垂直对齐：`alphabetic`（默认）、`top`、`middle`、`bottom`、`hanging`、`ideographic` |
+| `direction`    | 文本方向：`"ltr"`、`"rtl"`、`"inherit"`（默认）              |
+
+---
+
+ **4. 合成与裁剪**
+
+| 属性名                     | 说明                                                         |
+| -------------------------- | ------------------------------------------------------------ |
+| `globalCompositeOperation` | 合成操作（如 `"source-over"`、`"multiply"`、`"destination-out"` 等） |
+| `globalAlpha`              | 全局透明度（0 到 1，默认 1）                                 |
+
+---
+
+ **5. 图像平滑**
+
+| 属性名                  | 说明                                                      |
+| ----------------------- | --------------------------------------------------------- |
+| `imageSmoothingEnabled` | 是否开启图像平滑（默认 `true`）                           |
+| `imageSmoothingQuality` | 平滑质量：`"low"`、`"medium"`、`"high"`（部分浏览器支持） |
+
+---
+
+ **6. 虚线样式**
+
+| 属性名                  | 说明                         |
+| ----------------------- | ---------------------------- |
+| `setLineDash(segments)` | 设置虚线样式（如 `[5, 10]`） |
+| `lineDashOffset`        | 虚线偏移量（默认 0）         |
+
+---
+
+ **7. 变换矩阵（状态类）**
+
+虽然这些不是“样式”属性，但它们是可配置的状态：
+| 属性/方法                        | 说明                            |
+| -------------------------------- | ------------------------------- |
+| `currentTransform`               | 获取当前变换矩阵（`DOMMatrix`） |
+| `setTransform(a, b, c, d, e, f)` | 设置变换矩阵                    |
+| `transform(...)`                 | 叠加变换                        |
+
+
+
+### `.getImageData()` 和 `.putImageData()`
+
+------
+
+**getImageData** 把画布上的像素“读”出来；  
+**putImageData** 把像素数据“写”回去（或写到另一块区域）。
+
+---
+
+1. **getImageData(x, y, width, height)**
+
+返回一个 `ImageData` 对象，里面装着指定矩形区域内 每一个像素的 RGBA 值（0-255 的整数）。  
+```javascript
+const imgData = ctx.getImageData(50, 50, 200, 100); // 读取 200×100 区域
+console.log(imgData.data); // Uint8ClampedArray，长度 = 200×100×4（RGBA）
+```
+- **用途**：灰度化、反色、滤镜、验证码识别、像素动画、马赛克等。
+- **注意**：受 **跨域** 限制；如果画布曾绘制过跨域图片，浏览器会抛 `SecurityError`。
+
+---
+
+**2. putImageData(imagedata, dx, dy [, dirtyX, dirtyY, dirtyWidth, dirtyHeight ])**
+
+把一份 `ImageData` 对象（通常来自 `getImageData` 或你自己 `new ImageData()`）重新绘制到画布上。  
+```javascript
+// 把刚才读出来的数据原样贴回去
+ctx.putImageData(imgData, 50, 50);
+// 只贴“脏矩形”——局部更新，性能更好
+ctx.putImageData(imgData, 0, 0, 10, 10, 50, 50);
+```
+- **用途**：像素级动画、撤销/恢复、画笔橡皮擦、游戏地图局部刷新。
+- **注意**：不会受 `globalAlpha`、`transform`、`clip`、`shadow` 等影响，直写像素。
+
+
+
+### `globalCompositeOperation` 定义像素混合规则
+
+------
+
+`globalCompositeOperation` 是 **Canvas 2D 上下文**的一个属性，用来设置**“新绘制内容”与“已有内容”如何混合/叠加/裁剪**。  
+它决定了“画笔”与“画布”之间的像素混合规则，是实现橡皮擦、遮罩、高亮、镂空、混合模式等效果的核心工具
+
+---
+
+**常用模式速查表**
+
+| 模式                   | 效果描述                                 | 记忆口诀       |
+| ---------------------- | ---------------------------------------- | -------------- |
+| **`source-over`**      | **默认**：新图形盖在旧图形上             | 正常画         |
+| **`source-in`**        | 只保留**新旧重叠部分**，其余透明         | 交集-新图颜色  |
+| **`source-out`**       | 只保留**新图不与旧图重叠部分**           | 新图挖空       |
+| **`source-atop`**      | 新图只画在**旧图像素上**，旧图保留       | 新图被旧图裁剪 |
+| **`destination-over`** | 新图**垫在旧图下面**                     | 旧图盖新图     |
+| **`destination-in`**   | 只保留**新旧重叠部分**，颜色取旧图       | 交集-旧图颜色  |
+| **`destination-out`**  | **橡皮擦**：把旧图**被新图覆盖部分**擦掉 | 新图当橡皮     |
+| **`destination-atop`** | 旧图只保留**与新图重叠区域**，新图垫下面 | 旧图被新图裁剪 |
+| **`lighter`**          | 颜色**相加变亮**（类似滤色）             | 亮部叠加       |
+| **`multiply`**         | 正片叠底，**变暗**                       | 暗部叠加       |
+| **`screen`**           | 滤色，**变亮**                           | 亮部叠加       |
+| **`overlay`**          | 叠加，**中间调增强对比**                 | 对比增强       |
+| **`xor`**              | **异或**：重叠区域透明                   | 镂空           |
+| **`copy`**             | **清空画布**，只保留新图                 | 全清再画       |
+
+
+
+### `createElementNS` 与 `createElement` 对比
+
+------
+
+关键：**是否指定“命名空间（namespace）”**这决定了浏览器把标签当成什么类型的节点来解析。
+
+|    对比维度    | `createElement`                                              | `createElementNS`                                            |
+| :------------: | ------------------------------------------------------------ | ------------------------------------------------------------ |
+|    **签名**    | `document.createElement(tagName)`                            | `document.createElementNS(namespace, qualifiedName)`         |
+|  **命名空间**  | **总是 HTML** (`http://www.w3.org/1999/xhtml`)               | **自己指定**（SVG、MathML、XHTML…）                          |
+|   **返回值**   | `HTMLElement`                                                | 指定命名空间对应的元素（`SVGElement`、`MathMLElement`…）     |
+|  **典型用途**  | 创建 `<div>`、`<span>`、`<button>` …                         | 创建 `<svg>`、`<circle>`、`<path>`、`<math>` …               |
+|    **示例**    | `document.createElement('div')`                              | `document.createElementNS('http://www.w3.org/2000/svg', 'path')` |
+| **写错会怎样** | 少写命名空间时，SVG 元素会被当成 **未知 HTML 标签**，**不会渲染**。 |                                                              |
+
+“只要标签名带 `-` 或属于非 HTML（svg、math），就用 `createElementNS`；普通网页标签用 `createElement` 即可。”
+
 
 
 ## 项目发布与部署
-
-
-
-
-
-
 
 
 
@@ -1337,4 +1621,16 @@ element.addEventListener('click', handleClick());
 **原因：**
 
 **解决：**
+
+
+
+
+
+
+
+
+
+
+
+
 

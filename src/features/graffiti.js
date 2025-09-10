@@ -1,5 +1,5 @@
 // 创建涂鸦
-
+import store from '../store.js';
 import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
 
 // 状态和配置
@@ -19,6 +19,7 @@ let brushSizeValueDisplay = null;
 let clearButton = null;
 let saveButton = null;
 let eraserButton = null;
+let penButton = null;
 let graffitiControlsDiv = null;
 
 function getPageKey(){
@@ -57,7 +58,7 @@ function setupCanvasContext(){
 }
 
 function resizeCanvas(){
-  if(drawignCanvas){
+  if(drawingCanvas){
     const newWidth=Math.max(document.documentElement.scrollHeight,window.innerHeight);
     const newHeight=Math.max(document.documentElement.scrollHeight,window.innerHeight);
     if(drawingCanvas.width!==newWidth||drawingCanvas.height!==newHeight){
@@ -67,6 +68,23 @@ function resizeCanvas(){
       setupCanvasContext();
       drawingCtx.putImageData(imageData,0,0);
     }
+  }
+}
+
+function setToolMode(mode){
+  if(penButton) penButton.classList.remove('active');
+  if(eraserButton) eraserButton.classList.remove('active');
+
+  if(mode==='pen'){
+    isEraser=false;
+    penButton.classList.add('active');
+    eraserButton.classList.remove('active');
+  }else if(mode==='eraser'){
+    isEraser=true;
+    eraserButton.classList.add('active');
+    penButton.classList.remove('active');
+  }else{
+    isEraser=false;
   }
 }
 
@@ -89,22 +107,7 @@ function createControls(){
     updateEraserButtonState();
   });
 
-  // 橡皮擦按钮
-  eraserButton = document.createElement('button');
-  eraserButton.className = 'button';
-  eraserButton.textContent = '橡皮擦';
-  eraserButton.title = '切换橡皮擦';
-  eraserButton.addEventListener('click', toggleEraser);
-  updateEraserButtonState(); // 初始化状态
-
-  //清屏按钮
-  clearButton = document.createElement('button');
-  clearButton.className = 'button';
-  clearButton.textContent = '清屏';
-  clearButton.title = '清除所有涂鸦';
-  clearButton.addEventListener('click', clearCanvas);
-
-  // 笔刷大小滑块容器
+    // 笔刷大小滑块容器
   const brushSizeDiv = document.createElement('div');
   brushSizeDiv.style.display = 'flex';
   brushSizeDiv.style.alignItems = 'center';
@@ -116,52 +119,70 @@ function createControls(){
   brushSizeSlider.min = '1';
   brushSizeSlider.max = '50';
   brushSizeSlider.value = brushSize.toString();
-  brushSizeSlider.style.width = '8vh';
+  brushSizeSlider.style.width = '15vh';
 
   brushSizeValueDisplay = document.createElement('span');
-  brushSizeValueDisplay.textContent = brushSize;
+  brushSizeValueDisplay.textContent = brushSize+'px';
 
   brushSizeSlider.addEventListener('input', (e) => {
     brushSize = parseInt(e.target.value, 10);
-    brushSizeValueDisplay.textContent = brushSize;
+    brushSizeValueDisplay.textContent = brushSize+'px';
   });
 
   brushSizeDiv.appendChild(brushSizeSlider);
   brushSizeDiv.appendChild(brushSizeValueDisplay);
 
+  //工具组
+  const toolGroupDiv = document.createElement('div');
+  toolGroupDiv.className = 'tool-group';
+
+  // 橡皮擦
+  eraserButton = document.createElement('button');
+  eraserButton.id = 'eraser-btn';
+  eraserButton.className = 'graffiti-icon-btn';
+  eraserButton.title = '切换橡皮擦';
+  eraserButton.innerHTML='<i class="fas fa-eraser  graffiti-icon"></i>'
+  eraserButton.addEventListener('click', () => setToolMode('eraser'));
+
+  //笔
+  penButton = document.createElement('button'); 
+  penButton.id = 'pen-btn';
+  penButton.className = 'graffiti-icon-btn'; 
+  penButton.title = '画笔';
+  penButton.innerHTML='<i class="fas fa-paint-brush graffiti-icon" ></i>'
+  penButton.addEventListener('click', () => setToolMode('pen'));
+
+
+  //清屏按钮
+  clearButton = document.createElement('button');
+  clearButton.id = 'clear-btn';
+  clearButton.className = 'graffiti-icon-btn';
+  clearButton.title = '清除所有涂鸦';
+  clearButton.innerHTML='<i class="fa-solid fa-trash-can graffiti-icon"></i>'
+  clearButton.addEventListener('click', clearCanvas);
+
   //保存按钮
   saveButton = document.createElement('button');
-  saveButton.className = 'button';
-  saveButton.textContent = '保存';
+  saveButton.id = 'save-btn';
+  saveButton.className = 'graffiti-icon-btn';
   saveButton.title = '保存当前涂鸦';
+  saveButton.innerHTML='<i class="fa-solid fa-download graffiti-icon"></i>'
   saveButton.addEventListener('click', saveDrawing);
 
+  toolGroupDiv.appendChild(eraserButton);
+  toolGroupDiv.appendChild(penButton);
+  toolGroupDiv.appendChild(clearButton);
+  toolGroupDiv.appendChild(saveButton);
 
   graffitiControlsDiv.appendChild(colorPickerInput);
-  graffitiControlsDiv.appendChild(eraserButton);
-  graffitiControlsDiv.appendChild(clearButton);
   graffitiControlsDiv.appendChild(brushSizeDiv);
-  graffitiControlsDiv.appendChild(saveButton);
+  graffitiControlsDiv.appendChild(toolGroupDiv); 
+
 
   cardDiv.appendChild(graffitiControlsDiv);
 }
 
-function updateEraserButtonState(){
-  if(eraserButton){
-    if(isEraser){
-      eraserButton.style.background='var(--emphasis-color)';
-      eraserButton.textContent='绘画';
-    }else{
-      eraserButton.style.background='';
-      eraserButton.textContent='橡皮擦';
-    }
-  }
-}
 
-function toggleEraser(){
-  isEraser=!isEraser;
-  updateEraserButtonState();
-}
 
 //绘图过程监听
 function setupEventListeners(){
@@ -190,6 +211,7 @@ function setupEventListeners(){
 }
 
 function startDrawing(e){
+  if(store.isDraging||e.button!==0) return;
   isDrawing=true;
   drawingContainer.style.pointerEvents='auto';
   const rect=drawingCanvas.getBoundingClientRect();
@@ -203,7 +225,7 @@ function startDrawing(e){
 }
 
 function draw(e){
-  if(!isDrawing||!drawingCtx) return;
+  if(!isDrawing||!drawingCtx||store.isDraging) return;
   const rect=drawingCanvas.getBoundingClientRect();
   const PosX=e.clientX-rect.left;
   const PosY=e.clientY-rect.top;
@@ -227,7 +249,7 @@ function draw(e){
 }
 
 function stopDrawing(){
-  if(isDrawing){
+  if(isDrawing&&!store.isDraging){
     isDrawing=false;
     drawingCtx&&drawingCtx.beginPath();
     drawingContainer.style.pointerEvents = 'none';
@@ -245,12 +267,12 @@ function clearCanvas(){
 async function saveDrawing() {
   if(!drawingCanvas) return;
   try{
-    const dataURL=drawingCanvas.toDataURL('image/png');
+    const dataURL=drawingCanvas.toDataURL('image/png'); //指定以png的形式保存
     const pageKey=getPageKey();
-    const result=await chrome.storage.session.get({canvas: {}})
+    const result=await chrome.storage.local.get({canvas: {}})
     const canvas=result.canvas;
     canvas[pageKey]=dataURL;
-    await chrome.storage.session.set({canvas});
+    await chrome.storage.local.set({canvas});
 
   }catch (error) {
     console.error(error);
@@ -261,13 +283,14 @@ async function loadDrawing() {
   if (!drawingCtx || !drawingCanvas) return;
   try{
     const pageKey=getPageKey();
-    const result=await chrome.storage.session.get({canvas:{}})
+    const result=await chrome.storage.local.get({canvas:{}})
     const dataURL=result.canvas[pageKey];
 
     if(dataURL){
       let img=new Image();
+      //保证在图像加载后再绘制到canvas中
       img.onload=()=>{
-        drawingCtx.clearRect(0,0,drawignCanvas.width,drawignCanvas.height);
+        drawingCtx.clearRect(0,0,drawingCanvas.width,drawingCanvas.height);
         drawingCtx.drawImage(img,0,0);
         console.log('load drawing');
       }

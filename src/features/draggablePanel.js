@@ -3,12 +3,12 @@ import {activateScrollProgress} from './scrollProgress.js'
 import {activateBookmark} from './bookmark.js'
 import { activateGraffiti } from './graffiti.js';
 import { activateCountdown } from './countdownTimer.js';
+import store from '../store.js';
 
 let panelDiv=null;
 let cardDiv=null;
 let isOpen=false;
 let isMoved=false;
-let isDragging = false;
 let offsetX = 0, offsetY = 0;
 let Position = { left: 0, top: 0 };
 
@@ -59,7 +59,7 @@ function DraggablePanel(){
     // 拖动逻辑
     panelDiv.addEventListener('mousedown', (e) => {
         isMoved=false;
-        isDragging = true;
+        store.isDragging = true;
         //e.clientX —— 鼠标相对于视口的横坐标。
         //box.offsetLeft —— 方块相对于定位祖先的横坐标
         //二者相减得到“鼠标点击点距离方块左边框”的距离,这样拖动时按钮不会瞬间跳到鼠标位置
@@ -72,7 +72,7 @@ function DraggablePanel(){
     document.addEventListener('mousemove', (e) => {
         isMoved=true;
         //确保在拖动状态下才能移动
-        if (isDragging) {
+        if (store.isDragging) {
             //将拖动范围限制在窗口内
             const left = Math.max(0, Math.min(window.innerWidth - panelDiv.offsetWidth, e.clientX - offsetX));
             const top = Math.max(0, Math.min(window.innerHeight - panelDiv.offsetHeight, e.clientY - offsetY));
@@ -93,7 +93,7 @@ function DraggablePanel(){
     });
 
     document.addEventListener('mouseup', () => {
-        isDragging = false;
+        store.isDragging = false;
         document.body.style.userSelect = '';// 恢复文字可选中
     });
 

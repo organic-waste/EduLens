@@ -20,16 +20,17 @@
 #graffiti-controls {
     flex-direction: row;
     flex-wrap: wrap;
-    justify-content: flex-start;
+    justify-content: space-evenly; 
     align-items: center;
     gap: 0.5vh;
     padding: 0.5vh;
+    width: 100%;
     height: auto;
 }
-
+/* 
 #graffiti-controls > * {
     flex-shrink: 0;
-}
+} */
 
 /* 颜色选择器 */
 #graffiti-controls input[type="color"] {
@@ -70,15 +71,49 @@
     border: none;
 }
 
-/* 笔刷大小数值显示 */
 #graffiti-controls span {
-    font-size: 1.8vh;
+    font-size: 2vh;
     min-width: 3vh;
+    color: var(--main-color);
     text-align: center;
+    background-color: #f3f3f3;
 }
 
+.graffiti-icon-btn {
+    width: 4vh;
+    height: 4vh;
+    padding: 0;
+    background: var(--main-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 2vh;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
 
-#graffiti-controls .button {
-    padding: 0.4vh 0.8vh;
-    font-size: 1.8vh;
+.graffiti-icon-btn:hover {
+    background: var(--emphasis-color);
+}
+
+/* 激活状态的图标按钮 */
+.graffiti-icon-btn.active {
+    background: var(--emphasis-color); 
+    box-shadow: 0 0 0 2px rgba(84, 132, 201, 0.5); 
+}
+
+.graffiti-icon {
+    width: 60%;
+    height: 60%;
+    pointer-events: none; 
+}
+.tool-group {
+    display: flex;
+    justify-content: space-evenly;
+    width: 100%;
+    align-items: center;
 }
