@@ -1,43 +1,11 @@
 //创建定位书签
-
+import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
 
 let addDiv = null;
 let btnDiv = null;
 let cardDiv = null;
 let inputDiv = null; 
 let oldPageKey=null;        
-
-// 监听 SPA 路由变化
-(function initSPAMonitoring() {
-
-  let lastURL = window.location.href;
-
-  const observer = new MutationObserver((mutations) => {
-    const currentURL = window.location.href;
-    
-    if (currentURL !== lastURL) {
-      lastURL = currentURL;
-      // console.log('URL变化:', currentURL);
-      loadBookmarks();
-    }
-  });
-
-  // 监听整个document的变化
-  observer.observe(document, {
-    subtree: true,
-    childList: true,
-  });
-
-  window.addEventListener('popstate', () => {
-    // console.log('popstate');
-    setTimeout(loadBookmarks, 0);
-  });
-
-  window.addEventListener('hashchange', () => {
-    // console.log('hashchange');
-    setTimeout(loadBookmarks, 0);
-  });
-})();
 
 
 // 生成唯一id标识符
@@ -202,6 +170,8 @@ export function activateBookmark() {
   cardDiv.appendChild(addDiv);
 
   loadBookmarks();
+
+  MonitorSPARoutes(loadBookmarks);
 
   chrome.runtime.onMessage.addListener((message)=>{
     if(message.type==='LOAD_BOOKMARK'){

@@ -1,6 +1,8 @@
 // 可拖动卡片面板
 import {activateScrollProgress} from './scrollProgress.js'
 import {activateBookmark} from './bookmark.js'
+import { activateGraffiti } from './graffiti.js';
+import { activateCountdown } from './countdownTimer.js';
 
 let panelDiv=null;
 let cardDiv=null;
@@ -129,6 +131,8 @@ export function activateDraggablePanel() {
     DraggablePanel();
     activateScrollProgress();
     activateBookmark();
+    activateCountdown();
+    activateGraffiti();
 }
 
 export function deactivateDraggablePanel() {
