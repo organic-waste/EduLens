@@ -31,6 +31,7 @@ function createDrawingCanvas(){
   drawingContainer=document.getElementById('graffiti-container');
   if(!drawingContainer){
     drawingContainer=document.createElement('div');
+    drawingContainer.id = 'graffiti-container';
     document.body.appendChild(drawingContainer);
   }
   drawingCanvas = document.getElementById('graffiti-canvas');
@@ -60,14 +61,21 @@ function setupCanvasContext(){
 
 function resizeCanvas(){
   if(drawingCanvas){
-    const newWidth=Math.max(document.documentElement.scrollHeight,window.innerHeight);
+    const newWidth=Math.max(document.documentElement.scrollWidth,window.innerWidth);
     const newHeight=Math.max(document.documentElement.scrollHeight,window.innerHeight);
     if(drawingCanvas.width!==newWidth||drawingCanvas.height!==newHeight){
-      const imageData=drawingCtx.getImageData(0,0,drawingCanvas.width,drawingCanvas.height);
+      let imageData = null;
+      try {
+        imageData = drawingCtx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+      } catch(error) {
+        console.warn(error);
+      }
       drawingCanvas.width = newWidth;
-      drawingCanvas.height = newHeight;
-      setupCanvasContext();
-      drawingCtx.putImageData(imageData,0,0);
+      drawingCanvas.height = newHeight;      
+      setupCanvasContext();     
+      if(imageData) {
+        drawingCtx.putImageData(imageData, 0, 0);
+      }
     }
   }
 }
@@ -253,12 +261,12 @@ function setupEventListeners(){
   window.addEventListener('resize',handleResize);
   
   //让画布跟随页面滚动
-  window.addEventListener('scroll',()=>{
-    if(drawingContainer){
-      drawingContainer.style.top=`${window.scrollY}px`;
-      drawingContainer.style.left=`${window.scrollX}px`;
-    }
-  })
+  // window.addEventListener('scroll',()=>{
+  //   if(drawingContainer){
+  //     drawingContainer.style.top=`${window.scrollY}px`;
+  //     drawingContainer.style.left=`${window.scrollX}px`;
+  //   }
+  // })
 }
 
 function startDrawing(e){
@@ -327,7 +335,7 @@ async function saveDrawing() {
 }
 
 async function loadDrawing() {
-  if (!drawingCtx || !drawingCanvas) return;
+  if (!drawingCtx || !drawingCanvas)return; 
   try{
     const pageKey=getPageKey();
     const result=await chrome.storage.local.get({canvas:{}})
@@ -339,8 +347,11 @@ async function loadDrawing() {
       img.onload=()=>{
         drawingCtx.clearRect(0,0,drawingCanvas.width,drawingCanvas.height);
         drawingCtx.drawImage(img,0,0);
-        console.log('load drawing',drawingCtx);
+        // console.log('load drawing',drawingCtx);
       }
+      img.onerror = (error) => {
+        console.error(error);
+      };
       img.src=dataURL;
     }
 
@@ -350,7 +361,8 @@ async function loadDrawing() {
 }
 
 async function handlePageChange() {
-  await savaDrawing();
+  // console.log('page changed');
+  await saveDrawing();
   resizeCanvas();
   await loadDrawing();
 }

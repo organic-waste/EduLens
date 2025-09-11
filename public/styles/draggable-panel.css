@@ -54,6 +54,7 @@
     height: 40vh;
     background: #fff;
     box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    transition: width 0.3s ease-in-out, height 0.3s ease-in-out;
     z-index: 10000;
     padding: 0;
 }

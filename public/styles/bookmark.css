@@ -19,7 +19,7 @@
 .bookmark-tooltip {
     position: absolute;
     left:0;
-    transform: translateX(-110%);
+    transform: translate(-110%,-50%);
     background: #fff;
     color: #333;
     padding: 4px 8px;
