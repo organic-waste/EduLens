@@ -33,7 +33,7 @@ const store = {
     console.log("目前启用的功能是", name);
   },
   //关于面板相关功能
-  isDraging:false,
+  isDragging:false,
 
 };
 

@@ -76,6 +76,9 @@
     min-width: 3vh;
     color: var(--main-color);
     text-align: center;
+    line-height: 3vh;
+    height: 3vh;
+    padding: 0.5vh;
     background-color: #f3f3f3;
 }
 
@@ -100,7 +103,6 @@
     background: var(--emphasis-color);
 }
 
-/* 激活状态的图标按钮 */
 .graffiti-icon-btn.active {
     background: var(--emphasis-color); 
     box-shadow: 0 0 0 2px rgba(84, 132, 201, 0.5); 

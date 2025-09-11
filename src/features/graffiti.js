@@ -7,6 +7,7 @@ let isDrawing = false;
 let currentColor = '#FF0000'; 
 let brushSize = 5;
 let isEraser = false;
+let isPen=false;
 
 let drawingCanvas = null;
 let drawingCtx = null;
@@ -62,7 +63,7 @@ function resizeCanvas(){
     const newWidth=Math.max(document.documentElement.scrollHeight,window.innerHeight);
     const newHeight=Math.max(document.documentElement.scrollHeight,window.innerHeight);
     if(drawingCanvas.width!==newWidth||drawingCanvas.height!==newHeight){
-      const imageData=drawingCtx.getImageData(0,0,drawignCanvas.width,drawingCanvas.height);
+      const imageData=drawingCtx.getImageData(0,0,drawingCanvas.width,drawingCanvas.height);
       drawingCanvas.width = newWidth;
       drawingCanvas.height = newHeight;
       setupCanvasContext();
@@ -77,14 +78,23 @@ function setToolMode(mode){
 
   if(mode==='pen'){
     isEraser=false;
+    isPen=true;
     penButton.classList.add('active');
     eraserButton.classList.remove('active');
+    drawingCtx.globalCompositeOperation='source-over';
+    drawingCtx.strokeStyle=currentColor;
+
   }else if(mode==='eraser'){
+    isPen=false;
     isEraser=true;
     eraserButton.classList.add('active');
     penButton.classList.remove('active');
+    drawingCtx.globalCompositeOperation='destination-out';
+    drawingCtx.strokeStyle='rgba(0,0,0,1)';
+
   }else{
     isEraser=false;
+    isPen=false;
   }
 }
 
@@ -211,7 +221,8 @@ function setupEventListeners(){
 }
 
 function startDrawing(e){
-  if(store.isDraging||e.button!==0) return;
+  if(store.isDragging||e.button!==0) return;
+  if(!isEraser && !isPen) return;
   isDrawing=true;
   drawingContainer.style.pointerEvents='auto';
   const rect=drawingCanvas.getBoundingClientRect();
@@ -225,21 +236,14 @@ function startDrawing(e){
 }
 
 function draw(e){
-  if(!isDrawing||!drawingCtx||store.isDraging) return;
+  if(!isDrawing||!drawingCtx||store.isDragging) return;
+  if(!isEraser && !isPen) return;
   const rect=drawingCanvas.getBoundingClientRect();
   const PosX=e.clientX-rect.left;
   const PosY=e.clientY-rect.top;
 
   drawingCtx.lineWidth=brushSize;
 
-  //区别是绘制还是擦除
-  if(isEraser){
-    drawingCtx.globalCompositeOperation='destination-out';
-    drawingCtx.strokeStyle='rgba(0,0,0,1)';
-  }else{
-    drawingCtx.globalCompositeOperation='source-over';
-    drawingCtx.strokeStyle=currentColor;
-  }
 
   drawingCtx.lineTo(PosX,PosY);
   drawingCtx.stroke();
@@ -249,7 +253,9 @@ function draw(e){
 }
 
 function stopDrawing(){
-  if(isDrawing&&!store.isDraging){
+  if(store.isDragging)return;
+  if(!isEraser && !isPen) return;
+  if(isDrawing&&!store.isDragging){
     isDrawing=false;
     drawingCtx&&drawingCtx.beginPath();
     drawingContainer.style.pointerEvents = 'none';
