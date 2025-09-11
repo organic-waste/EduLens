@@ -108,6 +108,7 @@ function createControls(){
 
   //颜色选择器
   colorPickerInput = document.createElement('input');
+  colorPickerInput.id ='color-input';
   colorPickerInput.type = 'color';
   colorPickerInput.value = currentColor;
   colorPickerInput.title = '选择颜色';
@@ -117,7 +118,7 @@ function createControls(){
     updateEraserButtonState();
   });
 
-    // 笔刷大小滑块容器
+  // 笔刷大小滑块
   const brushSizeDiv = document.createElement('div');
   brushSizeDiv.style.display = 'flex';
   brushSizeDiv.style.alignItems = 'center';
@@ -125,18 +126,50 @@ function createControls(){
   brushSizeDiv.title = '调整笔刷大小';
 
   brushSizeSlider = document.createElement('input');
+  brushSizeSlider.id='brush-slider';
   brushSizeSlider.type = 'range';
   brushSizeSlider.min = '1';
   brushSizeSlider.max = '50';
   brushSizeSlider.value = brushSize.toString();
-  brushSizeSlider.style.width = '15vh';
+  brushSizeSlider.style.width = '12vh';
 
-  brushSizeValueDisplay = document.createElement('span');
-  brushSizeValueDisplay.textContent = brushSize+'px';
+  // 阻止滑块拖动时触发面板拖动
+  brushSizeSlider.addEventListener('mousedown', (e) => {
+    e.stopPropagation(); 
+  });
 
   brushSizeSlider.addEventListener('input', (e) => {
     brushSize = parseInt(e.target.value, 10);
-    brushSizeValueDisplay.textContent = brushSize+'px';
+    brushSizeValueDisplay.value = brushSize;
+    brushSizeValueDisplay.textContent = brushSize + 'px';
+  });
+
+
+  brushSizeValueDisplay = document.createElement('input');
+  brushSizeValueDisplay.id='brush-input';
+  brushSizeValueDisplay.type = 'number';
+  brushSizeValueDisplay.min = '1';
+  brushSizeValueDisplay.max = '50';
+  brushSizeValueDisplay.value = brushSize;
+  brushSizeValueDisplay.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
+
+  brushSizeValueDisplay.addEventListener('change', (e) => {
+    let value = parseInt(e.target.value);
+    // 限制范围
+    if (value < 1) value = 1;
+    if (value > 50) value = 50;
+    e.target.value = value;
+    brushSize = value;
+    brushSizeSlider.value = value; 
+  });
+
+  //回车时失去焦点
+  brushSizeValueDisplay.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.target.blur();
+    }
   });
 
   brushSizeDiv.appendChild(brushSizeSlider);
@@ -153,6 +186,9 @@ function createControls(){
   eraserButton.title = '切换橡皮擦';
   eraserButton.innerHTML='<i class="fas fa-eraser  graffiti-icon"></i>'
   eraserButton.addEventListener('click', () => setToolMode('eraser'));
+  eraserButton.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
 
   //笔
   penButton = document.createElement('button'); 
@@ -161,7 +197,9 @@ function createControls(){
   penButton.title = '画笔';
   penButton.innerHTML='<i class="fas fa-paint-brush graffiti-icon" ></i>'
   penButton.addEventListener('click', () => setToolMode('pen'));
-
+  penButton.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
 
   //清屏按钮
   clearButton = document.createElement('button');
@@ -170,6 +208,9 @@ function createControls(){
   clearButton.title = '清除所有涂鸦';
   clearButton.innerHTML='<i class="fa-solid fa-trash-can graffiti-icon"></i>'
   clearButton.addEventListener('click', clearCanvas);
+  clearButton.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
 
   //保存按钮
   saveButton = document.createElement('button');
@@ -178,6 +219,9 @@ function createControls(){
   saveButton.title = '保存当前涂鸦';
   saveButton.innerHTML='<i class="fa-solid fa-download graffiti-icon"></i>'
   saveButton.addEventListener('click', saveDrawing);
+  saveButton.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
 
   toolGroupDiv.appendChild(eraserButton);
   toolGroupDiv.appendChild(penButton);
@@ -188,11 +232,8 @@ function createControls(){
   graffitiControlsDiv.appendChild(brushSizeDiv);
   graffitiControlsDiv.appendChild(toolGroupDiv); 
 
-
   cardDiv.appendChild(graffitiControlsDiv);
 }
-
-
 
 //绘图过程监听
 function setupEventListeners(){
@@ -298,7 +339,7 @@ async function loadDrawing() {
       img.onload=()=>{
         drawingCtx.clearRect(0,0,drawingCanvas.width,drawingCanvas.height);
         drawingCtx.drawImage(img,0,0);
-        console.log('load drawing');
+        console.log('load drawing',drawingCtx);
       }
       img.src=dataURL;
     }

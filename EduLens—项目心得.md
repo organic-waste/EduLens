@@ -1340,6 +1340,67 @@ div[data-role="admin"] {
 
 
 
+### `<input type="range">` 滑动条控件
+
+让用户通过 **拖拽滑块** 在一段连续区间内选择一个数值。它属于**表单元素**，但比普通的 `<input type="number">` 更直观、更节省空间。
+
+---
+
+**基本语法**
+
+```html
+<input type="range" min="0" max="100" step="1" value="50">
+```
+
+| 属性    | 说明                                           |
+| ------- | ---------------------------------------------- |
+| `min`   | 可选，最小值，默认 0                           |
+| `max`   | 可选，最大值，默认 100                         |
+| `step`  | 可选，步长，默认 1；可为任意正数或 `"any"`     |
+| `value` | 可选，初始值；若不写则取 `min` 与 `max` 的中点 |
+
+---
+
+**样式定制**
+
+浏览器给 range 拆成了多个伪元素，但无标准命名，必须写 **两套私有前缀**：
+
+| 部位 | WebKit/Blink (Chrome/Safari/Edge) | Firefox              |
+| ---- | --------------------------------- | -------------------- |
+| 轨道 | `::-webkit-slider-runnable-track` | `::-moz-range-track` |
+| 滑块 | `::-webkit-slider-thumb`          | `::-moz-range-thumb` |
+
+---
+
+**事件**
+
+| 事件名   | 触发时机                                   |
+| -------- | ------------------------------------------ |
+| `input`  | 滑块 **一移动** 就触发（最常用，实时响应） |
+| `change` | 滑块 **松开鼠标** 后才触发（类似失焦）     |
+
+---
+
+**滑动刻度**
+
+可用 `list` 属性绑定 `<datalist>` 提供刻度：
+
+```html
+<input type="range" list="ticks" min="0" max="50" step="25">
+<datalist id="ticks">
+  <option value="0">
+  <option value="25">
+  <option value="50">
+</datalist>
+```
+浏览器会在轨道下方显示浅色刻度（WebKit 支持较好）。
+
+
+
+
+
+
+
 
 
 ### 错误解决：
@@ -1629,6 +1690,89 @@ ctx.putImageData(imgData, 0, 0, 10, 10, 50, 50);
 
 
 
+
+
+
+```
+    // 对于 SPA 或动态内容加载，可能需要更复杂的监听
+    const resizeObserver = new ResizeObserver(handleResizeOrContentChange);
+    resizeObserver.observe(document.body);
+    
+    
+    
+    if (e.button !== 0) return; // 只响应左键
+    
+    
+    .globalCompositeOperation
+    
+    
+    .toDataURL('image/png');
+    
+    
+                const img = new Image();
+            img.onload = () => {
+                drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                drawingCtx.drawImage(img, 0, 0);
+                console.log(`涂鸦已加载 for ${pageKey}`);
+            };
+            img.src = dataURL;
+```
+
+
+
+
+
+```
+// --- SPA 路由监控 ---
+function setupSPAMonitoring() {
+    let lastURL = window.location.href;
+
+    const observer = new MutationObserver(() => {
+        const currentURL = window.location.href;
+        if (currentURL !== lastURL) {
+            lastURL = currentURL;
+            console.log('SPA URL 变化 detected, reloading graffiti...');
+            handlePageChange();
+        }
+    });
+
+    observer.observe(document, {
+        subtree: true,
+        childList: true,
+    });
+
+    // 对于使用 pushState 的 SPA
+    let lastPath = window.location.pathname + window.location.search;
+    const handlePushStateChange = () => {
+         const currentPath = window.location.pathname + window.location.search;
+         if (currentPath !== lastPath) {
+             lastPath = currentPath;
+             console.log('pushState/replaceState detected, reloading graffiti...');
+             handlePageChange();
+         }
+    };
+
+    // 重写 pushState 和 replaceState
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+
+    history.pushState = function() {
+        originalPushState.apply(this, arguments);
+        setTimeout(handlePushStateChange, 0);
+    };
+
+    history.replaceState = function() {
+        originalReplaceState.apply(this, arguments);
+        setTimeout(handlePushStateChange, 0);
+    };
+
+    window.addEventListener('popstate', () => {
+        console.log('popstate detected, reloading graffiti...');
+        setTimeout(handlePageChange, 0);
+    });
+}
+
+```
 
 
 

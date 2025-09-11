@@ -14,7 +14,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    cursor: crosshair;
+    /* cursor: crosshair; */
 }
 
 #graffiti-controls {
@@ -22,7 +22,7 @@
     flex-wrap: wrap;
     justify-content: space-evenly; 
     align-items: center;
-    gap: 0.5vh;
+    gap: 1vh;
     padding: 0.5vh;
     width: 100%;
     height: auto;
@@ -33,10 +33,11 @@
 } */
 
 /* 颜色选择器 */
-#graffiti-controls input[type="color"] {
+#color-input {
     width: 4vh;
     height: 4vh;
     padding: 0;
+    margin-left: 2vh;
     border: 1px solid var(--secondary-color);
     border-radius: 4px;
     background: #fff;
@@ -44,7 +45,7 @@
 }
 
 /* 笔刷大小滑块 */
-#graffiti-controls input[type="range"] {
+#brush-slider {
     width: 8vh;
     height: 1.5vh;
     -webkit-appearance: none;
@@ -53,7 +54,7 @@
     border-radius: 5px;
     outline: none;
 }
-#graffiti-controls input[type="range"]::-webkit-slider-thumb {
+#brush-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 2vh;
@@ -62,7 +63,7 @@
     background: var(--main-color);
     cursor: pointer;
 }
-#graffiti-controls input[type="range"]::-moz-range-thumb {
+#brush-slider::-moz-range-thumb {
     width: 2vh;
     height: 2vh;
     border-radius: 50%;
@@ -70,6 +71,28 @@
     cursor: pointer;
     border: none;
 }
+
+
+#brush-input {
+    font-size: 2vh;
+    width: 6vh;
+    color: var(--main-color);
+    text-align: center;
+    line-height: 3vh;
+    margin-left: 1vh;
+    height: 3vh;
+    padding: 0.5vh;
+    background-color: #f3f3f3;
+    border: 1px solid var(--lighter-color);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+#brush-input:focus {
+    outline: 1px solid var(--main-color);
+    background-color: var(--lighter-color);
+}
+
 
 #graffiti-controls span {
     font-size: 2vh;
@@ -105,7 +128,7 @@
 
 .graffiti-icon-btn.active {
     background: var(--emphasis-color); 
-    box-shadow: 0 0 0 2px rgba(84, 132, 201, 0.5); 
+    box-shadow: 0 0 0 2px rgba(124, 161, 212, 0.5); 
 }
 
 .graffiti-icon {
