@@ -50,7 +50,7 @@
     height: 1.5vh;
     -webkit-appearance: none;
     appearance: none;
-    background: #ddd;
+    background:var(--background-color);
     border-radius: 5px;
     outline: none;
 }
@@ -90,7 +90,7 @@
 
 #brush-input:focus {
     outline: 1px solid var(--main-color);
-    background-color: var(--lighter-color);
+    background-color: var(--background-color);
 }
 
 
@@ -131,8 +131,8 @@
 }
 
 .graffiti-icon {
-    width: 80%;
-    height: 68%;
+    width: 50%;
+    height: 50%;
     pointer-events: none; 
 }
 .tool-group {

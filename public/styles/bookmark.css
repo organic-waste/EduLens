@@ -20,8 +20,8 @@
     position: absolute;
     left:0;
     transform: translate(-110%,-50%);
-    background: #fff;
-    color: #333;
+    background: var(--background-color);
+    color: var(--main-color);
     padding: 4px 8px;
     border-radius: 4px;
     border: 1px solid var(--main-color);

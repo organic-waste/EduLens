@@ -19,7 +19,8 @@
         "styles/bookmark.css",
         "styles/countdown.css",
         "styles/mouse-enhance.css",
-        "styles/graffiti.css"
+        "styles/graffiti.css",
+        "styles/rectangleAnnotation.css"
       ]  
     }
   ],

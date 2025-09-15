@@ -1,6 +1,8 @@
 // 创建涂鸦
 import store from '../store.js';
 import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
+import { getPageKey } from '../utils/getIdentity.js';
+import { activateRectangleAnnotation } from './rectangleAnnotation.js'
 
 // 状态和配置
 let isDrawing = false;
@@ -23,10 +25,6 @@ let eraserButton = null;
 let penButton = null;
 let graffitiControlsDiv = null;
 
-function getPageKey(){
-  return window.location.origin+window.location.pathname;
-}
-
 function createDrawingCanvas(){
   drawingContainer=document.getElementById('graffiti-container');
   if(!drawingContainer){
@@ -42,10 +40,10 @@ function createDrawingCanvas(){
     drawingCanvas.height = document.documentElement.scrollHeight;
     drawingContainer.appendChild(drawingCanvas);
 
-    drawingCtx=drawingCanvas.getContext('2d');
+    drawingCtx=drawingCanvas.getContext('2d', { willReadFrequently: true });
     setupCanvasContext();
   }else{
-    drawingCtx=drawingCanvas.getContext('2d');
+    drawingCtx=drawingCanvas.getContext('2d', { willReadFrequently: true });
     setupCanvasContext();
     //若画布存在，调整画布大小
     resizeCanvas();
@@ -122,8 +120,7 @@ function createControls(){
   colorPickerInput.title = '选择颜色';
   colorPickerInput.addEventListener('input', (e) => {
     currentColor = e.target.value;
-    isEraser = false;
-    updateEraserButtonState();
+    setToolMode('pen');
   });
 
   // 笔刷大小滑块
@@ -372,5 +369,6 @@ export function activateGraffiti(){
   loadDrawing();
   createControls();
   setupEventListeners();
-  MonitorSPARoutes(handlePageChange)
+  activateRectangleAnnotation();
+  MonitorSPARoutes(handlePageChange);
 }

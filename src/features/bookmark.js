@@ -1,6 +1,6 @@
 //创建定位书签
 import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
-
+import { getId,getPageKey } from '../utils/getIdentity.js';
 
 let addDiv = null;
 let btnDiv = null;
@@ -8,18 +8,6 @@ let cardDiv = null;
 let inputDiv = null; 
 let oldPageKey=null;        
 
-
-// 生成唯一id标识符
-function getId(){
-  let date=Date.now().toString(36);
-  let random=Math.random().toString(36).slice(0,3);
-  return date+random;
-}
-
-//用页面URL来作为切换页面时的key
-function getPageKey(){
-  return window.location.origin+window.location.pathname;
-}
 
 
 function createBookmarkEle(scrollTop,text,id){
