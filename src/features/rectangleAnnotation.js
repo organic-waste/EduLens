@@ -1,27 +1,26 @@
-创建矩形注释
+/* 创建矩形注释 */
 
 import { getPageKey,getId } from '../utils/getIdentity.js';
 
-let isRectangleMode = false;
-let isCreating = false;
-let isEditing = false;
+let isRectangleMode = false;  //是否处于创建矩阵模式
+let isCreating = false; //是否还在创建矩阵中
+let isEditing = false; //是否有矩阵处于编辑模式
 let editingRect= null;
 let startX, startY, endX, endY;
-let hoverTimeout = null;
-let hoveredRectId = null;
+// let hoverTimeout = null;
+// let hoverRectId = null;
 
 let rectangleButton = null;
 let drawingContainer = null;
-let rectangles = [];
-
 let previewDiv = null;
-let resizeInfo = { isResizing: false, handle: null, startX: 0, startY: 0, originalRect: null };
-let moveInfo = { isMoving: false, startX: 0, startY: 0, originalX: 0, originalY: 0 };
+let currentRect = null;
+
+let rectangles = [];
 
 export function activateRectangleAnnotation(){
     drawingContainer=document.getElementById('graffiti-container');
-    const toolGroupDiv=document.querySelector('graffiti-controls .tool-group');
-    if(!document.getElementById('rectangle-btn')){
+    const toolGroupDiv=document.querySelector('#graffiti-controls .tool-group');
+    if(toolGroupDiv && !document.getElementById('rectangle-btn')){
         rectangleButton=document.createElement('button');
         rectangleButton.id='rectangle-btn';
         rectangleButton.className='graffiti-icon-btn';
@@ -34,10 +33,11 @@ export function activateRectangleAnnotation(){
     loadRectangles().then(()=>{
         renderAllRectangles();
     });
-    setupRectangleEventListeners();
+    EditingRectangleEventListeners();
 
 }
 
+//转换矩阵模式（编辑模式/查看模式）
 function toggleRectangleMode(){
     isRectangleMode=!isRectangleMode;
     if(isRectangleMode){
@@ -52,15 +52,21 @@ function toggleRectangleMode(){
     }
 }
 
-//防止干荣到其他元素
+//监听画布的鼠标事件
 function preventPageInteraction(){
     document.body.style.userSelect='none';
     document.body.style.pointerEvents='none';
     drawingContainer.style.pointerEvents='auto';
-
 }
 
-function setupRectangleEventListeners(){
+//监听背景的鼠标事件
+function restorePageInteraction() {
+    document.body.style.userSelect = '';
+    document.body.style.pointerEvents = '';
+    // drawingContainer.style.pointerEvents = 'none'; 
+}
+
+function EditingRectangleEventListeners(){
     drawingContainer.addEventListener('mousedown', handleMouseDown);
     drawingContainer.addEventListener('mousemove', handleMouseMove);
     drawingContainer.addEventListener('mouseup', handleMouseUp);
@@ -73,6 +79,7 @@ function handleMouseDown(e){
     const rect = drawingContainer.getBoundingClientRect();
     const x = e.clientX-rect.left;
     const y = e.clientY-rect.top;
+    console.log("handleMouseDown")
     
     //创建新矩阵时
     if(isRectangleMode&&!isEditing){
@@ -86,14 +93,26 @@ function handleMouseDown(e){
     //矩阵处于编辑态时
     else if(isEditing&&currentRect){
         const handle = getHandleAt(x,y,currentRect);
+
+console.log('Mouse position:', x, y);
+console.log('Current rect:', currentRect);
+console.log('Is editing:', isEditing);
+console.log('Is rectangle mode:', isRectangleMode);
+console.log('isPointInRect: ', isPointInRect(x,y,currentRect.x,currentRect.y,currentRect.width,currentRect.height));
+
         //点击到编辑点时
-        if(handle){
-            startResizing(handle,x,y);
-            e.perventDefault();
-            e.stopPropagation();
-        }
+        // if(handle){
+        //     console.log('点击到编辑点');
+        //     startResizing(handle,x,y);
+        //     e.preventDefault();
+        //     e.stopPropagation();
+        // }
+
+
         //点击到矩阵内部
-        else if(isPointInRect(x,y,currentRect.x,currentRect.y,currentRect.width,currentRect.height)){
+        if(isPointInRect(x,y,currentRect.x,currentRect.y,currentRect.width,currentRect.height)){
+ 
+            console.log('点击到矩阵内部');
             const textContainer = e.target.closest('.annotation-text-container');
             const deleteBtn = e.target.closest('.annotation-delete-btn');
             if(textContainer||deleteBtn){
@@ -103,19 +122,22 @@ function handleMouseDown(e){
             }
             //移动矩阵
             startMoving(x,y);
-            e.perventDefault();
+            e.preventDefault();
             e.stopPropagation();
         }
+        //点击矩阵外部
         else{
+            console.log('点击矩阵外部')
             exitEditingMode();
             e.stopPropagation();
         }
     }
     //矩阵处于浏览态
     else if(!isRectangleMode&&!isEditing){
-        const clickRect = findTopmostRectangleAt(x.y);
-        if(clickRect){
-            enterEditingMode(clickedRect);
+        console.log('浏览态')
+        const clickedRect = findTopmostRectangleAt(x,y);
+        if(clickedRect){
+            exitEditingMode(clickedRect);
             e.preventDefault();
             e.stopPropagation();
         }
@@ -126,6 +148,9 @@ function handleMouseMove(e){
     const rect = drawingContainer.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+
+    console.log("handleMouseMove",!isRectangleMode && !isEditing)
+
     //创建矩阵元素时
     if(isCreating){
         endX=x;
@@ -139,7 +164,7 @@ function handleMouseMove(e){
             e.preventDefault();
         }else if(window.isMoving){
             doMove(x,y);
-            e.perventDefault();
+            e.preventDefault();
         }else {
             const handle = getHandleAt(x,y,currentRect);
             //通过判断鼠标位置来获取到对应的cursor样式
@@ -155,23 +180,27 @@ function handleMouseMove(e){
     //查看元素时
     else if(!isRectangleMode && !isEditing){
         const hoveredRect = findTopmostRectangleAt(x,y);
-        const hoveredRectId = hoveredRect ? hoveredRect.id : null;
-        //当转移hover的元素时
-        if(hoveredRectId && hoveredRectId!==window.currentHoveredRectId){
-            if(window.hoverTimeout) clearTimeout(window.hoverTimeout);
+        const hoveredRectId = hoveredRect?.id;
+        // 当鼠标下方没有有效矩阵时
+        if (!hoveredRect) {
+            if (window.currentHoveredRectId) {
+            window.hoverTimeout = setTimeout(() => {
+                hideTooltip(window.currentHoveredRectId);
+            }, 200);
+                window.currentHoveredRectId = null;
+            }
+            return;
+        }
+
+        // 当转移hover的元素时
+        if (hoveredRectId && hoveredRectId !== window.currentHoveredRectId) {
+            if (window.hoverTimeout) {
+                clearTimeout(window.hoverTimeout);
+            }
             window.currentHoveredRectId = hoveredRectId;
             window.hoverTimeout = setTimeout(() => {
                 showTooltip(hoveredRectId);
             }, 200);
-        }
-        //停止hover此元素
-        else if(!hoveredRectId && window.currentHoveredRectId){
-            if(window.hoverTimeout){
-                clearTimeout(window.hoverTimeout);
-                window.hoverTimeout = null;
-            }
-            hideTooltip(window.currentHoveredRectId);
-            window.currentHoveredRectId = null;
         }
     }
 }
@@ -213,6 +242,7 @@ function handleDblClick(e){
     const y = e.clientY - rect.top;
 
     const clickedRect = findTopmostRectangleAt(x,y);
+    console.log('clickedRect: ', clickedRect);
     if(clickedRect){
         enterEditingMode(clickedRect);
         e.preventDefault();
@@ -249,18 +279,18 @@ function removePreviewRectangle(){
 
 function renderAllRectangles(){
     document.querySelectorAll('.annotation-rect').forEach(e => e.remove());
-    rectangles.forEach(r => renderRectangle(r))
+    rectangles.forEach(r => renderRectangles(r))
 }
 
-function renderRectangle(rect){
+function renderRectangles(rect){
     const rectDiv = document.createElement('div');
     rectDiv.className = 'annotation-rect';
     rectDiv.dataset.id = rect.id;
-    rectDiv.style.left = `${rectData.x}px`;
-    rectDiv.style.top = `${rectData.y}px`;
-    rectDiv.style.width = `${rectData.width}px`;
-    rectDiv.style.height = `${rectData.height}px`;
-    rectDiv.style.borderColor = rectData.color;
+    rectDiv.style.left = `${rect.x}px`;
+    rectDiv.style.top = `${rect.y}px`;
+    rectDiv.style.width = `${rect.width}px`;
+    rectDiv.style.height = `${rect.height}px`;
+    rectDiv.style.borderColor = rect.color;
     
     //文本区域
     const textContainer = document.createElement('div');
@@ -269,9 +299,9 @@ function renderRectangle(rect){
     const textInput = document.createElement('input');
     textInput.type = 'text';
     textInput.className = 'annotation-text-input';
-    textInput.id = `annotation-input-${rectData.id}`;
-    textInput.name = `annotation-text-${rectData.id}`;
-    textInput.value = rectData.text;
+    textInput.id = `annotation-input-${rect.id}`;
+    textInput.name = `annotation-text-${rect.id}`;
+    textInput.value = rect.text;
     textInput.style.display = 'none';
 
     const deleteBtn = document.createElement('button');
@@ -285,13 +315,13 @@ function renderRectangle(rect){
     // Tooltip
     const tooltip = document.createElement('div');
     tooltip.className = 'annotation-tooltip';
-    tooltip.textContent = rectData.text;
+    tooltip.textContent = rect.text;
 
     rectDiv.appendChild(textContainer);
     rectDiv.appendChild(tooltip);
 
     textInput.addEventListener('input',(e) => {
-        rectData.text = e.target.value;
+        rect.text = e.target.value;
         tooltip.textContent = e.target.value;
         saveRectangles();
     })
@@ -317,14 +347,18 @@ function removeRectangle(id){
     saveRectangles()
 }
 
+//进入创建矩阵模式
 function enterEditingMode(rect){
     //已经在编辑这个矩阵时
     if(isEditing && editingRect && currentRect.id === rect.id) return;
+
     exitEditingMode();
     isEditing = true;
     editingRect = rect;
+    currentRect = rect;
 
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${rect.id}"]`);
+    console.log('rectDiv: ', rectDiv);
     if(!rectDiv) return;
     rectDiv.classList.add('editing');
 
@@ -337,10 +371,11 @@ function enterEditingMode(rect){
     tooltip.style.display = 'none';
     textInput.focus();
     textInput.select();//全选方便编辑
-
+    console.log("enterEditingMode")
     createHandles(rectDiv,rect);
 }
 
+//退出创建矩阵模式
 function exitEditingMode(){
     if(!isEditing) return;
     isEditing = false;
@@ -365,14 +400,15 @@ function exitEditingMode(){
         document.querySelectorAll('.resize-handle').forEach(h => h.remove());
     }
     editingRect = null;
+    currentRect = null;
     drawingContainer.style.cursor = 'default';
 }
 
 function createHandles(rectDiv,rect){
     const handles = [
-        { type: 'nw', x: -5, y: -5 }, { type: 'n', x: rectData.width / 2 - 5, y: -5 }, { type: 'ne', x: rectData.width - 5, y: -5 },
-        { type: 'e', x: rectData.width - 5, y: rectData.height / 2 - 5 }, { type: 'se', x: rectData.width - 5, y: rectData.height - 5 },
-        { type: 's', x: rectData.width / 2 - 5, y: rectData.height - 5 }, { type: 'sw', x: -5, y: rectData.height - 5 }, { type: 'w', x: -5, y: rectData.height / 2 - 5 }
+        { type: 'nw', x: -5, y: -5 }, { type: 'n', x: rect.width / 2 - 5, y: -5 }, { type: 'ne', x: rect.width - 5, y: -5 },
+        { type: 'e', x: rect.width - 5, y: rect.height / 2 - 5 }, { type: 'se', x: rect.width - 5, y: rect.height - 5 },
+        { type: 's', x: rect.width / 2 - 5, y: rect.height - 5 }, { type: 'sw', x: -5, y: rect.height - 5 }, { type: 'w', x: -5, y: rect.height / 2 - 5 }
     ];
     handles.forEach(h =>{
         const handle = document.createElement('div');
@@ -383,6 +419,7 @@ function createHandles(rectDiv,rect){
         handle.addEventListener('mousedown', (e) => {
             e.stopPropagation();
             e.preventDefault();
+            startResizing({ element: handle, type: handle.dataset.type }, e.clientX, e.clientY);
         });
         rectDiv.appendChild(handle);
     })
@@ -390,7 +427,7 @@ function createHandles(rectDiv,rect){
 
 function getHandleAt(x,y,rect){
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${rect.id}"]`);
-    const handles = rectDiv.querySelectorAll('.resize-handle');
+    const handles = rectDiv.getElementsByClassName('resize-handle');
     for(let handle of handles){
         const handleRect = handle.getBoundingClientRect();
         const containerRect = drawingContainer.getBoundingClientRect();
@@ -518,47 +555,63 @@ function doMove(currentX, currentY) {
 }
 
 /* 工具函数 */
+
 function isPointInRect(px,py,rx,ry,rw,rh){
-    return px >= rx && px <= rx +rw && py >= ry && px <= ry +rh;
+    return px >= rx && px <= rx +rw && py >= ry && py <= ry +rh;
 }
 
 function findTopmostRectangleAt(x,y){
-    const elements = document.elementsFromPoint(x + window.scrollX,y + window.scrollY);
+    const elements = document.elementsFromPoint(x + window.scrollX , y + window.scrollY);
     for(const el of elements){
         if(el.classList.contains('annotation-rect')){
             const rectId = el.dataset.id;
             return rectangles.find(r => r.id === rectId);
         }
     }
+    return null;
+
 }
 
 function showTooltip(rectId){
+    console.log("showTooltip")
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${rectId}"]`);
     const rect =rectangles.find(r => r.id === rectId);
     if(rect && rect.text.trim() !== ''){
-        const tooltip = rectDiv.querySelector('.anntotaion-tooltip');
+        const tooltip = rectDiv.querySelector('.annotation-tooltip');
         tooltip.textContent = rect.text;
-        tooltip.style.display = 'block';
+        tooltip.style.opacity = 1;
     }
 }
 
 function hideTooltip(rectId){
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${rectId}"]`);
     const tooltip = rectDiv.querySelector('.annotation-tooltip');
-    tooltip.style.display = 'none';
+    tooltip.style.opacity = 0;
 }
 
 /* 持久化 */
+
+async function saveRectangles() {
+    try{
+        const pageKey = getPageKey();
+        const result = await chrome.storage.local.get({rectangles: {}});
+        const allRectangles = result.rectangles;
+        allRectangles[pageKey] = rectangles;
+        await chrome.storage.local.set({rectangles:allRectangles});
+    }catch(error){
+        console.error(error);
+    }
+}
+
 async function loadRectangles() {
     try{
         const pageKey = getPageKey();
-        const result = await chromeExtension.storage.local.get({rectangles:{}});
+        const result = await chrome.storage.local.get({rectangles:{}});
         rectangles = result.rectangles[pageKey]||[];
     }catch(error){
         console.error(error);
         rectangles = [];
     }
-    
 }
 
 export { saveRectangles , loadRectangles };

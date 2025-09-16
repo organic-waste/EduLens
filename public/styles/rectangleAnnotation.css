@@ -1,4 +1,3 @@
-/* rectangleAnnotation.css */
 
 .annotation-rect {
     position: absolute;
@@ -6,11 +5,8 @@
     pointer-events: auto;
     border: 2px solid #FF0000;
     user-select: none;
-    touch-action: none; /* 防止触摸屏上的默认行为 */
-}
-
-.annotation-rect.editing {
-    /* 可以为编辑模式添加特殊样式 */
+    touch-action: none; 
+    margin: 2vh;
 }
 
 .annotation-text-container {
@@ -20,10 +16,10 @@
     width: 100%;
     background: rgba(255, 255, 255, 0.9);
     border-bottom: 1px solid #ccc;
-    display: none; /* 默认隐藏 */
+    display: none;
     pointer-events: auto;
     z-index: 10;
-    padding: 2px 20px 2px 2px; /* 右侧留出关闭按钮空间 */
+    padding: 2px 20px 2px 2px;
     box-sizing: border-box;
 }
 
@@ -71,7 +67,7 @@
     padding: 2px;
     box-sizing: border-box;
     text-align: center;
-    display: none;
+    opacity: 0;
     pointer-events: none;
     z-index: 9;
     overflow: hidden;
