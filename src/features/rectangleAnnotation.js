@@ -1,8 +1,9 @@
-/* 创建矩形注释 */
+// rectangleAnnotation.js
+// 创建矩形注释
 
+import store from './store.js';
 import { getPageKey,getId } from '../utils/getIdentity.js';
 
-let isRectangleMode = false;  //是否处于创建矩阵模式
 let isCreating = false; //是否还在创建矩阵中
 let isEditing = false; //是否有矩阵处于编辑模式
 let editingRect= null;
@@ -16,6 +17,15 @@ let previewDiv = null;
 let currentRect = null;
 
 let rectangles = [];
+
+// 矩形操作相关变量
+let isResizing = false;
+let isMoving = false;
+let resizeHandle = null;
+let moveStartX = 0;
+let moveStartY = 0;
+let originalRect = null;
+let originalRectPos = null;
 
 export function activateRectangleAnnotation(){
     drawingContainer=document.getElementById('graffiti-container');
@@ -34,13 +44,38 @@ export function activateRectangleAnnotation(){
         renderAllRectangles();
     });
     EditingRectangleEventListeners();
-
+    
+    // 将模块实例暴露给全局，以便其他模块可以调用
+    window.rectangleAnnotation = {
+        updateMode: function(isRectangleMode) {
+            if (!isRectangleMode && store.isRectangleMode) {
+                // 如果矩形模式被关闭，需要清理相关状态
+                if (rectangleButton) {
+                    rectangleButton.classList.remove('active');
+                }
+                drawingContainer.style.cursor = '';
+                restorePageInteraction();
+                store.isRectangleMode = false;
+            }
+        }
+    };
 }
 
 //转换矩阵模式（编辑模式/查看模式）
 function toggleRectangleMode(){
-    isRectangleMode=!isRectangleMode;
-    if(isRectangleMode){
+    // 互斥：关闭其他工具
+    const penBtn = document.getElementById('pen-btn');
+    const eraserBtn = document.getElementById('eraser-btn');
+    if (penBtn) penBtn.classList.remove('active');
+    if (eraserBtn) eraserBtn.classList.remove('active');
+    
+    store.updateState({
+        isRectangleMode: !store.isRectangleMode,
+        isPen: false,
+        isEraser: false
+    });
+    
+    if(store.isRectangleMode){
         rectangleButton.classList.add('active');
         drawingContainer.style.cursor='crosshair';
         exitEditingMode();
@@ -79,10 +114,9 @@ function handleMouseDown(e){
     const rect = drawingContainer.getBoundingClientRect();
     const x = e.clientX-rect.left;
     const y = e.clientY-rect.top;
-    console.log("handleMouseDown")
     
     //创建新矩阵时
-    if(isRectangleMode&&!isEditing){
+    if(store.isRectangleMode&&!isEditing){
         isCreating=true;
         startX = endX = x;
         startY = endY = y;
@@ -94,25 +128,9 @@ function handleMouseDown(e){
     else if(isEditing&&currentRect){
         const handle = getHandleAt(x,y,currentRect);
 
-console.log('Mouse position:', x, y);
-console.log('Current rect:', currentRect);
-console.log('Is editing:', isEditing);
-console.log('Is rectangle mode:', isRectangleMode);
-console.log('isPointInRect: ', isPointInRect(x,y,currentRect.x,currentRect.y,currentRect.width,currentRect.height));
-
-        //点击到编辑点时
-        // if(handle){
-        //     console.log('点击到编辑点');
-        //     startResizing(handle,x,y);
-        //     e.preventDefault();
-        //     e.stopPropagation();
-        // }
-
-
         //点击到矩阵内部
         if(isPointInRect(x,y,currentRect.x,currentRect.y,currentRect.width,currentRect.height)){
  
-            console.log('点击到矩阵内部');
             const textContainer = e.target.closest('.annotation-text-container');
             const deleteBtn = e.target.closest('.annotation-delete-btn');
             if(textContainer||deleteBtn){
@@ -127,14 +145,12 @@ console.log('isPointInRect: ', isPointInRect(x,y,currentRect.x,currentRect.y,cur
         }
         //点击矩阵外部
         else{
-            console.log('点击矩阵外部')
             exitEditingMode();
             e.stopPropagation();
         }
     }
     //矩阵处于浏览态
-    else if(!isRectangleMode&&!isEditing){
-        console.log('浏览态')
+    else if(!store.isRectangleMode&&!isEditing){
         const clickedRect = findTopmostRectangleAt(x,y);
         if(clickedRect){
             exitEditingMode(clickedRect);
@@ -149,8 +165,6 @@ function handleMouseMove(e){
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    console.log("handleMouseMove",!isRectangleMode && !isEditing)
-
     //创建矩阵元素时
     if(isCreating){
         endX=x;
@@ -159,10 +173,10 @@ function handleMouseMove(e){
     }
     //编辑矩阵时
     else if(isEditing&&currentRect){
-        if(window.isResizing){
+        if(isResizing){
             doResize(x,y);
             e.preventDefault();
-        }else if(window.isMoving){
+        }else if(isMoving){
             doMove(x,y);
             e.preventDefault();
         }else {
@@ -178,28 +192,28 @@ function handleMouseMove(e){
         }
     }
     //查看元素时
-    else if(!isRectangleMode && !isEditing){
+    else if(!store.isRectangleMode && !isEditing){
         const hoveredRect = findTopmostRectangleAt(x,y);
         const hoveredRectId = hoveredRect?.id;
         // 当鼠标下方没有有效矩阵时
         if (!hoveredRect) {
-            if (window.currentHoveredRectId) {
-                if (window.hoverTimeout) {
-                    clearTimeout(window.hoverTimeout);
+            if (store.currentHoveredRectId) {
+                if (store.hoverTimeout) {
+                    clearTimeout(store.hoverTimeout);
                 }
-                hideTooltip(window.currentHoveredRectId);
-                window.currentHoveredRectId = null;
+                hideTooltip(store.currentHoveredRectId);
+                store.currentHoveredRectId = null;
             }
             return;
         }
 
         // 当转移hover的元素时
-        if (hoveredRectId && hoveredRectId !== window.currentHoveredRectId) {
-            if (window.hoverTimeout) {
-                clearTimeout(window.hoverTimeout);
+        if (hoveredRectId && hoveredRectId !== store.currentHoveredRectId) {
+            if (store.hoverTimeout) {
+                clearTimeout(store.hoverTimeout);
             }
-            window.currentHoveredRectId = hoveredRectId;
-            window.hoverTimeout = setTimeout(() => {
+            store.currentHoveredRectId = hoveredRectId;
+            store.hoverTimeout = setTimeout(() => {
                 showTooltip(hoveredRectId);
             }, 200);
         }
@@ -230,20 +244,19 @@ function handleMouseUp(e){
         toggleRectangleMode();
     }
     //恢复其他操作
-    window.isResizing = false;
-    window.isMoving = false;
-    drawingContainer.style.cursor = isRectangleMode ? 'crosshair' : 'default';
+    isResizing = false;
+    isMoving = false;
+    drawingContainer.style.cursor = store.isRectangleMode ? 'crosshair' : 'default';
     restorePageInteraction();
 }
 
 function handleDblClick(e){
-    if(isRectangleMode||isEditing) return;
+    if(store.isRectangleMode||isEditing) return;
     const rect = drawingContainer.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
     const clickedRect = findTopmostRectangleAt(x,y);
-    console.log('clickedRect: ', clickedRect);
     if(clickedRect){
         enterEditingMode(clickedRect);
         e.preventDefault();
@@ -342,7 +355,7 @@ function removeRectangle(id){
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${id}"]`);
     if(rectDiv) rectDiv.remove();
     // 如果删除的是当前编辑的矩形，则退出编辑模式
-    if(editingRect && currentRect.id === id){
+    if(editingRect && currentRect && currentRect.id === id){
         exitEditingMode();
     }
     saveRectangles()
@@ -351,7 +364,7 @@ function removeRectangle(id){
 //进入创建矩阵模式
 function enterEditingMode(rect){
     //已经在编辑这个矩阵时
-    if(isEditing && editingRect && currentRect.id === rect.id) return;
+    if(isEditing && editingRect && currentRect && currentRect.id === rect.id) return;
 
     exitEditingMode();
     isEditing = true;
@@ -359,7 +372,6 @@ function enterEditingMode(rect){
     currentRect = rect;
 
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${rect.id}"]`);
-    console.log('rectDiv: ', rectDiv);
     if(!rectDiv) return;
     rectDiv.classList.add('editing');
 
@@ -372,7 +384,6 @@ function enterEditingMode(rect){
     tooltip.style.display = 'none';
     textInput.focus();
     textInput.select();//全选方便编辑
-    console.log("enterEditingMode")
     createHandles(rectDiv,rect);
 }
 
@@ -382,23 +393,25 @@ function exitEditingMode(){
     isEditing = false;
     if(currentRect){
         const rectDiv = document.querySelector(`.annotation-rect[data-id="${currentRect.id}"]`);
-        rectDiv.classList.remove('editing');
-        const textContainer = rectDiv.querySelector('.annotation-text-container');
-        const textInput = rectDiv.querySelector('.annotation-text-input');
-        const tooltip = rectDiv.querySelector('.annotation-tooltip');
-        
-        textContainer.style.display = 'none';
-        textInput.style.display = 'none';
+        if (rectDiv) {
+            rectDiv.classList.remove('editing');
+            const textContainer = rectDiv.querySelector('.annotation-text-container');
+            const textInput = rectDiv.querySelector('.annotation-text-input');
+            const tooltip = rectDiv.querySelector('.annotation-tooltip');
+            
+            textContainer.style.display = 'none';
+            textInput.style.display = 'none';
 
-        //有文本的时候才显示tooltip
-        if(currentRect.text.trim()!==''){
-            tooltip.textContent = currentRect.text;
-            tooltip.style.display = 'block';
-        } else {
-            tooltip.style.display = 'none';
+            //有文本的时候才显示tooltip
+            if(currentRect.text.trim()!==''){
+                tooltip.textContent = currentRect.text;
+                tooltip.style.display = 'block';
+            } else {
+                tooltip.style.display = 'none';
+            }
+
+            document.querySelectorAll('.resize-handle').forEach(h => h.remove());
         }
-
-        document.querySelectorAll('.resize-handle').forEach(h => h.remove());
     }
     editingRect = null;
     currentRect = null;
@@ -428,6 +441,7 @@ function createHandles(rectDiv,rect){
 
 function getHandleAt(x,y,rect){
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${rect.id}"]`);
+    if (!rectDiv) return null;
     const handles = rectDiv.getElementsByClassName('resize-handle');
     for(let handle of handles){
         const handleRect = handle.getBoundingClientRect();
@@ -443,6 +457,7 @@ function getHandleAt(x,y,rect){
             };
         }
     }
+    return null;
 }
 
 function getCursorForHandle(handle) {
@@ -455,11 +470,9 @@ function getCursorForHandle(handle) {
 }
 
 function startResizing(handle,startX,startY){
-    window.isResizing = true;
-    window.resizeHandle = handle;
-    window.startX = startX;
-    window.startY = startY;
-    window.originalRect = {
+    isResizing = true;
+    resizeHandle = handle;
+    originalRect = {
         x:currentRect.x,
         y:currentRect.y,
         width:currentRect.width,
@@ -469,16 +482,16 @@ function startResizing(handle,startX,startY){
 }
 
 function doResize(currentX,currentY){
-    if(!window.isResizing||!window.resizeHandle||!window.originalRect) return;
-    const dx = currentX - window.startX;
-    const dy = currentY - window.startY;
-    const orig = window.originalRect;
+    if(!isResizing||!resizeHandle||!originalRect) return;
+    const dx = currentX - startX;
+    const dy = currentY - startY;
+    const orig = originalRect;
     let newX = orig.x;
     let newY = orig.y;
     let newW = orig.width;
     let newH = orig.height;
 
-    switch (window.resizeHandle.type) {
+    switch (resizeHandle.type) {
         case 'nw': newX = orig.x + dx; newY = orig.y + dy; newW = orig.width - dx; newH = orig.height - dy; break;
         case 'n': newY = orig.y + dy; newH = orig.height - dy; break;
         case 'ne': newY = orig.y + dy; newW = orig.width + dx; newH = orig.height - dy; break;
@@ -495,12 +508,12 @@ function doResize(currentX,currentY){
     if(newW < minWidth){
         newW = minWidth;
         //调整向左拉
-        if(window.resizeHandle.type.includes('w')) newX = orig.x + orig.width - minWidth;
+        if(resizeHandle.type.includes('w')) newX = orig.x + orig.width - minWidth;
     }    
     if (newH < minHeight) {
         newH = minHeight; 
         //调整向上拉
-        if (window.resizeHandle.type.includes('n')) newY = orig.y + orig.height - minHeight; 
+        if (resizeHandle.type.includes('n')) newY = orig.y + orig.height - minHeight; 
     }
 
     currentRect.x = newX;
@@ -509,50 +522,54 @@ function doResize(currentX,currentY){
     currentRect.height = newH;
     
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${currentRect.id}"]`);
-    rectDiv.style.left = `${newX}px`;
-    rectDiv.style.top = `${newY}px`;
-    rectDiv.style.width = `${newW}px`;
-    rectDiv.style.height = `${newH}px`;
+    if (rectDiv) {
+        rectDiv.style.left = `${newX}px`;
+        rectDiv.style.top = `${newY}px`;
+        rectDiv.style.width = `${newW}px`;
+        rectDiv.style.height = `${newH}px`;
 
-    const handles = rectDiv.querySelectorAll('.resize-handle');
-    handles.forEach(h => {
-        let hx, hy;
-        switch(h.dataset.type) {
-            case 'nw': hx = -5; hy = -5; break;
-            case 'n': hx = newW / 2 - 5; hy = -5; break;
-            case 'ne': hx = newW - 5; hy = -5; break;
-            case 'e': hx = newW - 5; hy = newH / 2 - 5; break;
-            case 'se': hx = newW - 5; hy = newH - 5; break;
-            case 's': hx = newW / 2 - 5; hy = newH - 5; break;
-            case 'sw': hx = -5; hy = newH - 5; break;
-            case 'w': hx = -5; hy = newH / 2 - 5; break;
-        }
-        h.style.left = `${hx}px`;
-        h.style.top = `${hy}px`;
-    });    
+        const handles = rectDiv.querySelectorAll('.resize-handle');
+        handles.forEach(h => {
+            let hx, hy;
+            switch(h.dataset.type) {
+                case 'nw': hx = -5; hy = -5; break;
+                case 'n': hx = newW / 2 - 5; hy = -5; break;
+                case 'ne': hx = newW - 5; hy = -5; break;
+                case 'e': hx = newW - 5; hy = newH / 2 - 5; break;
+                case 'se': hx = newW - 5; hy = newH - 5; break;
+                case 's': hx = newW / 2 - 5; hy = newH - 5; break;
+                case 'sw': hx = -5; hy = newH - 5; break;
+                case 'w': hx = -5; hy = newH / 2 - 5; break;
+            }
+            h.style.left = `${hx}px`;
+            h.style.top = `${hy}px`;
+        });
+    }
 }
 
 function startMoving(startX, startY) {
-    window.isMoving = true;
-    window.moveStartX = startX;
-    window.moveStartY = startY;
-    window.originalRectPos = { x: currentRect.x, y: currentRect.y };
+    isMoving = true;
+    moveStartX = startX;
+    moveStartY = startY;
+    originalRectPos = { x: currentRect.x, y: currentRect.y };
     preventPageInteraction();
 }
 
 function doMove(currentX, currentY) {
-    if (!window.isMoving || !window.originalRectPos) return;
-    const dx = currentX - window.moveStartX;
-    const dy = currentY - window.moveStartY;
-    const newX = window.originalRectPos.x + dx;
-    const newY = window.originalRectPos.y + dy;
+    if (!isMoving || !originalRectPos) return;
+    const dx = currentX - moveStartX;
+    const dy = currentY - moveStartY;
+    const newX = originalRectPos.x + dx;
+    const newY = originalRectPos.y + dy;
 
     currentRect.x = newX;
     currentRect.y = newY;
 
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${currentRect.id}"]`);
-    rectDiv.style.left = `${newX}px`;
-    rectDiv.style.top = `${newY}px`;
+    if (rectDiv) {
+        rectDiv.style.left = `${newX}px`;
+        rectDiv.style.top = `${newY}px`;
+    }
 }
 
 /* 工具函数 */
@@ -564,7 +581,7 @@ function isPointInRect(px,py,rx,ry,rw,rh){
 function findTopmostRectangleAt(x,y){
     const elements = document.elementsFromPoint(x + window.scrollX , y + window.scrollY);
     for(const el of elements){
-        if(el.classList.contains('annotation-rect')){
+        if(el.classList && el.classList.contains('annotation-rect')){
             const rectId = el.dataset.id;
             return rectangles.find(r => r.id === rectId);
         }
@@ -574,22 +591,25 @@ function findTopmostRectangleAt(x,y){
 }
 
 function showTooltip(rectId){
-    console.log("showTooltip")
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${rectId}"]`);
     const rect =rectangles.find(r => r.id === rectId);
-    if(rect && rect.text.trim() !== ''){
+    if(rect && rect.text.trim() !== '' && rectDiv){
         const tooltip = rectDiv.querySelector('.annotation-tooltip');
-        tooltip.textContent = rect.text;
-        tooltip.style.opacity = 1;
+        if (tooltip) {
+            tooltip.textContent = rect.text;
+            tooltip.style.opacity = 1;
+        }
     }
 }
 
 function hideTooltip(rectId){
-    console.log('rectId: ', rectId);
-
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${rectId}"]`);
-    const tooltip = rectDiv.querySelector('.annotation-tooltip');
-    tooltip.style.opacity = 0;
+    if (rectDiv) {
+        const tooltip = rectDiv.querySelector('.annotation-tooltip');
+        if (tooltip) {
+            tooltip.style.opacity = 0;
+        }
+    }
 }
 
 /* 持久化 */

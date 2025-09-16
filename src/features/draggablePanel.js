@@ -3,7 +3,7 @@ import {activateScrollProgress} from './scrollProgress.js'
 import {activateBookmark} from './bookmark.js'
 import { activateGraffiti } from './graffiti.js';
 import { activateCountdown } from './countdownTimer.js';
-import store from '../store.js';
+import store from '../stores/functions.js';
 
 let panelDiv=null;
 let cardDiv=null;

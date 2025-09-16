@@ -1,21 +1,13 @@
+// graffiti.js
 // 创建涂鸦
-import store from '../store.js';
+import store from './store.js';
 import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
 import { getPageKey } from '../utils/getIdentity.js';
 import { activateRectangleAnnotation } from './rectangleAnnotation.js'
 
-// 状态和配置
-let isDrawing = false;
-let currentColor = '#FF0000'; 
-let brushSize = 5;
-let isEraser = false;
-let isPen=false;
-
 let drawingCanvas = null;
 let drawingCtx = null;
 let drawingContainer = null;
-
-// DOM元素
 let colorPickerInput = null;
 let brushSizeSlider = null;
 let brushSizeValueDisplay = null;
@@ -79,28 +71,44 @@ function resizeCanvas(){
 }
 
 function setToolMode(mode){
+  // 清除所有工具的激活状态
   if(penButton) penButton.classList.remove('active');
   if(eraserButton) eraserButton.classList.remove('active');
+  if(document.getElementById('rectangle-btn')) {
+    document.getElementById('rectangle-btn').classList.remove('active');
+  }
 
-  if(mode==='pen'){
-    isEraser=false;
-    isPen=true;
-    penButton.classList.add('active');
-    eraserButton.classList.remove('active');
-    drawingCtx.globalCompositeOperation='source-over';
-    drawingCtx.strokeStyle=currentColor;
-
-  }else if(mode==='eraser'){
-    isPen=false;
-    isEraser=true;
-    eraserButton.classList.add('active');
-    penButton.classList.remove('active');
-    drawingCtx.globalCompositeOperation='destination-out';
-    drawingCtx.strokeStyle='rgba(0,0,0,1)';
-
-  }else{
-    isEraser=false;
-    isPen=false;
+  switch(mode){
+    case 'pen':
+      store.updateState({
+        isEraser: false,
+        isPen: true,
+        isRectangleMode: false
+      });
+      penButton.classList.add('active');
+      drawingCtx.globalCompositeOperation='source-over';
+      drawingCtx.strokeStyle=store.currentColor;
+      break;
+    case 'eraser':
+      store.updateState({
+        isEraser: true,
+        isPen: false,
+        isRectangleMode: false
+      });
+      eraserButton.classList.add('active');
+      drawingCtx.globalCompositeOperation='destination-out';
+      drawingCtx.strokeStyle='rgba(0,0,0,1)';
+      break;
+    default:
+      store.updateState({
+        isEraser: false,
+        isPen: false
+      });
+  }
+  
+  // 通知矩形注释模块更新状态
+  if (window.rectangleAnnotation) {
+    window.rectangleAnnotation.updateMode(store.isRectangleMode);
   }
 }
 
@@ -116,10 +124,10 @@ function createControls(){
   colorPickerInput = document.createElement('input');
   colorPickerInput.id ='color-input';
   colorPickerInput.type = 'color';
-  colorPickerInput.value = currentColor;
+  colorPickerInput.value = store.currentColor;
   colorPickerInput.title = '选择颜色';
   colorPickerInput.addEventListener('input', (e) => {
-    currentColor = e.target.value;
+    store.currentColor = e.target.value;
     setToolMode('pen');
   });
 
@@ -135,7 +143,7 @@ function createControls(){
   brushSizeSlider.type = 'range';
   brushSizeSlider.min = '1';
   brushSizeSlider.max = '50';
-  brushSizeSlider.value = brushSize.toString();
+  brushSizeSlider.value = store.brushSize.toString();
   brushSizeSlider.style.width = '12vh';
 
   // 阻止滑块拖动时触发面板拖动
@@ -144,9 +152,9 @@ function createControls(){
   });
 
   brushSizeSlider.addEventListener('input', (e) => {
-    brushSize = parseInt(e.target.value, 10);
-    brushSizeValueDisplay.value = brushSize;
-    brushSizeValueDisplay.textContent = brushSize + 'px';
+    store.brushSize = parseInt(e.target.value, 10);
+    brushSizeValueDisplay.value = store.brushSize;
+    brushSizeValueDisplay.textContent = store.brushSize + 'px';
   });
 
 
@@ -155,7 +163,7 @@ function createControls(){
   brushSizeValueDisplay.type = 'number';
   brushSizeValueDisplay.min = '1';
   brushSizeValueDisplay.max = '50';
-  brushSizeValueDisplay.value = brushSize;
+  brushSizeValueDisplay.value = store.brushSize;
   brushSizeValueDisplay.addEventListener('mousedown', (e) => {
     e.stopPropagation();
   });
@@ -166,7 +174,7 @@ function createControls(){
     if (value < 1) value = 1;
     if (value > 50) value = 50;
     e.target.value = value;
-    brushSize = value;
+    store.brushSize = value;
     brushSizeSlider.value = value; 
   });
 
@@ -268,8 +276,8 @@ function setupEventListeners(){
 
 function startDrawing(e){
   if(store.isDragging||e.button!==0) return;
-  if(!isEraser && !isPen) return;
-  isDrawing=true;
+  if(!store.isEraser && !store.isPen) return;
+  store.isDrawing = true;
   drawingContainer.style.pointerEvents='auto';
   const rect=drawingCanvas.getBoundingClientRect();
   const PosX=e.clientX-rect.left;
@@ -282,13 +290,13 @@ function startDrawing(e){
 }
 
 function draw(e){
-  if(!isDrawing||!drawingCtx||store.isDragging) return;
-  if(!isEraser && !isPen) return;
+  if(!store.isDrawing||!drawingCtx||store.isDragging) return;
+  if(!store.isEraser && !store.isPen) return;
   const rect=drawingCanvas.getBoundingClientRect();
   const PosX=e.clientX-rect.left;
   const PosY=e.clientY-rect.top;
 
-  drawingCtx.lineWidth=brushSize;
+  drawingCtx.lineWidth=store.brushSize;
 
 
   drawingCtx.lineTo(PosX,PosY);
@@ -300,9 +308,9 @@ function draw(e){
 
 function stopDrawing(){
   if(store.isDragging)return;
-  if(!isEraser && !isPen) return;
-  if(isDrawing&&!store.isDragging){
-    isDrawing=false;
+  if(!store.isEraser && !store.isPen) return;
+  if(store.isDrawing&&!store.isDragging){
+    store.isDrawing = false;
     drawingCtx&&drawingCtx.beginPath();
     drawingContainer.style.pointerEvents = 'none';
   }

@@ -1,8 +1,8 @@
 // 各功能之间的状态管理
 
-import { activateHighlight, deactivateHighlight } from './features/mouseHighlight.js';
-import { activateSpotlight, deactivateSpotlight } from './features/spotlight.js';
-import { activateReadingSpotlight, deactivateReadingSpotlight } from './features/readingSpotlight.js';
+import { activateHighlight, deactivateHighlight } from '../features/mouseHighlight.js';
+import { activateSpotlight, deactivateSpotlight } from '../features/spotlight.js';
+import { activateReadingSpotlight, deactivateReadingSpotlight } from '../features/readingSpotlight.js';
 
 function changeFunction(name){
     if(name === 'mouseHighlight'){
@@ -32,9 +32,6 @@ const store = {
     changeFunction(name);
     console.log("目前启用的功能是", name);
   },
-  //关于面板相关功能
-  isDragging:false,
-
 };
 
 export default store;

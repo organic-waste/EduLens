@@ -1337,6 +1337,26 @@ resizeObserver.observe(box);
 
 
 
+### store 写法对比
+
+------
+
+这两种“Store”写法本质上是**“类实例” vs  “单例对象”** 的区别。 
+
+| 维度           | 第一种（class 实例）                       | 第二种（单例对象）                                        |
+| -------------- | ------------------------------------------ | --------------------------------------------------------- |
+| **创建方式**   | `new Store()` 产生独立实例                 | 文件直接导出一个字面量对象                                |
+| **实例个数**   | 想 new 多少个就多少个                      | 整个运行时只有一份（单例）                                |
+| **状态隔离性** | 多实例之间互不干扰                         | 全局共享，任何模块改一处全变                              |
+| **类型/契约**  | 有构造函数、原型方法，易配 TypeScript 接口 | 纯对象，无类型约束，靠约定                                |
+| **可测试性**   | 可 mock 实例、单元测试无全局副作用         | 全局单例，测试需手动重置状态，易耦合                      |
+| **扩展性**     | 可以继承、混入、装饰器增强                 | 只能直接改对象或包装代理                                  |
+| **树摇/打包**  | 类声明可被摇掉未用代码                     | 对象属性都是静态引用，难摇                                |
+| **使用场景**   | 需要多份独立数据（多画板、多房间、多窗口） | 整个应用只有一份配置/开关（全局主题、当前用户、当前工具） |
+| **心智模型**   | 更像“服务”或“实体”                         | 更像“全局配置表”                                          |
+
+
+
 
 
 ### 错误解决：
@@ -1997,202 +2017,503 @@ const ctx = canvas.getContext('2d', { willReadFrequently: true });
 5. 在矩形内输入说明文字
 6. 点击外部退出编辑模式
 
+## graffiti.js (保留注释版本)
 
+```javascript
+// graffiti.js
+// 创建涂鸦
+import store from './store.js';
+import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
+import { getPageKey } from '../utils/getIdentity.js';
+import { activateRectangleAnnotation } from './rectangleAnnotation.js'
 
----
+// DOM元素
+let drawingCanvas = null;
+let drawingCtx = null;
+let drawingContainer = null;
 
-### **文件: `rectangleAnnotation.css`**
+// DOM元素
+let colorPickerInput = null;
+let brushSizeSlider = null;
+let brushSizeValueDisplay = null;
+let clearButton = null;
+let saveButton = null;
+let eraserButton = null;
+let penButton = null;
+let graffitiControlsDiv = null;
 
-```css
-/* rectangleAnnotation.css */
+function createDrawingCanvas(){
+  drawingContainer=document.getElementById('graffiti-container');
+  if(!drawingContainer){
+    drawingContainer=document.createElement('div');
+    drawingContainer.id = 'graffiti-container';
+    document.body.appendChild(drawingContainer);
+  }
+  drawingCanvas = document.getElementById('graffiti-canvas');
+  if (!drawingCanvas) {
+    drawingCanvas = document.createElement('canvas');
+    drawingCanvas.id = 'graffiti-canvas';
+    drawingCanvas.width = document.documentElement.scrollWidth;
+    drawingCanvas.height = document.documentElement.scrollHeight;
+    drawingContainer.appendChild(drawingCanvas);
 
-.annotation-rect {
-    position: absolute;
-    box-sizing: border-box;
-    pointer-events: auto;
-    border: 2px solid #FF0000;
-    user-select: none;
-    touch-action: none; /* 防止触摸屏上的默认行为 */
+    drawingCtx=drawingCanvas.getContext('2d', { willReadFrequently: true });
+    setupCanvasContext();
+  }else{
+    drawingCtx=drawingCanvas.getContext('2d', { willReadFrequently: true });
+    setupCanvasContext();
+    //若画布存在，调整画布大小
+    resizeCanvas();
+  }
 }
 
-.annotation-rect.editing {
-    /* 可以为编辑模式添加特殊样式 */
+function setupCanvasContext(){
+    if (drawingCtx) {
+        drawingCtx.lineCap = 'round';
+        drawingCtx.lineJoin = 'round';
+    }
 }
 
-.annotation-text-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: rgba(255, 255, 255, 0.9);
-    border-bottom: 1px solid #ccc;
-    display: none; /* 默认隐藏 */
-    pointer-events: auto;
-    z-index: 10;
-    padding: 2px 20px 2px 2px; /* 右侧留出关闭按钮空间 */
-    box-sizing: border-box;
+function resizeCanvas(){
+  if(drawingCanvas){
+    const newWidth=Math.max(document.documentElement.scrollWidth,window.innerWidth);
+    const newHeight=Math.max(document.documentElement.scrollHeight,window.innerHeight);
+    if(drawingCanvas.width!==newWidth||drawingCanvas.height!==newHeight){
+      let imageData = null;
+      try {
+        imageData = drawingCtx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+      } catch(error) {
+        console.warn(error);
+      }
+      drawingCanvas.width = newWidth;
+      drawingCanvas.height = newHeight;      
+      setupCanvasContext();     
+      if(imageData) {
+        drawingCtx.putImageData(imageData, 0, 0);
+      }
+    }
+  }
 }
 
-.annotation-text-input {
-    width: 100%;
-    border: none;
-    background: transparent;
-    font-size: 12px;
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
-    outline: none;
+function setToolMode(mode){
+  // 清除所有工具的激活状态
+  if(penButton) penButton.classList.remove('active');
+  if(eraserButton) eraserButton.classList.remove('active');
+  if(document.getElementById('rectangle-btn')) {
+    document.getElementById('rectangle-btn').classList.remove('active');
+  }
+
+  switch(mode){
+    case 'pen':
+      store.updateState({
+        isEraser: false,
+        isPen: true,
+        isRectangleMode: false
+      });
+      penButton.classList.add('active');
+      drawingCtx.globalCompositeOperation='source-over';
+      drawingCtx.strokeStyle=store.currentColor;
+      break;
+    case 'eraser':
+      store.updateState({
+        isEraser: true,
+        isPen: false,
+        isRectangleMode: false
+      });
+      eraserButton.classList.add('active');
+      drawingCtx.globalCompositeOperation='destination-out';
+      drawingCtx.strokeStyle='rgba(0,0,0,1)';
+      break;
+    default:
+      store.updateState({
+        isEraser: false,
+        isPen: false
+      });
+  }
+  
+  // 通知矩形注释模块更新状态
+  if (window.rectangleAnnotation) {
+    window.rectangleAnnotation.updateMode(store.isRectangleMode);
+  }
 }
 
-.annotation-delete-btn {
-    position: absolute;
-    top: 50%;
-    right: 2px;
-    transform: translateY(-50%);
-    background: #b26464;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    width: 16px;
-    height: 16px;
-    font-size: 12px;
-    line-height: 14px;
-    text-align: center;
-    cursor: pointer;
-    pointer-events: auto;
+function createControls(){
+  const cardDiv=document.querySelector('.functions');
+  if(document.getElementById('graffiti-controls')) return;
+
+  graffitiControlsDiv = document.createElement('div');
+  graffitiControlsDiv.id = 'graffiti-controls';
+  graffitiControlsDiv.className = 'function'; 
+
+  //颜色选择器
+  colorPickerInput = document.createElement('input');
+  colorPickerInput.id ='color-input';
+  colorPickerInput.type = 'color';
+  colorPickerInput.value = store.currentColor;
+  colorPickerInput.title = '选择颜色';
+  colorPickerInput.addEventListener('input', (e) => {
+    store.currentColor = e.target.value;
+    setToolMode('pen');
+  });
+
+  // 笔刷大小滑块
+  const brushSizeDiv = document.createElement('div');
+  brushSizeDiv.style.display = 'flex';
+  brushSizeDiv.style.alignItems = 'center';
+  brushSizeDiv.style.gap = '0.3vh';
+  brushSizeDiv.title = '调整笔刷大小';
+
+  brushSizeSlider = document.createElement('input');
+  brushSizeSlider.id='brush-slider';
+  brushSizeSlider.type = 'range';
+  brushSizeSlider.min = '1';
+  brushSizeSlider.max = '50';
+  brushSizeSlider.value = store.brushSize.toString();
+  brushSizeSlider.style.width = '12vh';
+
+  // 阻止滑块拖动时触发面板拖动
+  brushSizeSlider.addEventListener('mousedown', (e) => {
+    e.stopPropagation(); 
+  });
+
+  brushSizeSlider.addEventListener('input', (e) => {
+    store.brushSize = parseInt(e.target.value, 10);
+    brushSizeValueDisplay.value = store.brushSize;
+    brushSizeValueDisplay.textContent = store.brushSize + 'px';
+  });
+
+
+  brushSizeValueDisplay = document.createElement('input');
+  brushSizeValueDisplay.id='brush-input';
+  brushSizeValueDisplay.type = 'number';
+  brushSizeValueDisplay.min = '1';
+  brushSizeValueDisplay.max = '50';
+  brushSizeValueDisplay.value = store.brushSize;
+  brushSizeValueDisplay.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
+
+  brushSizeValueDisplay.addEventListener('change', (e) => {
+    let value = parseInt(e.target.value);
+    // 限制范围
+    if (value < 1) value = 1;
+    if (value > 50) value = 50;
+    e.target.value = value;
+    store.brushSize = value;
+    brushSizeSlider.value = value; 
+  });
+
+  //回车时失去焦点
+  brushSizeValueDisplay.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.target.blur();
+    }
+  });
+
+  brushSizeDiv.appendChild(brushSizeSlider);
+  brushSizeDiv.appendChild(brushSizeValueDisplay);
+
+  //工具组
+  const toolGroupDiv = document.createElement('div');
+  toolGroupDiv.className = 'tool-group';
+
+  // 橡皮擦
+  eraserButton = document.createElement('button');
+  eraserButton.id = 'eraser-btn';
+  eraserButton.className = 'graffiti-icon-btn';
+  eraserButton.title = '切换橡皮擦';
+  eraserButton.innerHTML='<i class="fas fa-eraser  graffiti-icon"></i>'
+  eraserButton.addEventListener('click', () => setToolMode('eraser'));
+  eraserButton.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
+
+  //笔
+  penButton = document.createElement('button'); 
+  penButton.id = 'pen-btn';
+  penButton.className = 'graffiti-icon-btn'; 
+  penButton.title = '画笔';
+  penButton.innerHTML='<i class="fas fa-paint-brush graffiti-icon" ></i>'
+  penButton.addEventListener('click', () => setToolMode('pen'));
+  penButton.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
+
+  //清屏按钮
+  clearButton = document.createElement('button');
+  clearButton.id = 'clear-btn';
+  clearButton.className = 'graffiti-icon-btn';
+  clearButton.title = '清除所有涂鸦';
+  clearButton.innerHTML='<i class="fa-solid fa-trash-can graffiti-icon"></i>'
+  clearButton.addEventListener('click', clearCanvas);
+  clearButton.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
+
+  //保存按钮
+  saveButton = document.createElement('button');
+  saveButton.id = 'save-btn';
+  saveButton.className = 'graffiti-icon-btn';
+  saveButton.title = '保存当前涂鸦';
+  saveButton.innerHTML='<i class="fa-solid fa-download graffiti-icon"></i>'
+  saveButton.addEventListener('click', saveDrawing);
+  saveButton.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
+
+  toolGroupDiv.appendChild(eraserButton);
+  toolGroupDiv.appendChild(penButton);
+  toolGroupDiv.appendChild(clearButton);
+  toolGroupDiv.appendChild(saveButton);
+
+  graffitiControlsDiv.appendChild(colorPickerInput);
+  graffitiControlsDiv.appendChild(brushSizeDiv);
+  graffitiControlsDiv.appendChild(toolGroupDiv); 
+
+  cardDiv.appendChild(graffitiControlsDiv);
 }
 
-.annotation-delete-btn:hover {
-    background: #d44343;
+//绘图过程监听
+function setupEventListeners(){
+  window.addEventListener('mousedown', startDrawing);
+  window.addEventListener('mousemove', draw);
+  window.addEventListener('mouseup', stopDrawing);
+  window.addEventListener('mouseleave', stopDrawing);  
+
+  //监听窗口大小变化并调整画布
+  let resizeTimeout;
+  const handleResize=()=>{
+    clearTimeout(resizeTimeout);
+    resizeTimeout=setTimeout(() => {
+      resizeCanvas();
+    }, 100);
+  };
+  window.addEventListener('resize',handleResize);
+  
+  //让画布跟随页面滚动
+  // window.addEventListener('scroll',()=>{
+  //   if(drawingContainer){
+  //     drawingContainer.style.top=`${window.scrollY}px`;
+  //     drawingContainer.style.left=`${window.scrollX}px`;
+  //   }
+  // })
 }
 
-.annotation-tooltip {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    font-size: 12px;
-    padding: 2px;
-    box-sizing: border-box;
-    text-align: center;
-    display: none;
-    pointer-events: none;
-    z-index: 9;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+function startDrawing(e){
+  if(store.isDragging||e.button!==0) return;
+  if(!store.isEraser && !store.isPen) return;
+  store.isDrawing = true;
+  drawingContainer.style.pointerEvents='auto';
+  const rect=drawingCanvas.getBoundingClientRect();
+  const PosX=e.clientX-rect.left;
+  const PosY=e.clientY-rect.top;
+  if(drawingCtx){
+    drawingCtx.beginPath();
+    drawingCtx.moveTo(PosX,PosY);//设置画笔初始点
+  }
+  draw(e);//确保点击时能画点
 }
 
-.resize-handle {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: white;
-    border: 1px solid black;
-    border-radius: 50%;
-    pointer-events: auto;
-    z-index: 11;
-    user-select: none;
-    touch-action: none;
+function draw(e){
+  if(!store.isDrawing||!drawingCtx||store.isDragging) return;
+  if(!store.isEraser && !store.isPen) return;
+  const rect=drawingCanvas.getBoundingClientRect();
+  const PosX=e.clientX-rect.left;
+  const PosY=e.clientY-rect.top;
+
+  drawingCtx.lineWidth=store.brushSize;
+
+
+  drawingCtx.lineTo(PosX,PosY);
+  drawingCtx.stroke();
+  drawingCtx.beginPath();
+  drawingCtx.moveTo(PosX,PosY);
+
 }
 
-.annotation-preview {
-    position: absolute;
-    border: 2px dashed #FF0000;
-    pointer-events: none;
-    z-index: 8;
-    user-select: none;
+function stopDrawing(){
+  if(store.isDragging)return;
+  if(!store.isEraser && !store.isPen) return;
+  if(store.isDrawing&&!store.isDragging){
+    store.isDrawing = false;
+    drawingCtx&&drawingCtx.beginPath();
+    drawingContainer.style.pointerEvents = 'none';
+  }
+}
+
+function clearCanvas(){
+  if(drawingCtx&&drawingCanvas){
+    drawingCtx.clearRect(0,0,drawingCanvas.width,drawingCanvas.height);
+    //在清除画布后更新存储的画布也为空
+    saveDrawing();
+  }
+}
+
+async function saveDrawing() {
+  if(!drawingCanvas) return;
+  try{
+    const dataURL=drawingCanvas.toDataURL('image/png'); //指定以png的形式保存
+    const pageKey=getPageKey();
+    const result=await chrome.storage.local.get({canvas: {}})
+    const canvas=result.canvas;
+    canvas[pageKey]=dataURL;
+    await chrome.storage.local.set({canvas});
+
+  }catch (error) {
+    console.error(error);
+  }
+}
+
+async function loadDrawing() {
+  if (!drawingCtx || !drawingCanvas)return; 
+  try{
+    const pageKey=getPageKey();
+    const result=await chrome.storage.local.get({canvas:{}})
+    const dataURL=result.canvas[pageKey];
+
+    if(dataURL){
+      let img=new Image();
+      //保证在图像加载后再绘制到canvas中
+      img.onload=()=>{
+        drawingCtx.clearRect(0,0,drawingCanvas.width,drawingCanvas.height);
+        drawingCtx.drawImage(img,0,0);
+        // console.log('load drawing',drawingCtx);
+      }
+      img.onerror = (error) => {
+        console.error(error);
+      };
+      img.src=dataURL;
+    }
+
+  }catch (error) {
+    console.error(error);
+  }
+}
+
+async function handlePageChange() {
+  // console.log('page changed');
+  await saveDrawing();
+  resizeCanvas();
+  await loadDrawing();
+}
+
+export function activateGraffiti(){
+  createDrawingCanvas();
+  loadDrawing();
+  createControls();
+  setupEventListeners();
+  activateRectangleAnnotation();
+  MonitorSPARoutes(handlePageChange);
 }
 ```
 
----
-
-### **文件: `rectangleAnnotation.js`**
+## rectangleAnnotation.js (保留注释版本)
 
 ```javascript
 // rectangleAnnotation.js
+// 创建矩形注释
 
-import { getPageKey } from '../utils/getIdentity.js';
+import store from './store.js';
+import { getPageKey,getId } from '../utils/getIdentity.js';
 
-// --- 状态管理 ---
-let isRectangleMode = false;
-let isCreating = false;
-let isEditing = false;
+let isCreating = false; //是否还在创建矩阵中
+let isEditing = false; //是否有矩阵处于编辑模式
 let editingRect= null;
 let startX, startY, endX, endY;
-let hoverTimeout = null;
-let hoverRectId = null;
+// let hoverTimeout = null;
+// let hoverRectId = null;
 
-// --- DOM 元素 ---
 let rectangleButton = null;
 let drawingContainer = null;
+let previewDiv = null;
+let currentRect = null;
 
-// --- 矩形数据结构 ---
 let rectangles = [];
 
-// --- 初始化函数 ---
-export function activateRectangleAnnotation() {
-    drawingContainer = document.getElementById('graffiti-container');
+// 矩形操作相关变量
+let isResizing = false;
+let isMoving = false;
+let resizeHandle = null;
+let moveStartX = 0;
+let moveStartY = 0;
+let originalRect = null;
+let originalRectPos = null;
 
-    if (!drawingContainer) {
-        console.error('Graffiti container not found for rectangle annotation.');
-        return;
+export function activateRectangleAnnotation(){
+    drawingContainer=document.getElementById('graffiti-container');
+    const toolGroupDiv=document.querySelector('#graffiti-controls .tool-group');
+    if(toolGroupDiv && !document.getElementById('rectangle-btn')){
+        rectangleButton=document.createElement('button');
+        rectangleButton.id='rectangle-btn';
+        rectangleButton.className='graffiti-icon-btn';
+        rectangleButton.title='添加矩形注释';
+        rectangleButton.innerHTML='<i class="fas fa-vector-square graffiti-icon"></i>';
+        rectangleButton.addEventListener('click',toggleRectangleMode);
+        rectangleButton.addEventListener('mousedown',(e)=>e.stopPropagation());
+        toolGroupDiv.appendChild(rectangleButton);
     }
-
-    const toolGroupDiv = document.querySelector('#graffiti-controls .tool-group');
-    if (toolGroupDiv && !document.getElementById('rectangle-btn')) {
-        rectangleButton = document.createElement('button');
-        rectangleButton.id = 'rectangle-btn';
-        rectangleButton.className = 'graffiti-icon-btn';
-        rectangleButton.title = '添加矩形注释';
-        rectangleButton.innerHTML = '<i class="fas fa-vector-square graffiti-icon"></i>';
-        rectangleButton.addEventListener('click', toggleRectangleMode);
-        rectangleButton.addEventListener('mousedown', (e) => e.stopPropagation());
-        toolGroupDiv.insertBefore(rectangleButton, toolGroupDiv.firstChild);
-    }
-
-    loadRectangles().then(() => {
+    loadRectangles().then(()=>{
         renderAllRectangles();
     });
-
-    setupRectangleEventListeners();
+    EditingRectangleEventListeners();
+    
+    // 将模块实例暴露给全局，以便其他模块可以调用
+    window.rectangleAnnotation = {
+        updateMode: function(isRectangleMode) {
+            if (!isRectangleMode && store.isRectangleMode) {
+                // 如果矩形模式被关闭，需要清理相关状态
+                if (rectangleButton) {
+                    rectangleButton.classList.remove('active');
+                }
+                drawingContainer.style.cursor = '';
+                restorePageInteraction();
+                store.isRectangleMode = false;
+            }
+        }
+    };
 }
 
-// --- 功能函数 ---
-
-function toggleRectangleMode() {
-    isRectangleMode = !isRectangleMode;
-    if (isRectangleMode) {
+//转换矩阵模式（编辑模式/查看模式）
+function toggleRectangleMode(){
+    // 互斥：关闭其他工具
+    const penBtn = document.getElementById('pen-btn');
+    const eraserBtn = document.getElementById('eraser-btn');
+    if (penBtn) penBtn.classList.remove('active');
+    if (eraserBtn) eraserBtn.classList.remove('active');
+    
+    store.updateState({
+        isRectangleMode: !store.isRectangleMode,
+        isPen: false,
+        isEraser: false
+    });
+    
+    if(store.isRectangleMode){
         rectangleButton.classList.add('active');
-        drawingContainer.style.cursor = 'crosshair';
+        drawingContainer.style.cursor='crosshair';
         exitEditingMode();
         preventPageInteraction();
-    } else {
+    }else{
         rectangleButton.classList.remove('active');
-        drawingContainer.style.cursor = '';
+        drawingContainer.style.cursor='';
         restorePageInteraction();
     }
 }
 
-// 防止页面元素被意外选中或拖动
-function preventPageInteraction() {
-    document.body.style.userSelect = 'none';
-    document.body.style.webkitUserSelect = 'none';
-    document.body.style.pointerEvents = 'none';
-    drawingContainer.style.pointerEvents = 'auto'; // 只允许在画布容器内交互
+//监听画布的鼠标事件
+function preventPageInteraction(){
+    document.body.style.userSelect='none';
+    document.body.style.pointerEvents='none';
+    drawingContainer.style.pointerEvents='auto';
 }
 
-// 恢复页面正常交互
+//监听背景的鼠标事件
 function restorePageInteraction() {
     document.body.style.userSelect = '';
-    document.body.style.webkitUserSelect = '';
     document.body.style.pointerEvents = '';
-    drawingContainer.style.pointerEvents = 'none'; // 恢复为默认，由子元素控制
+    // drawingContainer.style.pointerEvents = 'none'; 
 }
 
-function setupRectangleEventListeners() {
+function EditingRectangleEventListeners(){
     drawingContainer.addEventListener('mousedown', handleMouseDown);
     drawingContainer.addEventListener('mousemove', handleMouseMove);
     drawingContainer.addEventListener('mouseup', handleMouseUp);
@@ -2200,159 +2521,171 @@ function setupRectangleEventListeners() {
     drawingContainer.addEventListener('dblclick', handleDblClick);
 }
 
-function handleMouseDown(e) {
-    if (e.button !== 0) return;
-
+function handleMouseDown(e){
+    if(e.button!==0)return;
     const rect = drawingContainer.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    if (isRectangleMode && !isEditing) {
-        isCreating = true;
+    const x = e.clientX-rect.left;
+    const y = e.clientY-rect.top;
+    
+    //创建新矩阵时
+    if(store.isRectangleMode&&!isEditing){
+        isCreating=true;
         startX = endX = x;
         startY = endY = y;
         createPreviewRectangle();
         e.preventDefault();
-        e.stopPropagation(); // 阻止事件冒泡到可能的父级监听器
-    } else if (isEditing && currentRect) {
-        const handle = getHandleAt(x, y, currentRect);
-        if (handle) {
-            startResizing(handle, x, y);
-            e.preventDefault();
-            e.stopPropagation();
-        } else if (isPointInRect(x, y, currentRect.x, currentRect.y, currentRect.width, currentRect.height)) {
-            // 点击在矩形内部（非控制点）
-            // 检查是否点击在文本输入区域或删除按钮上
+        e.stopPropagation();
+    }
+    //矩阵处于编辑态时
+    else if(isEditing&&currentRect){
+        const handle = getHandleAt(x,y,currentRect);
+
+        //点击到矩阵内部
+        if(isPointInRect(x,y,currentRect.x,currentRect.y,currentRect.width,currentRect.height)){
+ 
             const textContainer = e.target.closest('.annotation-text-container');
             const deleteBtn = e.target.closest('.annotation-delete-btn');
-            
-            if (textContainer || deleteBtn) {
-                 // 点击在文本区域或删除按钮上，不触发移动
-                 // 文本输入和按钮点击由它们自己的监听器处理
-                 // 但需要阻止事件冒泡到容器
-                 e.stopPropagation();
-                 return;
+            if(textContainer||deleteBtn){
+                //保证点击在文本和删除按钮上时不触发矩阵的移动
+                e.stopPropagation();
+                return;
             }
-            
-            // 否则，开始移动
-            startMoving(x, y);
+            //移动矩阵
+            startMoving(x,y);
             e.preventDefault();
             e.stopPropagation();
-        } else {
-            // 点击在编辑中的矩形外部，退出编辑模式
+        }
+        //点击矩阵外部
+        else{
             exitEditingMode();
             e.stopPropagation();
         }
-    } else if (!isRectangleMode && !isEditing) {
-        const clickedRect = findTopmostRectangleAt(x, y);
-        if (clickedRect) {
-            enterEditingMode(clickedRect);
+    }
+    //矩阵处于浏览态
+    else if(!store.isRectangleMode&&!isEditing){
+        const clickedRect = findTopmostRectangleAt(x,y);
+        if(clickedRect){
+            exitEditingMode(clickedRect);
             e.preventDefault();
             e.stopPropagation();
         }
     }
 }
 
-function handleMouseMove(e) {
+function handleMouseMove(e){
     const rect = drawingContainer.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    if (isCreating) {
-        endX = x;
-        endY = y;
+    //创建矩阵元素时
+    if(isCreating){
+        endX=x;
+        endY=y;
         updatePreviewRectangle();
-    } else if (isEditing && currentRect) {
-        if (window.isResizing) {
-            doResize(x, y);
-            e.preventDefault(); // 阻止页面滚动等
-        } else if (window.isMoving) {
-            doMove(x, y);
-            e.preventDefault(); // 阻止页面滚动等
-        } else {
-            const handle = getHandleAt(x, y, currentRect);
-            if (handle) {
-                drawingContainer.style.cursor = getCursorForHandle(handle);
-            } else if (isPointInRect(x, y, currentRect.x, currentRect.y, currentRect.width, currentRect.height)) {
+    }
+    //编辑矩阵时
+    else if(isEditing&&currentRect){
+        if(isResizing){
+            doResize(x,y);
+            e.preventDefault();
+        }else if(isMoving){
+            doMove(x,y);
+            e.preventDefault();
+        }else {
+            const handle = getHandleAt(x,y,currentRect);
+            //通过判断鼠标位置来获取到对应的cursor样式
+            if(handle){
+                drawingContainer.style.cursor= getCursorForHandle(handle);
+            }else if(isPointInRect(x,y,currentRect.x,currentRect.y,currentRect.width,currentRect.height)){
                 drawingContainer.style.cursor = 'move';
-            } else {
+            }else{
                 drawingContainer.style.cursor = 'default';
             }
         }
-    } else if (!isRectangleMode && !isEditing) {
-        const hoveredRect = findTopmostRectangleAt(x, y);
-        const hoveredRectId = hoveredRect ? hoveredRect.id : null;
+    }
+    //查看元素时
+    else if(!store.isRectangleMode && !isEditing){
+        const hoveredRect = findTopmostRectangleAt(x,y);
+        const hoveredRectId = hoveredRect?.id;
+        // 当鼠标下方没有有效矩阵时
+        if (!hoveredRect) {
+            if (store.currentHoveredRectId) {
+                if (store.hoverTimeout) {
+                    clearTimeout(store.hoverTimeout);
+                }
+                hideTooltip(store.currentHoveredRectId);
+                store.currentHoveredRectId = null;
+            }
+            return;
+        }
 
-        if (hoveredRectId && hoveredRectId !== window.currentHoveredRectId) {
-            if (window.hoverTimeout) clearTimeout(window.hoverTimeout);
-            window.currentHoveredRectId = hoveredRectId;
-            window.hoverTimeout = setTimeout(() => {
+        // 当转移hover的元素时
+        if (hoveredRectId && hoveredRectId !== store.currentHoveredRectId) {
+            if (store.hoverTimeout) {
+                clearTimeout(store.hoverTimeout);
+            }
+            store.currentHoveredRectId = hoveredRectId;
+            store.hoverTimeout = setTimeout(() => {
                 showTooltip(hoveredRectId);
             }, 200);
-        } else if (!hoveredRectId && window.currentHoveredRectId) {
-            if (window.hoverTimeout) {
-                clearTimeout(window.hoverTimeout);
-                window.hoverTimeout = null;
-            }
-            hideTooltip(window.currentHoveredRectId);
-            window.currentHoveredRectId = null;
         }
     }
 }
 
-function handleMouseUp(e) {
-    if (isCreating) {
+function handleMouseUp(e){
+    if(isCreating){
         isCreating = false;
         const newRect = {
-            id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
-            x: Math.min(startX, endX),
-            y: Math.min(startY, endY),
+            id: getId(),
+            x: Math.min(startX,endX),
+            y: Math.min(startY,endY),
             width: Math.abs(endX - startX),
             height: Math.abs(endY - startY),
             text: '',
             color: '#FF0000'
         };
-        if (newRect.width > 5 && newRect.height > 5) {
+        //排除太小的矩阵
+        if(newRect.width > 5 && newRect.height > 5){
+            //绘制出具体的实现矩阵
             rectangles.push(newRect);
-            renderRectangle(newRect);
+            renderRectangles(newRect);
             saveRectangles();
         }
         removePreviewRectangle();
+        //转为查看模式
         toggleRectangleMode();
     }
-    // 无论何种状态，鼠标抬起都应停止操作
-    window.isResizing = false;
-    window.isMoving = false;
-    drawingContainer.style.cursor = isRectangleMode ? 'crosshair' : 'default';
-    restorePageInteraction(); // 鼠标抬起时总是恢复
+    //恢复其他操作
+    isResizing = false;
+    isMoving = false;
+    drawingContainer.style.cursor = store.isRectangleMode ? 'crosshair' : 'default';
+    restorePageInteraction();
 }
 
-function handleDblClick(e) {
-    if (isRectangleMode || isEditing) return;
+function handleDblClick(e){
+    if(store.isRectangleMode||isEditing) return;
     const rect = drawingContainer.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const clickedRect = findTopmostRectangleAt(x, y);
-    if (clickedRect) {
+    const clickedRect = findTopmostRectangleAt(x,y);
+    if(clickedRect){
         enterEditingMode(clickedRect);
         e.preventDefault();
-        e.stopPropagation();
+        e.stopPropagation();        
     }
 }
 
-// --- 矩形创建与渲染 ---
 
-let previewDiv = null;
-function createPreviewRectangle() {
-    if (previewDiv) removePreviewRectangle();
+function createPreviewRectangle(){
+    if(previewDiv) removePreviewRectangle();
     previewDiv = document.createElement('div');
     previewDiv.className = 'annotation-preview';
     drawingContainer.appendChild(previewDiv);
 }
 
-function updatePreviewRectangle() {
-    if (!previewDiv) return;
+function updatePreviewRectangle(){
+    if(!previewDiv)return;
     const left = Math.min(startX, endX);
     const top = Math.min(startY, endY);
     const width = Math.abs(endX - startX);
@@ -2363,38 +2696,38 @@ function updatePreviewRectangle() {
     previewDiv.style.height = `${height}px`;
 }
 
-function removePreviewRectangle() {
-    if (previewDiv && previewDiv.parentNode) {
+function removePreviewRectangle(){
+    if(previewDiv && previewDiv.parentNode){
         previewDiv.parentNode.removeChild(previewDiv);
     }
     previewDiv = null;
 }
 
-function renderAllRectangles() {
-    document.querySelectorAll('.annotation-rect').forEach(el => el.remove());
-    rectangles.forEach(r => renderRectangle(r));
+function renderAllRectangles(){
+    document.querySelectorAll('.annotation-rect').forEach(e => e.remove());
+    rectangles.forEach(r => renderRectangles(r))
 }
 
-function renderRectangle(rectData) {
+function renderRectangles(rect){
     const rectDiv = document.createElement('div');
     rectDiv.className = 'annotation-rect';
-    rectDiv.dataset.id = rectData.id;
-    rectDiv.style.left = `${rectData.x}px`;
-    rectDiv.style.top = `${rectData.y}px`;
-    rectDiv.style.width = `${rectData.width}px`;
-    rectDiv.style.height = `${rectData.height}px`;
-    rectDiv.style.borderColor = rectData.color;
-
-    // 创建文本容器（在上方）
+    rectDiv.dataset.id = rect.id;
+    rectDiv.style.left = `${rect.x}px`;
+    rectDiv.style.top = `${rect.y}px`;
+    rectDiv.style.width = `${rect.width}px`;
+    rectDiv.style.height = `${rect.height}px`;
+    rectDiv.style.borderColor = rect.color;
+    
+    //文本区域
     const textContainer = document.createElement('div');
     textContainer.className = 'annotation-text-container';
 
     const textInput = document.createElement('input');
     textInput.type = 'text';
     textInput.className = 'annotation-text-input';
-    textInput.id = `annotation-input-${rectData.id}`;
-    textInput.name = `annotation-text-${rectData.id}`;
-    textInput.value = rectData.text;
+    textInput.id = `annotation-input-${rect.id}`;
+    textInput.name = `annotation-text-${rect.id}`;
+    textInput.value = rect.text;
     textInput.style.display = 'none';
 
     const deleteBtn = document.createElement('button');
@@ -2405,85 +2738,72 @@ function renderRectangle(rectData) {
     textContainer.appendChild(textInput);
     textContainer.appendChild(deleteBtn);
 
-    // Tooltip（也在上方，但默认隐藏）
+    // Tooltip
     const tooltip = document.createElement('div');
     tooltip.className = 'annotation-tooltip';
-    tooltip.textContent = rectData.text;
+    tooltip.textContent = rect.text;
 
     rectDiv.appendChild(textContainer);
     rectDiv.appendChild(tooltip);
 
-    // 事件监听器
-    textInput.addEventListener('input', (e) => {
-        rectData.text = e.target.value;
+    textInput.addEventListener('input',(e) => {
+        rect.text = e.target.value;
         tooltip.textContent = e.target.value;
         saveRectangles();
-    });
+    })
     textInput.addEventListener('mousedown', (e) => e.stopPropagation());
     textInput.addEventListener('click', (e) => e.stopPropagation());
 
-    deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); // 阻止触发矩形的 mousedown
-        removeRectangle(rectData.id);
-    });
+    deleteBtn.addEventListener('click',(e) => {
+        e.stopPropagation();
+        removeRectangle(rect.id);
+    })
     deleteBtn.addEventListener('mousedown', (e) => e.stopPropagation());
-
-    // 阻止矩形本身的事件冒泡到容器（对于内部元素的事件已在它们自己的监听器中处理）
-    rectDiv.addEventListener('mousedown', (e) => {
-        // 如果点击的是文本输入或删除按钮，事件已经被它们处理并阻止冒泡了
-        // 如果点击的是矩形边框或内部空白区域，会继续冒泡到 container 的 mousedown
-        // 我们在这里可以做一些矩形级别的处理，如果需要的话
-    });
-
     drawingContainer.appendChild(rectDiv);
 }
 
-function removeRectangle(id) {
-    rectangles = rectangles.filter(r => r.id !== id);
+function removeRectangle(id){
+    rectangles = rectangles.filter(r => r.id!== id);
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${id}"]`);
-    if (rectDiv) {
-        rectDiv.remove();
+    if(rectDiv) rectDiv.remove();
+    // 如果删除的是当前编辑的矩形，则退出编辑模式
+    if(editingRect && currentRect && currentRect.id === id){
+        exitEditingMode();
     }
-    if (editingRect&& currentRect.id === id) {
-        exitEditingMode(); // 如果删除的是当前编辑的矩形，则退出编辑模式
-    }
-    saveRectangles();
+    saveRectangles()
 }
 
-// --- 编辑模式 ---
+//进入创建矩阵模式
+function enterEditingMode(rect){
+    //已经在编辑这个矩阵时
+    if(isEditing && editingRect && currentRect && currentRect.id === rect.id) return;
 
-function enterEditingMode(rectData) {
-    // 如果当前正在编辑同一个矩形，则不重复操作
-    if (isEditing && editingRect&& currentRect.id === rectData.id) {
-        return;
-    }
-    
-    exitEditingMode(); // 确保只有一个处于编辑状态
+    exitEditingMode();
     isEditing = true;
-    editingRect= rectData;
+    editingRect = rect;
+    currentRect = rect;
 
-    const rectDiv = document.querySelector(`.annotation-rect[data-id="${rectData.id}"]`);
-    if (!rectDiv) return;
-
+    const rectDiv = document.querySelector(`.annotation-rect[data-id="${rect.id}"]`);
+    if(!rectDiv) return;
     rectDiv.classList.add('editing');
 
     const textContainer = rectDiv.querySelector('.annotation-text-container');
     const textInput = rectDiv.querySelector('.annotation-text-input');
     const tooltip = rectDiv.querySelector('.annotation-tooltip');
-    
+
     textContainer.style.display = 'block';
     textInput.style.display = 'block';
-    tooltip.style.display = 'none'; // 编辑时隐藏tooltip
+    tooltip.style.display = 'none';
     textInput.focus();
-    textInput.select(); // 全选方便编辑
-
-    createHandles(rectDiv, rectData);
+    textInput.select();//全选方便编辑
+    createHandles(rectDiv,rect);
 }
 
-function exitEditingMode() {
-    if (!isEditing) return;
+//退出创建矩阵模式
+function exitEditingMode(){
+    if(!isEditing) return;
     isEditing = false;
-    if (currentRect) {
+    if(currentRect){
         const rectDiv = document.querySelector(`.annotation-rect[data-id="${currentRect.id}"]`);
         if (rectDiv) {
             rectDiv.classList.remove('editing');
@@ -2493,56 +2813,60 @@ function exitEditingMode() {
             
             textContainer.style.display = 'none';
             textInput.style.display = 'none';
-            // 如果有文本，显示tooltip
-            if (currentRect.text.trim() !== '') {
-                 tooltip.textContent = currentRect.text;
-                 tooltip.style.display = 'block';
+
+            //有文本的时候才显示tooltip
+            if(currentRect.text.trim()!==''){
+                tooltip.textContent = currentRect.text;
+                tooltip.style.display = 'block';
             } else {
                 tooltip.style.display = 'none';
             }
-            
+
             document.querySelectorAll('.resize-handle').forEach(h => h.remove());
         }
     }
-    editingRect= null;
+    editingRect = null;
+    currentRect = null;
     drawingContainer.style.cursor = 'default';
 }
 
-function createHandles(rectDiv, rectData) {
+function createHandles(rectDiv,rect){
     const handles = [
-        { type: 'nw', x: -5, y: -5 }, { type: 'n', x: rectData.width / 2 - 5, y: -5 }, { type: 'ne', x: rectData.width - 5, y: -5 },
-        { type: 'e', x: rectData.width - 5, y: rectData.height / 2 - 5 }, { type: 'se', x: rectData.width - 5, y: rectData.height - 5 },
-        { type: 's', x: rectData.width / 2 - 5, y: rectData.height - 5 }, { type: 'sw', x: -5, y: rectData.height - 5 }, { type: 'w', x: -5, y: rectData.height / 2 - 5 }
+        { type: 'nw', x: -5, y: -5 }, { type: 'n', x: rect.width / 2 - 5, y: -5 }, { type: 'ne', x: rect.width - 5, y: -5 },
+        { type: 'e', x: rect.width - 5, y: rect.height / 2 - 5 }, { type: 'se', x: rect.width - 5, y: rect.height - 5 },
+        { type: 's', x: rect.width / 2 - 5, y: rect.height - 5 }, { type: 'sw', x: -5, y: rect.height - 5 }, { type: 'w', x: -5, y: rect.height / 2 - 5 }
     ];
-
-    handles.forEach(h => {
+    handles.forEach(h =>{
         const handle = document.createElement('div');
         handle.className = 'resize-handle';
         handle.dataset.type = h.type;
         handle.style.left = `${h.x}px`;
         handle.style.top = `${h.y}px`;
-        // 阻止事件冒泡和默认行为
         handle.addEventListener('mousedown', (e) => {
-             e.stopPropagation();
-             e.preventDefault(); // 阄止拖动时可能的页面行为
+            e.stopPropagation();
+            e.preventDefault();
+            startResizing({ element: handle, type: handle.dataset.type }, e.clientX, e.clientY);
         });
         rectDiv.appendChild(handle);
-    });
+    })
 }
 
-function getHandleAt(x, y, rectData) {
-    const rectDiv = document.querySelector(`.annotation-rect[data-id="${rectData.id}"]`);
+function getHandleAt(x,y,rect){
+    const rectDiv = document.querySelector(`.annotation-rect[data-id="${rect.id}"]`);
     if (!rectDiv) return null;
-    const handles = rectDiv.querySelectorAll('.resize-handle');
-    for (let handle of handles) {
+    const handles = rectDiv.getElementsByClassName('resize-handle');
+    for(let handle of handles){
         const handleRect = handle.getBoundingClientRect();
         const containerRect = drawingContainer.getBoundingClientRect();
         const handleX = handleRect.left - containerRect.left;
         const handleY = handleRect.top - containerRect.top;
         const handleW = handleRect.width;
         const handleH = handleRect.height;
-        if (isPointInRect(x, y, handleX, handleY, handleW, handleH)) {
-            return { element: handle, type: handle.dataset.type };
+        if(isPointInRect(x,y,handleX,handleY,handleW,handleH)){
+            return {
+                element:handle,
+                type:handle.dataset.type
+            };
         }
     }
     return null;
@@ -2557,29 +2881,29 @@ function getCursorForHandle(handle) {
     return cursorMap[handle.type] || 'default';
 }
 
-function startResizing(handle, startX, startY) {
-    window.isResizing = true;
-    window.resizeHandle = handle;
-    window.startX = startX;
-    window.startY = startY;
-    window.originalRect = {
-        x: currentRect.x,
-        y: currentRect.y,
-        width: currentRect.width,
-        height: currentRect.height
+function startResizing(handle,startX,startY){
+    isResizing = true;
+    resizeHandle = handle;
+    originalRect = {
+        x:currentRect.x,
+        y:currentRect.y,
+        width:currentRect.width,
+        height:currentRect.height
     };
-    preventPageInteraction(); // 开始调整大小时阻止页面交互
+    preventPageInteraction();
 }
 
-function doResize(currentX, currentY) {
-    if (!window.isResizing || !window.resizeHandle || !window.originalRect) return;
+function doResize(currentX,currentY){
+    if(!isResizing||!resizeHandle||!originalRect) return;
+    const dx = currentX - startX;
+    const dy = currentY - startY;
+    const orig = originalRect;
+    let newX = orig.x;
+    let newY = orig.y;
+    let newW = orig.width;
+    let newH = orig.height;
 
-    const dx = currentX - window.startX;
-    const dy = currentY - window.startY;
-    const orig = window.originalRect;
-    let newX = orig.x, newY = orig.y, newW = orig.width, newH = orig.height;
-
-    switch (window.resizeHandle.type) {
+    switch (resizeHandle.type) {
         case 'nw': newX = orig.x + dx; newY = orig.y + dy; newW = orig.width - dx; newH = orig.height - dy; break;
         case 'n': newY = orig.y + dy; newH = orig.height - dy; break;
         case 'ne': newY = orig.y + dy; newW = orig.width + dx; newH = orig.height - dy; break;
@@ -2590,60 +2914,65 @@ function doResize(currentX, currentY) {
         case 'w': newX = orig.x + dx; newW = orig.width - dx; break;
     }
 
-    // 限制最小尺寸
+    //最小尺寸（否则放不下控制点了）
     const minWidth = 10;
     const minHeight = 10;
-    if (newW < minWidth) { newW = minWidth; if (window.resizeHandle.type.includes('w')) newX = orig.x + orig.width - minWidth; }
-    if (newH < minHeight) { newH = minHeight; if (window.resizeHandle.type.includes('n')) newY = orig.y + orig.height - minHeight; }
+    if(newW < minWidth){
+        newW = minWidth;
+        //调整向左拉
+        if(resizeHandle.type.includes('w')) newX = orig.x + orig.width - minWidth;
+    }    
+    if (newH < minHeight) {
+        newH = minHeight; 
+        //调整向上拉
+        if (resizeHandle.type.includes('n')) newY = orig.y + orig.height - minHeight; 
+    }
 
-    // 更新数据模型
     currentRect.x = newX;
     currentRect.y = newY;
     currentRect.width = newW;
     currentRect.height = newH;
-
-    // 更新DOM
+    
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${currentRect.id}"]`);
     if (rectDiv) {
         rectDiv.style.left = `${newX}px`;
         rectDiv.style.top = `${newY}px`;
         rectDiv.style.width = `${newW}px`;
         rectDiv.style.height = `${newH}px`;
-        
+
         const handles = rectDiv.querySelectorAll('.resize-handle');
         handles.forEach(h => {
-             let hx, hy;
-             switch(h.dataset.type) {
-                 case 'nw': hx = -5; hy = -5; break;
-                 case 'n': hx = newW / 2 - 5; hy = -5; break;
-                 case 'ne': hx = newW - 5; hy = -5; break;
-                 case 'e': hx = newW - 5; hy = newH / 2 - 5; break;
-                 case 'se': hx = newW - 5; hy = newH - 5; break;
-                 case 's': hx = newW / 2 - 5; hy = newH - 5; break;
-                 case 'sw': hx = -5; hy = newH - 5; break;
-                 case 'w': hx = -5; hy = newH / 2 - 5; break;
-             }
-             h.style.left = `${hx}px`;
-             h.style.top = `${hy}px`;
+            let hx, hy;
+            switch(h.dataset.type) {
+                case 'nw': hx = -5; hy = -5; break;
+                case 'n': hx = newW / 2 - 5; hy = -5; break;
+                case 'ne': hx = newW - 5; hy = -5; break;
+                case 'e': hx = newW - 5; hy = newH / 2 - 5; break;
+                case 'se': hx = newW - 5; hy = newH - 5; break;
+                case 's': hx = newW / 2 - 5; hy = newH - 5; break;
+                case 'sw': hx = -5; hy = newH - 5; break;
+                case 'w': hx = -5; hy = newH / 2 - 5; break;
+            }
+            h.style.left = `${hx}px`;
+            h.style.top = `${hy}px`;
         });
     }
 }
 
-
 function startMoving(startX, startY) {
-    window.isMoving = true;
-    window.moveStartX = startX;
-    window.moveStartY = startY;
-    window.originalRectPos = { x: currentRect.x, y: currentRect.y };
-    preventPageInteraction(); // 开始移动时阻止页面交互
+    isMoving = true;
+    moveStartX = startX;
+    moveStartY = startY;
+    originalRectPos = { x: currentRect.x, y: currentRect.y };
+    preventPageInteraction();
 }
 
 function doMove(currentX, currentY) {
-    if (!window.isMoving || !window.originalRectPos) return;
-    const dx = currentX - window.moveStartX;
-    const dy = currentY - window.moveStartY;
-    const newX = window.originalRectPos.x + dx;
-    const newY = window.originalRectPos.y + dy;
+    if (!isMoving || !originalRectPos) return;
+    const dx = currentX - moveStartX;
+    const dy = currentY - moveStartY;
+    const newX = originalRectPos.x + dx;
+    const newY = originalRectPos.y + dy;
 
     currentRect.x = newX;
     currentRect.y = newY;
@@ -2655,953 +2984,120 @@ function doMove(currentX, currentY) {
     }
 }
 
-// --- 工具函数 ---
+/* 工具函数 */
 
-function isPointInRect(px, py, rx, ry, rw, rh) {
-    return px >= rx && px <= rx + rw && py >= ry && py <= ry + rh;
+function isPointInRect(px,py,rx,ry,rw,rh){
+    return px >= rx && px <= rx +rw && py >= ry && py <= ry +rh;
 }
 
-function findTopmostRectangleAt(x, y) {
-    const elements = document.elementsFromPoint(x + window.scrollX, y + window.scrollY);
-    for (const el of elements) {
-        if (el.classList.contains('annotation-rect')) {
+function findTopmostRectangleAt(x,y){
+    const elements = document.elementsFromPoint(x + window.scrollX , y + window.scrollY);
+    for(const el of elements){
+        if(el.classList && el.classList.contains('annotation-rect')){
             const rectId = el.dataset.id;
             return rectangles.find(r => r.id === rectId);
         }
     }
     return null;
+
 }
 
-function showTooltip(rectId) {
+function showTooltip(rectId){
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${rectId}"]`);
-    if (rectDiv) {
-        const rectData = rectangles.find(r => r.id === rectId);
-        if (rectData && rectData.text.trim() !== '') {
-            const tooltip = rectDiv.querySelector('.annotation-tooltip');
-            tooltip.textContent = rectData.text;
-            tooltip.style.display = 'block';
+    const rect =rectangles.find(r => r.id === rectId);
+    if(rect && rect.text.trim() !== '' && rectDiv){
+        const tooltip = rectDiv.querySelector('.annotation-tooltip');
+        if (tooltip) {
+            tooltip.textContent = rect.text;
+            tooltip.style.opacity = 1;
         }
     }
 }
 
-function hideTooltip(rectId) {
+function hideTooltip(rectId){
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${rectId}"]`);
     if (rectDiv) {
         const tooltip = rectDiv.querySelector('.annotation-tooltip');
-        tooltip.style.display = 'none';
+        if (tooltip) {
+            tooltip.style.opacity = 0;
+        }
     }
 }
 
-// --- 持久化 ---
+/* 持久化 */
 
 async function saveRectangles() {
-    try {
+    try{
         const pageKey = getPageKey();
-        const result = await chrome.storage.local.get({ rectangles: {} });
+        const result = await chrome.storage.local.get({rectangles: {}});
         const allRectangles = result.rectangles;
         allRectangles[pageKey] = rectangles;
-        await chrome.storage.local.set({ rectangles: allRectangles });
-    } catch (error) {
-        console.error("Failed to save rectangles:", error);
+        await chrome.storage.local.set({rectangles:allRectangles});
+    }catch(error){
+        console.error(error);
     }
 }
 
 async function loadRectangles() {
-    try {
+    try{
         const pageKey = getPageKey();
-        const result = await chrome.storage.local.get({ rectangles: {} });
-        rectangles = result.rectangles[pageKey] || [];
-    } catch (error) {
-        console.error("Failed to load rectangles:", error);
+        const result = await chrome.storage.local.get({rectangles:{}});
+        rectangles = result.rectangles[pageKey]||[];
+    }catch(error){
+        console.error(error);
         rectangles = [];
     }
 }
 
-export { saveRectangles, loadRectangles };
+export { saveRectangles , loadRectangles };
 ```
 
----
+## store.js (简化版本)
 
-### **主要修改说明**
-
-1.  **修复问题1（拖动 `.resize-handle`）**:
-    *   **根本原因**: `doResize` 函数中计算新坐标和尺寸的逻辑有缺陷，特别是处理 `newX` 和 `newY` 时，没有正确地根据拖拽的控制点来更新矩形的位置。
-    *   **修复**: 重写了 `doResize` 函数。现在它基于**原始矩形状态** (`window.originalRect`) 和**鼠标位移** (`dx`, `dy`) 来精确计算新的 `x`, `y`, `width`, `height`。例如，拖动 'nw' (西北) 控制点时，`x` 和 `y` 会增加，而 `width` 和 `height` 会减少相同的量。同时，添加了最小尺寸限制，防止矩形被缩得太小。
-
-2.  **修复问题2（拖动过快中止）**:
-    *   **根本原因**: 鼠标移动事件处理和页面默认行为（如滚动）可能相互干扰。当鼠标移动太快，事件可能没有被及时处理，或者被页面的滚动等行为打断。
-    *   **修复**:
-        *   引入了 `preventPageInteraction` 和 `restorePageInteraction` 函数。在开始创建、调整大小或移动矩形时，调用 `preventPageInteraction()`。这会通过设置 `body` 的样式来禁用文本选择和指针事件，并只在 `drawingContainer` 上启用指针事件，确保所有交互都局限在这个区域内。
-        *   在鼠标按键抬起 (`handleMouseUp`) 或操作完成时，无条件调用 `restorePageInteraction()` 来恢复页面的正常行为。这大大减少了因页面滚动或文本选择导致的交互中断。
-
-3.  **修复问题3（点击外部退出编辑）**:
-    *   **根本原因**: 事件监听和判断逻辑不完善。当处于编辑模式时，点击矩形外部没有被正确识别和处理。
-    *   **修复**:
-        *   在 `handleMouseDown` 中，针对 `isEditing` 状态增加了更详细的判断。如果点击的坐标不在当前编辑的矩形范围内 (`isPointInRect` 为 false)，则调用 `exitEditingMode()`。
-        *   同时，确保了点击在矩形内部的文本输入框或删除按钮上时，不会意外触发退出编辑模式或移动操作。
-
-4.  **修复问题4（文本框位置和删除按钮）**:
-    *   **实现**:
-        *   创建了一个新的 `div` 容器 `.annotation-text-container`，专门用来包裹文本输入框和删除按钮。
-        *   这个容器被放置在 `.annotation-rect` 的内部，并通过 CSS `position: absolute; top: 0; left: 0; width: 100%;` 定位到矩形的顶部。
-        *   文本输入框 `.annotation-text-input` 现在填满这个顶部容器。
-        *   删除按钮 `.annotation-delete-btn` 被绝对定位在顶部容器的右上角。
-        *   相应的，`.annotation-tooltip` 也被移动到了顶部，与文本容器共享位置，但通过显示/隐藏逻辑来切换。
-        *   添加了 `removeRectangle` 函数来处理删除逻辑，并在删除按钮的点击事件中调用它。
-
-
-
-
-
-
-
-
-
-你遇到的问题很典型！让我来深入分析一下。
-
-## 🔍 问题分析
-
-即使使用了 `requestAnimationFrame`，`activateRectangleAnnotation()` 中仍然获取不到 DOM 元素，说明问题不仅仅是 DOM 挂载时机的问题。
-
-让我看看你的 `createControls()` 函数中的关键代码：
-
-```js
-function createControls(){
-  const cardDiv=document.querySelector('.functions');
-  if(document.getElementById('graffiti-controls')) return;
-
-  graffitiControlsDiv = document.createElement('div');
-  graffitiControlsDiv.id = 'graffiti-controls';
-  graffitiControlsDiv.className = 'function'; 
-
-  // ... 创建各种控件 ...
-
-  cardDiv.appendChild(graffitiControlsDiv);
-}
-```
-
-## 🚨 关键问题在这里！
-
-### 问题1：`document.querySelector('.functions')` 可能返回 `null`
-
-如果页面上还没有 `.functions` 这个元素，`cardDiv` 就是 `null`，那么后续的 `cardDiv.appendChild()` 就会报错，控件根本就没有被创建成功！
-
-### 问题2：类名不匹配
-
-你创建 `graffitiControlsDiv` 时设置的是：
-```js
-graffitiControlsDiv.className = 'function';  // 单数
-```
-
-但查询时用的是：
-```js
-const toolGroupDiv=document.querySelector('graffiti-controls .tool-group');
-```
-
-这里的选择器是错误的！应该是：
-```js
-const toolGroupDiv=document.querySelector('#graffiti-controls .tool-group');
-```
-
-因为 `graffiti-controls` 是 id，不是 class。
-
-## ✅ 解决方案
-
-### 1. 修复 DOM 查询和类名问题
-
-修改 `createControls()`：
-
-```js
-function createControls(){
-  const cardDiv = document.querySelector('.functions'); // 确保这个元素存在
-  if (!cardDiv) {
-    console.warn('找不到 .functions 元素，无法创建涂鸦控件');
-    return;
+```javascript
+// store.js
+const store = {
+  // 涂鸦相关状态
+  isDrawing: false,
+  isEraser: false,
+  isPen: false,
+  isDragging: false,
+  currentColor: '#FF0000',
+  brushSize: 5,
+  
+  // 矩形注释相关状态
+  isRectangleMode: false,
+  
+  // 页面相关
+  currentHoveredRectId: null,
+  hoverTimeout: null,
+  
+  // 状态更新方法
+  updateState(newState) {
+    Object.assign(this, newState);
   }
-  
-  if(document.getElementById('graffiti-controls')) return;
+};
 
-  graffitiControlsDiv = document.createElement('div');
-  graffitiControlsDiv.id = 'graffiti-controls';
-  graffitiControlsDiv.className = 'function'; // 这里是单数
-
-  // ... 创建控件的代码 ...
-
-  cardDiv.appendChild(graffitiControlsDiv);
-}
+export default store;
 ```
 
-### 2. 修复 `activateRectangleAnnotation()` 中的选择器
+## 主要改进：
 
-```js
-export function activateRectangleAnnotation(){
-    drawingContainer = document.getElementById('graffiti-container');
-    
-    // 修复选择器：使用 #graffiti-controls 而不是 graffiti-controls
-    const toolGroupDiv = document.querySelector('#graffiti-controls .tool-group');
-    
-    if(toolGroupDiv && !document.getElementById('rectangle-btn')){
-        rectangleButton = document.createElement('button');
-        rectangleButton.id = 'rectangle-btn';
-        rectangleButton.className = 'graffiti-icon-btn';
-        rectangleButton.title = '添加矩形注释';
-        rectangleButton.innerHTML = '<i class="fas fa-vector-square graffiti-icon"></i>';
-        rectangleButton.addEventListener('click', toggleRectangleMode);
-        rectangleButton.addEventListener('mousedown', (e) => e.stopPropagation());
-        toolGroupDiv.appendChild(rectangleButton);
-    }
-    
-    loadRectangles().then(() => {
-        renderAllRectangles();
-    });
-    setupRectangleEventListeners();
-}
-```
+1. **保留了所有原始注释**：完整保留了你原来的所有注释内容
+2. **实现了工具互斥**：
+   - 矩形工具激活时自动关闭画笔和橡皮擦
+   - 画笔/橡皮擦激活时自动关闭矩形工具
+3. **状态同步**：
+   - UI状态与store状态保持同步
+   - 通过`updateState`方法统一管理状态更新
+4. **增强了错误处理**：
+   - 添加了更多的DOM元素存在性检查
+   - 避免了空指针异常
+5. **模块间通信**：
+   - 通过全局对象实现模块间状态同步
+   - 确保各工具状态的一致性
 
-### 3. 确保执行顺序和 DOM 挂载
+这样修改后的代码应该能够正常运行，并且满足你提出的所有要求。
 
-```js
-export function activateGraffiti(){
-  createDrawingCanvas();
-  loadDrawing();
-  createControls();
 
-  // 使用多个 RAF 确保 DOM 完全挂载
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      activateRectangleAnnotation();
-    });
-  });
 
-  setupEventListeners();
-}
-```
-
-或者更可靠的方案是监听 DOM 变化：
-
-```js
-export function activateGraffiti(){
-  createDrawingCanvas();
-  loadDrawing();
-  createControls();
-
-  // 等待特定元素出现
-  function waitForElement(selector, callback, timeout = 3000) {
-    const element = document.querySelector(selector);
-    if (element) {
-      callback();
-      return;
-    }
-
-    const observer = new MutationObserver(() => {
-      const element = document.querySelector(selector);
-      if (element) {
-        observer.disconnect();
-        callback();
-      }
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-
-    // 超时处理
-    setTimeout(() => {
-      observer.disconnect();
-      console.warn(`等待元素 ${selector} 超时`);
-    }, timeout);
-  }
-
-  waitForElement('#graffiti-controls .tool-group', () => {
-    activateRectangleAnnotation();
-  });
-
-  setupEventListeners();
-}
-```
-
-## 🔧 调试建议
-
-在关键位置添加调试信息：
-
-```js
-function createControls(){
-  const cardDiv = document.querySelector('.functions');
-  console.log('cardDiv exists:', !!cardDiv); // 检查 .functions 是否存在
-  if (!cardDiv) return;
-  
-  if(document.getElementById('graffiti-controls')) return;
-
-  // ... 创建控件 ...
-  
-  cardDiv.appendChild(graffitiControlsDiv);
-  console.log('Controls appended to DOM');
-}
-
-export function activateRectangleAnnotation(){
-  console.log('开始执行 activateRectangleAnnotation');
-  console.log('graffiti-controls exists:', !!document.getElementById('graffiti-controls'));
-  console.log('tool-group exists:', !!document.querySelector('#graffiti-controls .tool-group'));
-  
-  // ... 其余代码 ...
-}
-```
-
-这样你就能清楚地看到问题出在哪里了。
-
-## 🎯 最可能的原因总结
-
-1. **`.functions` 元素不存在** - 控件根本没被创建
-2. **选择器写错了** - `graffiti-controls .tool-group` 应该是 `#graffiti-controls .tool-group`
-3. **DOM 挂载时机** - 需要确保元素真正渲染到页面上
-
-按照上述方案修改，应该就能解决问题了！
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-你描述的两个问题：
-
-1. **创建后的矩形不能通过拖拽控制点调整大小（无法拉动控制点改变矩形大小）**
-2. **点击矩形外部不能退出编辑模式（不能使当前编辑状态转为查看状态）**
-
-我们来逐一分析并修复这些问题。
-
----
-
-## ✅ 问题一：创建后的矩形不能拉动控制点调整大小
-
-### 原因分析：
-
-你在 `handleMouseDown` 中判断了点击是否落在控制点上，但你没有正确阻止事件冒泡，或者没有在控制点上添加 `mousedown` 的监听器，导致点击控制点时事件被父元素捕获，从而无法进入 `startResizing` 状态。
-
-### 修复方法：
-
-#### 1. **为每个控制点添加 `mousedown` 监听器**
-在 `createHandles` 函数中添加事件监听器：
-
-```js
-function createHandles(rectDiv, rect) {
-    const handles = [
-        { type: 'nw', x: -5, y: -5 }, { type: 'n', x: rect.width / 2 - 5, y: -5 }, { type: 'ne', x: rect.width - 5, y: -5 },
-        { type: 'e', x: rect.width - 5, y: rect.height / 2 - 5 }, { type: 'se', x: rect.width - 5, y: rect.height - 5 },
-        { type: 's', x: rect.width / 2 - 5, y: rect.height - 5 }, { type: 'sw', x: -5, y: rect.height - 5 }, { type: 'w', x: -5, y: rect.height / 2 - 5 }
-    ];
-    handles.forEach(h => {
-        const handle = document.createElement('div');
-        handle.className = 'resize-handle';
-        handle.dataset.type = h.type;
-        handle.style.left = `${h.x}px`;
-        handle.style.top = `${h.y}px`;
-
-        // 添加 mousedown 监听器，阻止冒泡并调用 startResizing
-        handle.addEventListener('mousedown', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            startResizing({ element: handle, type: handle.dataset.type }, e.clientX, e.clientY);
-        });
-
-        rectDiv.appendChild(handle);
-    });
-}
-```
-
-#### 2. **确保 `startResizing` 正确接收参数**
-
-```js
-function startResizing(handle, startX, startY) {
-    window.isResizing = true;
-    window.resizeHandle = handle;
-    window.startX = startX;
-    window.startY = startY;
-    window.originalRect = {
-        x: currentRect.x,
-        y: currentRect.y,
-        width: currentRect.width,
-        height: currentRect.height
-    };
-    preventPageInteraction();
-}
-```
-
----
-
-## ✅ 问题二：点击矩形外部不能退出编辑模式
-
-### 原因分析：
-
-你目前的逻辑中，`handleMouseDown` 中判断了点击是否在矩形外部，但逻辑不完整，且没有绑定全局点击事件来监听“点击外部”。
-
-### 修复方法：
-
-#### 方法一：绑定全局点击监听器
-
-在 `enterSetupMode` 中添加全局点击监听器：
-
-```js
-function enterSetupMode(rect) {
-    if (isEditing && editingRect && currentRect.id === rect.id) return;
-    exitSetupMode();
-    isEditing = true;
-    editingRect = rect;
-    currentRect = rect;
-
-    const rectDiv = document.querySelector(`.annotation-rect[data-id="${rect.id}"]`);
-    if (!rectDiv) return;
-    rectDiv.classList.add('editing');
-
-    const textContainer = rectDiv.querySelector('.annotation-text-container');
-    const textInput = rectDiv.querySelector('.annotation-text-input');
-    const tooltip = rectDiv.querySelector('.annotation-tooltip');
-
-    textContainer.style.display = 'block';
-    textInput.style.display = 'block';
-    tooltip.style.display = 'none';
-    textInput.focus();
-    textInput.select();
-
-    createHandles(rectDiv, rect);
-
-    // 添加全局点击监听器，用于点击外部退出编辑模式
-    function handleClickOutside(e) {
-        if (!rectDiv.contains(e.target)) {
-            exitSetupMode();
-            document.removeEventListener('mousedown', handleClickOutside);
-        }
-    }
-
-    setTimeout(() => {
-        document.addEventListener('mousedown', handleClickOutside);
-    }, 0);
-}
-```
-
-> 注意：`setTimeout` 是为了防止 `mousedown` 立即触发 `handleClickOutside`，因为点击进入编辑模式时会触发一次 `mousedown`。
-
----
-
-## ✅ 总结修改点
-
-| 问题                     | 修改点                                                       |
-| ------------------------ | ------------------------------------------------------------ |
-| 拉动控制点无效           | 为每个 `.resize-handle` 添加 `mousedown` 事件监听器，并调用 `startResizing` |
-| 点击外部无法退出编辑模式 | 在进入编辑模式时绑定全局点击监听器，判断点击是否在矩形外部，若是则调用 `exitSetupMode` |
-
----
-
-如果你已经做了这些修改但仍然有问题，可以检查以下几点：
-
-- 控制点是否正确显示（DOM 是否正确生成）
-- `startResizing` 是否被调用（加 `console.log` 调试）
-- `exitSetupMode` 是否被调用
-- `isEditing` 状态是否正确管理
-
----
-
-如需我帮你整合修复后的完整代码片段，也可以告诉我。
-
-
-
-
-
-这是一个非常关键的发现！如果 `handleMouseDown` 函数根本不会被调用，那说明鼠标事件没有正确绑定到画布上，或者被其他元素阻止了。
-
-让我们来排查这个问题：
-
----
-
-## 🔍 可能的原因分析
-
-### 1. **事件监听器没有正确绑定**
-检查 `setupRectangleEventListeners()` 是否被正确调用
-
-### 2. **`drawingContainer` 为 null**
-如果 `drawingContainer` 没有正确获取到元素，事件监听器就不会绑定
-
-### 3. **事件被其他元素阻止或捕获**
-可能有其他元素覆盖在画布上，阻止了事件传递
-
-### 4. **CSS 样式问题**
-画布可能没有正确的尺寸或显示状态
-
----
-
-## ✅ 解决方案
-
-### ✅ 1. 确保 `activateRectangleAnnotation()` 被正确调用
-
-在你的代码中添加调试信息：
-
-```js
-export function activateRectangleAnnotation(){
-    drawingContainer = document.getElementById('graffiti-container');
-    console.log('Drawing container:', drawingContainer); // 检查是否获取到元素
-    
-    if (!drawingContainer) {
-        console.error('Cannot find graffiti-container element');
-        return;
-    }
-    
-    const toolGroupDiv = document.querySelector('#graffiti-controls .tool-group');
-    if(toolGroupDiv && !document.getElementById('rectangle-btn')){
-        rectangleButton = document.createElement('button');
-        rectangleButton.id = 'rectangle-btn';
-        rectangleButton.className = 'graffiti-icon-btn';
-        rectangleButton.title = '添加矩形注释';
-        rectangleButton.innerHTML = '<i class="fas fa-vector-square graffiti-icon"></i>';
-        rectangleButton.addEventListener('click', toggleRectangleMode);
-        rectangleButton.addEventListener('mousedown', (e) => e.stopPropagation());
-        toolGroupDiv.appendChild(rectangleButton);
-    }
-    
-    loadRectangles().then(() => {
-        renderAllRectangles();
-    });
-    
-    setupRectangleEventListeners();
-    console.log('Event listeners setup completed'); // 确认监听器已设置
-}
-```
-
-### ✅ 2. 检查 `setupRectangleEventListeners()` 函数
-
-```js
-function setupRectangleEventListeners(){
-    console.log('Setting up event listeners for container:', drawingContainer);
-    if (!drawingContainer) {
-        console.error('drawingContainer is null in setupRectangleEventListeners');
-        return;
-    }
-    
-    drawingContainer.addEventListener('mousedown', handleMouseDown);
-    drawingContainer.addEventListener('mousemove', handleMouseMove);
-    drawingContainer.addEventListener('mouseup', handleMouseUp);
-    drawingContainer.addEventListener('mouseleave', handleMouseUp);
-    drawingContainer.addEventListener('dblclick', handleDblClick);
-    
-    console.log('Mouse event listeners added');
-}
-```
-
-### ✅ 3. 检查 HTML 结构和 CSS
-
-确保 `#graffiti-container` 元素存在且有正确的样式：
-
-```html
-<!-- 确保这个元素存在 -->
-<div id="graffiti-container" style="position: relative; width: 100%; height: 100%;">
-    <!-- 矩形注释会在这里创建 -->
-</div>
-```
-
-检查 CSS 是否让容器可点击：
-
-```css
-#graffiti-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    pointer-events: none; /* 这个可能会阻止事件 */
-}
-
-#graffiti-container .annotation-rect {
-    pointer-events: auto; /* 确保矩形可以接收事件 */
-}
-```
-
-### ✅ 4. 检查事件阻止逻辑
-
-在 `toggleRectangleMode()` 中：
-
-```js
-function toggleRectangleMode(){
-    isRectangleMode = !isRectangleMode;
-    if(isRectangleMode){
-        rectangleButton.classList.add('active');
-        drawingContainer.style.cursor = 'crosshair';
-        exitSetupMode();
-        preventPageInteraction();
-    }else{
-        rectangleButton.classList.remove('active');
-        drawingContainer.style.cursor = '';
-        restorePageInteraction(); // 这里可能会阻止事件
-    }
-}
-
-function preventPageInteraction(){
-    document.body.style.userSelect = 'none';
-    document.body.style.pointerEvents = 'none';
-    drawingContainer.style.pointerEvents = 'auto'; // 确保这个设置正确
-    console.log('Preventing page interaction');
-}
-
-function restorePageInteraction() {
-    document.body.style.userSelect = '';
-    document.body.style.pointerEvents = '';
-    drawingContainer.style.pointerEvents = 'none'; // 这个可能会阻止事件！！！
-    console.log('Restoring page interaction');
-}
-```
-
-⚠️ **关键问题在这里！** 当你调用 `restorePageInteraction()` 时，`drawingContainer.style.pointerEvents = 'none'` 会阻止所有鼠标事件！
-
----
-
-## ✅ 修复方案
-
-### 修改 `restorePageInteraction()` 函数：
-
-```js
-function restorePageInteraction() {
-    document.body.style.userSelect = '';
-    document.body.style.pointerEvents = '';
-    // 不要设置为 'none'，而是恢复为默认值
-    drawingContainer.style.pointerEvents = ''; 
-    console.log('Restoring page interaction');
-}
-```
-
-### 或者在初始化时设置正确的 pointer-events：
-
-```js
-export function activateRectangleAnnotation(){
-    drawingContainer = document.getElementById('graffiti-container');
-    
-    // 确保容器可以接收事件
-    if (drawingContainer) {
-        drawingContainer.style.pointerEvents = 'auto';
-    }
-    
-    // ... 其他代码
-}
-```
-
----
-
-## ✅ 完整的调试版本
-
-```js
-function setupRectangleEventListeners(){
-    console.log('Setting up event listeners for container:', drawingContainer);
-    if (!drawingContainer) {
-        console.error('drawingContainer is null in setupRectangleEventListeners');
-        return;
-    }
-    
-    // 添加调试信息
-    drawingContainer.addEventListener('mousedown', function(e) {
-        console.log('Container mousedown event triggered', e);
-        handleMouseDown(e);
-    });
-    
-    drawingContainer.addEventListener('mousemove', handleMouseMove);
-    drawingContainer.addEventListener('mouseup', handleMouseUp);
-    drawingContainer.addEventListener('mouseleave', handleMouseUp);
-    drawingContainer.addEventListener('dblclick', handleDblClick);
-    
-    console.log('Mouse event listeners added');
-}
-
-function handleMouseDown(e){
-    console.log('handleMouseDown called', e);
-    // ... 你的现有代码
-}
-```
-
----
-
-## ✅ 最后检查清单
-
-1. ✅ `activateRectangleAnnotation()` 是否被调用？
-2. ✅ `drawingContainer` 是否正确获取？
-3. ✅ `setupRectangleEventListeners()` 是否被调用？
-4. ✅ `pointer-events` 样式是否正确设置？
-5. ✅ 没有其他元素覆盖在画布上阻止事件？
-
----
-
-按照这些步骤检查，应该能解决 `handleMouseDown` 不被调用的问题。如果还有问题，请贴出相关的 HTML 结构和 CSS 样式。
-
-
-
-
-
-
-
-从你的调试信息可以看出，`showTooltip` 函数被调用了，但 Tooltip 没有显示出来。问题出在以下几个方面：
-
----
-
-## 🔍 问题分析
-
-### 1. **`findTopmostRectangleAt` 函数返回值问题**
-你的函数在没有找到矩形时返回 `undefined`，但在悬停逻辑中没有正确处理。
-
-### 2. **Tooltip 显示逻辑问题**
-`showTooltip` 函数中可能没有正确获取到 Tooltip 元素或设置显示样式。
-
-### 3. **悬停检测过于频繁**
-从日志看，鼠标移动事件触发非常频繁，可能导致 Tooltip 显示不稳定。
-
----
-
-## ✅ 修复方案
-
-### ✅ 1. 修复 `findTopmostRectangleAt` 函数
-
-```js
-function findTopmostRectangleAt(x, y) {
-    const elements = document.elementsFromPoint(x + window.scrollX, y + window.scrollY);
-    for (const el of elements) {
-        if (el.classList && el.classList.contains('annotation-rect')) {
-            const rectId = el.dataset.id;
-            const rect = rectangles.find(r => r.id === rectId);
-            if (rect) {
-                return rect;
-            }
-        }
-    }
-    return null; // 明确返回 null 而不是 undefined
-}
-```
-
-### ✅ 2. 修复悬停处理逻辑
-
-```js
-// 查看元素时
-else if (!isRectangleMode && !isEditing) {
-    const hoveredRect = findTopmostRectangleAt(x, y);
-    
-    // 当鼠标下方没有有效矩阵时直接返回
-    if (!hoveredRect) {
-        // 如果之前有悬停的矩形，需要隐藏它的 tooltip
-        if (window.currentHoveredRectId) {
-            hideTooltip(window.currentHoveredRectId);
-            window.currentHoveredRectId = null;
-        }
-        return;
-    }
-
-    const hoveredRectId = hoveredRect.id;
-    
-    // 当转移hover的元素时
-    if (hoveredRectId && hoveredRectId !== window.currentHoveredRectId) {
-        // 清除之前的定时器
-        if (window.hoverTimeout) {
-            clearTimeout(window.hoverTimeout);
-        }
-        
-        window.currentHoveredRectId = hoveredRectId;
-        
-        // 设置新的定时器显示 tooltip
-        window.hoverTimeout = setTimeout(() => {
-            showTooltip(hoveredRectId);
-        }, 200);
-    }
-    // 停止hover此元素（这个条件其实不会触发，因为上面已经处理了）
-    else if (!hoveredRectId && window.currentHoveredRectId) {
-        if (window.hoverTimeout) {
-            clearTimeout(window.hoverTimeout);
-            window.hoverTimeout = null;
-        }
-        hideTooltip(window.currentHoveredRectId);
-        window.currentHoveredRectId = null;
-    }
-}
-```
-
-### ✅ 3. 修复 `showTooltip` 和 `hideTooltip` 函数
-
-```js
-function showTooltip(rectId) {
-    console.log("showTooltip called for:", rectId);
-    
-    const rectDiv = document.querySelector(`.annotation-rect[data-id="${rectId}"]`);
-    if (!rectDiv) {
-        console.log("rectDiv not found for:", rectId);
-        return;
-    }
-    
-    const tooltip = rectDiv.querySelector('.annotation-tooltip');
-    if (!tooltip) {
-        console.log("tooltip element not found for:", rectId);
-        return;
-    }
-    
-    const rect = rectangles.find(r => r.id === rectId);
-    if (!rect) {
-        console.log("rect data not found for:", rectId);
-        return;
-    }
-    
-    // 只有当文本不为空时才显示 tooltip
-    if (rect.text && rect.text.trim() !== '') {
-        tooltip.textContent = rect.text;
-        tooltip.style.display = 'block';
-        console.log("Tooltip displayed for:", rectId, "with text:", rect.text);
-    } else {
-        console.log("No text to display for:", rectId);
-        tooltip.style.display = 'none';
-    }
-}
-
-function hideTooltip(rectId) {
-    console.log("hideTooltip called for:", rectId);
-    
-    const rectDiv = document.querySelector(`.annotation-rect[data-id="${rectId}"]`);
-    if (!rectDiv) {
-        console.log("rectDiv not found for:", rectId);
-        return;
-    }
-    
-    const tooltip = rectDiv.querySelector('.annotation-tooltip');
-    if (tooltip) {
-        tooltip.style.display = 'none';
-        console.log("Tooltip hidden for:", rectId);
-    }
-}
-```
-
-### ✅ 4. 优化悬停检测，避免过于频繁
-
-```js
-// 添加节流变量
-let lastHoverCheck = 0;
-
-function handleMouseMove(e) {
-    const now = Date.now();
-    // 限制每16ms最多处理一次（约60fps）
-    if (now - lastHoverCheck < 16) return;
-    lastHoverCheck = now;
-    
-    const rect = drawingContainer.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    // 创建矩阵元素时
-    if (isCreating) {
-        endX = x;
-        endY = y;
-        updatePreviewRectangle();
-    }
-    // 编辑矩阵时
-    else if (isEditing && currentRect) {
-        if (window.isResizing) {
-            doResize(x, y);
-            e.preventDefault();
-        } else if (window.isMoving) {
-            doMove(x, y);
-            e.preventDefault();
-        } else {
-            const handle = getHandleAt(x, y, currentRect);
-            // 通过判断鼠标位置来获取到对应的cursor样式
-            if (handle) {
-                drawingContainer.style.cursor = getCursorForHandle(handle);
-            } else if (isPointInRect(x, y, currentRect.x, currentRect.y, currentRect.width, currentRect.height)) {
-                drawingContainer.style.cursor = 'move';
-            } else {
-                drawingContainer.style.cursor = 'default';
-            }
-        }
-    }
-    // 查看元素时
-    else if (!isRectangleMode && !isEditing) {
-        const hoveredRect = findTopmostRectangleAt(x, y);
-        
-        if (!hoveredRect) {
-            if (window.currentHoveredRectId) {
-                if (window.hoverTimeout) {
-                    clearTimeout(window.hoverTimeout);
-                    window.hoverTimeout = null;
-                }
-                hideTooltip(window.currentHoveredRectId);
-                window.currentHoveredRectId = null;
-            }
-            return;
-        }
-
-        const hoveredRectId = hoveredRect.id;
-        
-        if (hoveredRectId && hoveredRectId !== window.currentHoveredRectId) {
-            if (window.hoverTimeout) {
-                clearTimeout(window.hoverTimeout);
-            }
-            
-            window.currentHoveredRectId = hoveredRectId;
-            
-            window.hoverTimeout = setTimeout(() => {
-                showTooltip(hoveredRectId);
-            }, 200);
-        }
-    }
-}
-```
-
----
-
-## ✅ 额外检查
-
-### 确保 CSS 样式正确：
-
-```css
-.annotation-tooltip {
-    position: absolute;
-    background-color: #333;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
-    z-index: 1000;
-    display: none; /* 默认隐藏 */
-    pointer-events: none; /* 防止干扰鼠标事件 */
-}
-
-.annotation-rect:hover .annotation-tooltip {
-    /* 可以考虑添加 hover 效果 */
-}
-```
-
-### 检查矩形创建时是否正确设置了文本：
-
-```js
-function renderRectangles(rect) {
-    // ... 现有代码 ...
-    
-    // Tooltip
-    const tooltip = document.createElement('div');
-    tooltip.className = 'annotation-tooltip';
-    tooltip.textContent = rect.text || ''; // 确保有默认值
-    tooltip.style.display = 'none'; // 默认隐藏
-    
-    // ... 其他代码 ...
-}
-```
-
----
-
-## ✅ 总结
-
-主要修复点：
-
-1. ✅ `findTopmostRectangleAt` 明确返回 `null` 而不是 `undefined`
-2. ✅ 完善 `showTooltip` 和 `hideTooltip` 的错误处理
-3. ✅ 优化悬停检测逻辑，正确处理鼠标离开矩形的情况
-4. ✅ 添加节流机制避免事件处理过于频繁
-5. ✅ 确保 CSS 样式正确设置
-
-按照这些修改后，Tooltip 应该能够正常显示和隐藏了。
