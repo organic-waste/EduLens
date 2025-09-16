@@ -27,10 +27,7 @@
     width: 100%;
     height: auto;
 }
-/* 
-#graffiti-controls > * {
-    flex-shrink: 0;
-} */
+
 
 /* 颜色选择器 */
 #color-input {

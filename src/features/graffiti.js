@@ -1,6 +1,5 @@
-// graffiti.js
 // 创建涂鸦
-import store from './store.js';
+import store from '../stores/marks.js';
 import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
 import { getPageKey } from '../utils/getIdentity.js';
 import { activateRectangleAnnotation } from './rectangleAnnotation.js'
@@ -62,6 +61,8 @@ function resizeCanvas(){
       }
       drawingCanvas.width = newWidth;
       drawingCanvas.height = newHeight;      
+      // drawingContainer.width = newWidth;
+      // drawingContainer.height = newHeight;
       setupCanvasContext();     
       if(imageData) {
         drawingCtx.putImageData(imageData, 0, 0);

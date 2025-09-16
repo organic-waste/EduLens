@@ -1,7 +1,6 @@
-// rectangleAnnotation.js
 // 创建矩形注释
 
-import store from './store.js';
+import store from '../stores/marks.js';
 import { getPageKey,getId } from '../utils/getIdentity.js';
 
 let isCreating = false; //是否还在创建矩阵中
@@ -319,7 +318,7 @@ function renderRectangles(rect){
     textInput.style.display = 'none';
 
     const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'annotation-delete-btn';
+    deleteBtn.className = 'annotation-delete-btn delete-button';
     deleteBtn.textContent = '×';
     deleteBtn.title = '删除注释';
 
@@ -433,7 +432,11 @@ function createHandles(rectDiv,rect){
         handle.addEventListener('mousedown', (e) => {
             e.stopPropagation();
             e.preventDefault();
-            startResizing({ element: handle, type: handle.dataset.type }, e.clientX, e.clientY);
+            //获取container位置转为获取canvas的位置
+            const rect = drawingContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            startResizing({ element: handle, type: handle.dataset.type }, x, y);
         });
         rectDiv.appendChild(handle);
     })
@@ -469,22 +472,24 @@ function getCursorForHandle(handle) {
     return cursorMap[handle.type] || 'default';
 }
 
-function startResizing(handle,startX,startY){
+function startResizing(handle, x, y){
     isResizing = true;
     resizeHandle = handle;
+    moveStartX = x;
+    moveStartY = y;
     originalRect = {
-        x:currentRect.x,
-        y:currentRect.y,
-        width:currentRect.width,
-        height:currentRect.height
+        x: currentRect.x,
+        y: currentRect.y,
+        width: currentRect.width,
+        height: currentRect.height
     };
     preventPageInteraction();
 }
 
 function doResize(currentX,currentY){
     if(!isResizing||!resizeHandle||!originalRect) return;
-    const dx = currentX - startX;
-    const dy = currentY - startY;
+    const dx = currentX - moveStartX;
+    const dy = currentY - moveStartY;
     const orig = originalRect;
     let newX = orig.x;
     let newY = orig.y;

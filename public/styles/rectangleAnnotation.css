@@ -6,7 +6,6 @@
     border: 2px solid #FF0000;
     user-select: none;
     touch-action: none; 
-    margin: 2vh;
 }
 
 .annotation-text-container {
@@ -39,21 +38,7 @@
     top: 50%;
     right: 2px;
     transform: translateY(-50%);
-    background: #b26464;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    width: 16px;
-    height: 16px;
-    font-size: 12px;
-    line-height: 14px;
-    text-align: center;
-    cursor: pointer;
     pointer-events: auto;
-}
-
-.annotation-delete-btn:hover {
-    background: #d44343;
 }
 
 .annotation-tooltip {
