@@ -184,9 +184,10 @@ function handleMouseMove(e){
         // 当鼠标下方没有有效矩阵时
         if (!hoveredRect) {
             if (window.currentHoveredRectId) {
-            window.hoverTimeout = setTimeout(() => {
+                if (window.hoverTimeout) {
+                    clearTimeout(window.hoverTimeout);
+                }
                 hideTooltip(window.currentHoveredRectId);
-            }, 200);
                 window.currentHoveredRectId = null;
             }
             return;
@@ -584,6 +585,8 @@ function showTooltip(rectId){
 }
 
 function hideTooltip(rectId){
+    console.log('rectId: ', rectId);
+
     const rectDiv = document.querySelector(`.annotation-rect[data-id="${rectId}"]`);
     const tooltip = rectDiv.querySelector('.annotation-tooltip');
     tooltip.style.opacity = 0;

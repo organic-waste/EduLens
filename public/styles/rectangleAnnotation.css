@@ -68,6 +68,7 @@
     box-sizing: border-box;
     text-align: center;
     opacity: 0;
+    transition: opacity 1s ease;
     pointer-events: none;
     z-index: 9;
     overflow: hidden;
