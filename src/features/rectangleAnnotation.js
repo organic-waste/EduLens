@@ -44,43 +44,21 @@ export function activateRectangleAnnotation(){
     });
     EditingRectangleEventListeners();
     
-    // 将模块实例暴露给全局，以便其他模块可以调用
-    window.rectangleAnnotation = {
-        updateMode: function(isRectangleMode) {
-            if (!isRectangleMode && store.isRectangleMode) {
-                // 如果矩形模式被关闭，需要清理相关状态
-                if (rectangleButton) {
-                    rectangleButton.classList.remove('active');
-                }
-                drawingContainer.style.cursor = '';
-                restorePageInteraction();
-                store.isRectangleMode = false;
-            }
-        }
-    };
+
 }
 
 //转换矩阵模式（编辑模式/查看模式）
 function toggleRectangleMode(){
-    // 互斥：关闭其他工具
-    const penBtn = document.getElementById('pen-btn');
-    const eraserBtn = document.getElementById('eraser-btn');
-    if (penBtn) penBtn.classList.remove('active');
-    if (eraserBtn) eraserBtn.classList.remove('active');
-    
+    store.isRectangle = !store.isRectangle
     store.updateState({
-        isRectangleMode: !store.isRectangleMode,
+        isEraser: false,
         isPen: false,
-        isEraser: false
-    });
-    
-    if(store.isRectangleMode){
-        rectangleButton.classList.add('active');
+    })
+    if(store.isRectangle){
         drawingContainer.style.cursor='crosshair';
         exitEditingMode();
         preventPageInteraction();
     }else{
-        rectangleButton.classList.remove('active');
         drawingContainer.style.cursor='';
         restorePageInteraction();
     }
@@ -115,7 +93,7 @@ function handleMouseDown(e){
     const y = e.clientY-rect.top;
     
     //创建新矩阵时
-    if(store.isRectangleMode&&!isEditing){
+    if(store.isRectangle&&!isEditing){
         isCreating=true;
         startX = endX = x;
         startY = endY = y;
@@ -149,7 +127,7 @@ function handleMouseDown(e){
         }
     }
     //矩阵处于浏览态
-    else if(!store.isRectangleMode&&!isEditing){
+    else if(!store.isRectangle&&!isEditing){
         const clickedRect = findTopmostRectangleAt(x,y);
         if(clickedRect){
             exitEditingMode(clickedRect);
@@ -191,7 +169,7 @@ function handleMouseMove(e){
         }
     }
     //查看元素时
-    else if(!store.isRectangleMode && !isEditing){
+    else if(!store.isRectangle && !isEditing){
         const hoveredRect = findTopmostRectangleAt(x,y);
         const hoveredRectId = hoveredRect?.id;
         // 当鼠标下方没有有效矩阵时
@@ -229,7 +207,7 @@ function handleMouseUp(e){
             width: Math.abs(endX - startX),
             height: Math.abs(endY - startY),
             text: '',
-            color: '#FF0000'
+            color: store.currentColor
         };
         //排除太小的矩阵
         if(newRect.width > 5 && newRect.height > 5){
@@ -245,12 +223,12 @@ function handleMouseUp(e){
     //恢复其他操作
     isResizing = false;
     isMoving = false;
-    drawingContainer.style.cursor = store.isRectangleMode ? 'crosshair' : 'default';
+    drawingContainer.style.cursor = store.isRectangle ? 'crosshair' : 'default';
     restorePageInteraction();
 }
 
 function handleDblClick(e){
-    if(store.isRectangleMode||isEditing) return;
+    if(store.isRectangle||isEditing) return;
     const rect = drawingContainer.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -268,6 +246,8 @@ function createPreviewRectangle(){
     if(previewDiv) removePreviewRectangle();
     previewDiv = document.createElement('div');
     previewDiv.className = 'annotation-preview';
+    previewDiv.style.borderColor = store.currentColor;
+    previewDiv.style.borderWidth = store.brushSize;
     drawingContainer.appendChild(previewDiv);
 }
 
@@ -329,6 +309,7 @@ function renderRectangles(rect){
     const tooltip = document.createElement('div');
     tooltip.className = 'annotation-tooltip';
     tooltip.textContent = rect.text;
+    tooltip.style.color = store.currentColor;
 
     rectDiv.appendChild(textContainer);
     rectDiv.appendChild(tooltip);

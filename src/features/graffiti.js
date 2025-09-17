@@ -72,21 +72,13 @@ function resizeCanvas(){
 }
 
 function setToolMode(mode){
-  // 清除所有工具的激活状态
-  if(penButton) penButton.classList.remove('active');
-  if(eraserButton) eraserButton.classList.remove('active');
-  if(document.getElementById('rectangle-btn')) {
-    document.getElementById('rectangle-btn').classList.remove('active');
-  }
-
   switch(mode){
     case 'pen':
       store.updateState({
         isEraser: false,
         isPen: true,
-        isRectangleMode: false
+        isRectangle: false
       });
-      penButton.classList.add('active');
       drawingCtx.globalCompositeOperation='source-over';
       drawingCtx.strokeStyle=store.currentColor;
       break;
@@ -94,9 +86,8 @@ function setToolMode(mode){
       store.updateState({
         isEraser: true,
         isPen: false,
-        isRectangleMode: false
+        isRectangle: false
       });
-      eraserButton.classList.add('active');
       drawingCtx.globalCompositeOperation='destination-out';
       drawingCtx.strokeStyle='rgba(0,0,0,1)';
       break;
@@ -105,11 +96,6 @@ function setToolMode(mode){
         isEraser: false,
         isPen: false
       });
-  }
-  
-  // 通知矩形注释模块更新状态
-  if (window.rectangleAnnotation) {
-    window.rectangleAnnotation.updateMode(store.isRectangleMode);
   }
 }
 
@@ -231,7 +217,7 @@ function createControls(){
   saveButton.id = 'save-btn';
   saveButton.className = 'graffiti-icon-btn';
   saveButton.title = '保存当前涂鸦';
-  saveButton.innerHTML='<i class="fa-solid fa-download graffiti-icon"></i>'
+  saveButton.innerHTML='<i class="fa-solid fa-floppy-disk graffiti-icon"></i>'
   saveButton.addEventListener('click', saveDrawing);
   saveButton.addEventListener('mousedown', (e) => {
     e.stopPropagation();
