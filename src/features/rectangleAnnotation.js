@@ -79,11 +79,11 @@ function restorePageInteraction() {
 }
 
 function EditingRectangleEventListeners(){
-    drawingContainer.addEventListener('mousedown', handleMouseDown);
-    drawingContainer.addEventListener('mousemove', handleMouseMove);
-    drawingContainer.addEventListener('mouseup', handleMouseUp);
-    drawingContainer.addEventListener('mouseleave', handleMouseUp);
-    drawingContainer.addEventListener('dblclick', handleDblClick);
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mouseleave', handleMouseUp);
+    document.addEventListener('dblclick', handleDblClick);
 }
 
 function handleMouseDown(e){

@@ -19,7 +19,7 @@
     display: none;
     pointer-events: auto;
     z-index: 10;
-    padding: 2px 20px 2px 2px;
+    padding: 2px 3vh 2px 2px;
     box-sizing: border-box;
 }
 
@@ -28,7 +28,6 @@
     border: none;
     background: transparent;
     font-size: 2.4vh;
-    padding: 0.5vh;
     margin: 0;
     box-sizing: border-box;
     outline: none;

@@ -56,6 +56,16 @@ function DraggablePanel(){
     //     cardDiv.style.top = (Position.top- 5- cardDiv.offsetHeight) + 'px';
     // }
 
+    //将拖动范围限制在窗口内
+    function limitPosition(e){
+        const left = Math.max(0, Math.min(window.innerWidth - panelDiv.offsetWidth, e.clientX - offsetX));
+        const top = Math.max(0, Math.min(window.innerHeight - panelDiv.offsetHeight, e.clientY - offsetY));
+        panelDiv.style.left = left + 'px';
+        panelDiv.style.top = top + 'px';
+        Position.left = left;
+        Position.top = top;
+    }
+
     // 拖动逻辑
     panelDiv.addEventListener('mousedown', (e) => {
         isMoved=false;
@@ -73,13 +83,7 @@ function DraggablePanel(){
         isMoved=true;
         //确保在拖动状态下才能移动
         if (store.isDragging) {
-            //将拖动范围限制在窗口内
-            const left = Math.max(0, Math.min(window.innerWidth - panelDiv.offsetWidth, e.clientX - offsetX));
-            const top = Math.max(0, Math.min(window.innerHeight - panelDiv.offsetHeight, e.clientY - offsetY));
-            panelDiv.style.left = left + 'px';
-            panelDiv.style.top = top + 'px';
-            Position.left = left;
-            Position.top = top;
+            limitPosition(e);
 
             // if(left<cardDiv.offsetWidth+20||top<cardDiv.offsetHeight+10){
             //     console.log('reposition');
@@ -105,6 +109,7 @@ function DraggablePanel(){
             btnDiv.classList.add('open-panel');
             cardDiv.style.display='block';
             panelDiv.classList.add('open-panel');
+            limitPosition(e);
             //确保面板打开后在视窗内
 
         }else{

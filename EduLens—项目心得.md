@@ -1355,6 +1355,54 @@ resizeObserver.observe(box);
 | **使用场景**   | 需要多份独立数据（多画板、多房间、多窗口） | 整个应用只有一份配置/开关（全局主题、当前用户、当前工具） |
 | **心智模型**   | 更像“服务”或“实体”                         | 更像“全局配置表”                                          |
 
+ 现代更推荐使用class实例的写法，class 是更通用、可扩展、结构清晰的方式。
+
+
+
+### `window`和`document`在事件绑定上的对比
+
+------
+
+- **window** = 浏览器**整个标签页**（顶级 JS 运行实体、视口、全局作用域）  
+- **document** = 当前页面里的**那份 HTML 文档**（DOM 树的根节点）
+
+| 维度                  | window                                                       | document                                                     |
+| --------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 代表范围              | **BOM**（Browser Object Model）整个标签页                    | **DOM** 这份 HTML 文档                                       |
+| 全局作用域            | ✅ `var foo` 会成为 `window.foo`                              | ❌ 不会成为 `document.foo`                                    |
+| 提供哪些常用属性/方法 | `innerWidth/innerHeight`、<br>`scrollX/scrollY`、<br>`setTimeout`、`fetch`、`localStorage`、<br>`alert/confirm/prompt` | `getElementById`、`querySelector`、<br>`createElement`、`cookie`、<br>`documentElement`（`<html>`）、<br>`head`、`body` |
+| 可否拿到 DOM 节点     | 只能间接通过 `document`                                      | 直接——本身就是根节点                                         |
+
+---
+
+ **事件绑定写法（addEventListener）**
+
+**① 绑在 window 上**
+
+```js
+window.addEventListener('scroll', () => { ... });
+window.addEventListener('resize', () => { ... });
+window.addEventListener('load', () => { ... });   // 所有资源（含图片）加载完
+```
+- 监听的是**浏览器窗口级**事件：滚动条位置变化、窗口大小变化、资源加载完成、哈希变化、存储变化等。
+
+**② 绑在 document 上**
+
+```js
+document.addEventListener('DOMContentLoaded', () => { ... }); // DOM 树解析完
+document.addEventListener('click', handler);   // 事件捕获/冒泡到 document
+document.addEventListener('visibilitychange', handler);
+```
+- 监听的是**文档自身**或**DOM 事件**：DOM 就绪、点击、键盘、剪贴板、可见性变化等。
+
+**③ 事件流路径**
+
+捕获阶段：`window → document → <html> → … → 目标元素`  
+冒泡阶段：反向回到 `window`。  
+因此**把监听器放 window 还是 document**，只决定**事件流里谁先谁后**，功能上常常都能收到冒泡，但：
+- 需要最早截获 → 绑 `window`  
+- 只需 DOM 层且比 `html` 早 → 绑 `document`
+
 
 
 
@@ -1496,51 +1544,6 @@ export async function activateGraffiti(){
 **注意：**  `.classList`得到的是 **DOMTokenList 对象**，不能直接运用数组方法，需要使用特定的方法进行增添修改
 
 
-
-### 动画优化
-
-------
-
-**改动：**
-将 left/top 的定位方式替换为 transform，并在 CSS 中类添加 will-change: transform
-
-**原因：**
-
-- 使用 transform 替代 left/top：可以让浏览器只在合成层上移动元素，而不需要触发布局（reflow）和重绘（repaint），大幅减少计算量，动画更流畅。
-- will-change: transform 告诉浏览器该属性会频繁变化，浏览器会提前为该元素分配独立的合成层，进一步避免不必要的重排和重绘，提升响应速度和动画性能。
-
-
-
-### 合成层
-
-------
-
-**定义：**
-合成层（Compositor Layer）是浏览器渲染管线里的一个独立画布，简单说：
-浏览器把网页拆成若干层，每层单独画好，再像 PS 一样一次性合成到屏幕上。
-只要这一层里的内容不改变，后续帧就直接复用这张小画布，只移动/缩放/淡入淡出这张画布，从而跳过重新绘制和布局。
-
-------
-
-**特点：**
-
-1. **减少重绘区域**
-   只重绘变化的那一层，其他层复用。
-2. **GPU 加速**
-   每层都可以上传到 GPU 作为纹理，变换（translate/scale/rotate/opacity）由 GPU 直接完成，CPU 不参与。
-3. **60 fps 平滑动画**
-   避免主线程阻塞，动画在合成线程独立进行。
-
-------
-
-**常见自动提升为合成层的情况：**
-
-- 3D transform：`transform: translateZ(0)`、`rotateY(45deg)`
-- 视频、Canvas、WebGL
-- `position: fixed`、`sticky`
-- `will-change: transform / opacity`
-- `filter`、`backdrop-filter`
-- `iframe`、`overflow: scroll`（部分浏览器）
 
 
 
@@ -1968,9 +1971,274 @@ const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
 
 
+### 错误解决：
+
+#### `Store` 中变量值冲突
+
+**问题：**开启画笔功能后拖动面板仍会在面板后面留下笔迹，拖动面板时控制台会打印“graffiti.js.js:282 store.isDragging:  false”但是此时面板还是能跟随鼠标拖动
+
+**原因：**
+
+1. 两个模块各认各的“拖动”标志  
+   - `draggablePanel.js` 里把 `store.isDragging` 设为 true 以后，面板就进入拖动逻辑。  
+   - `graffiti.js` 里只认自己的 `store.isDragging`——它一旦为 false，就以为“用户没在拖动，可以下笔”。  
+   结果：面板拖动期间，涂鸦模块仍然把鼠标事件当成“在画布上画画”来处理，于是留下笔迹。
+
+2. 打印的那句日志  
+   你在 `graffiti.js` 里 `console.log('store.isDragging: ', store.isDragging);`  
+   打印的是**涂鸦模块自己**的 `store.isDragging`，它当然一直是 false（涂鸦模块自己从来没把那个变量设成 true），所以控制台看起来“矛盾”。
+
+3. 根本问题  
+   面板拖动开始时，**必须让涂鸦模块完全收不到鼠标事件**，否则它一定会画线。  
+   靠“变量判断”去区分“到底是拖动还是画画”永远有 race-condition，最省事的办法就是让事件根本到不了涂鸦层。
+
+------------------------------------------------
+解决办法（任选其一，推荐方案 1）
+
+方案 1：拖动期间让画布“点不透”  
+在 `draggablePanel.js` 里加两行即可：
+
+```javascript
+// 拖动开始
+panelDiv.addEventListener('mousedown', (e) => {
+  isMoved = false;
+  store.isDragging = true;
+  // 让涂鸦画布收不到事件
+  const canvas = document.getElementById('graffiti-canvas');
+  if (canvas) canvas.style.pointerEvents = 'none';
+
+  offsetX = e.clientX - panelDiv.offsetLeft;
+  offsetY = e.clientY - panelDiv.offsetTop;
+  document.body.style.userSelect = 'none';
+});
+
+// 拖动结束
+document.addEventListener('mouseup', () => {
+  store.isDragging = false;
+  // 恢复画布可画
+  const canvas = document.getElementById('graffiti-canvas');
+  if (canvas) canvas.style.pointerEvents = 'auto';
+
+  document.body.style.userSelect = '';
+});
+```
+
+这样面板拖动时，鼠标事件被 `graffiti-canvas` 忽略，自然不会再留笔迹。
+
+方案 2：把“全局拖动”状态收敛到同一个 `store.isDragging`  
+如果你希望只靠变量判断，那就让 `graffiti.js` 里所有“能不能画”的判断都**只依赖** `store.isDragging`，而 `draggablePanel.js` 在拖动期间**不要释放** `store.isDragging = false`，直到 `mouseup` 再置回 false。  
+但这样仍有可能在快速拖动时漏掉一两帧，不如方案 1 彻底。
+
+------------------------------------------------
+一句话总结  
+面板拖动时把 `graffiti-canvas` 的 `pointerEvents` 设成 `none`，让画布直接“失焦”，就再也不会“拖一路画一路”了。
 
 
 
+
+
+## 性能监控和优化
+
+### 动画优化
+
+------
+
+**改动：**
+将 left/top 的定位方式替换为 transform，并在 CSS 中类添加 will-change: transform
+
+**原因：**
+
+- 使用 transform 替代 left/top：可以让浏览器只在合成层上移动元素，而不需要触发布局（reflow）和重绘（repaint），大幅减少计算量，动画更流畅。
+- will-change: transform 告诉浏览器该属性会频繁变化，浏览器会提前为该元素分配独立的合成层，进一步避免不必要的重排和重绘，提升响应速度和动画性能。
+
+
+
+### 合成层
+
+------
+
+**定义：**
+合成层（Compositor Layer）是浏览器渲染管线里的一个独立画布，简单说：
+浏览器把网页拆成若干层，每层单独画好，再像 PS 一样一次性合成到屏幕上。
+只要这一层里的内容不改变，后续帧就直接复用这张小画布，只移动/缩放/淡入淡出这张画布，从而跳过重新绘制和布局。
+
+------
+
+**特点：**
+
+1. **减少重绘区域**
+   只重绘变化的那一层，其他层复用。
+2. **GPU 加速**
+   每层都可以上传到 GPU 作为纹理，变换（translate/scale/rotate/opacity）由 GPU 直接完成，CPU 不参与。
+3. **60 fps 平滑动画**
+   避免主线程阻塞，动画在合成线程独立进行。
+
+------
+
+**常见自动提升为合成层的情况：**
+
+- 3D transform：`transform: translateZ(0)`、`rotateY(45deg)`
+- 视频、Canvas、WebGL
+- `position: fixed`、`sticky`
+- `will-change: transform / opacity`
+- `filter`、`backdrop-filter`
+- `iframe`、`overflow: scroll`（部分浏览器）
+
+
+
+### 布局抖动
+
+> 浏览器在 **短时间内反复读取 → 写入 → 读取 → 写入……** 布局属性，导致被迫 **连续强制同步布局**，从而引发 **性能雪崩** 的现象。
+>
+> **注意：**通过 JS 读取某个 DOM 元素的宽高等属性时也会引起元素重排
+
+---
+
+ **关键问题：强制同步布局**
+
+- **正常流程**：JS → 浏览器异步等一会 → 统一做一次 Layout。  
+- **触发强制同步布局**：你在 **同一帧里** 先 **读** 一个布局属性，再 **写** 一个样式，再 **读** 同一个（或相关）布局属性。  
+  浏览器为了给你 最新值，必须 立即停下 JS，先计算 Layout，再继续执行 JS。  
+  如果这发生在循环里 → 每轮都强制布局 → 爆炸。
+
+---
+
+ **如何检测布局抖动**
+
+**① DevTools Performance 面板**  
+
+录制时看到 大量紫色（Layout）条，且右上角出现 红色三角形 → 强制同步布局警告。
+
+**② Lighthouse / CLS**  
+
+- CLS（Cumulative Layout Shift） 高，可能伴随抖动。  
+- 诊断项 “Avoid large layout shifts” 或 “Avoid forced synchronous layouts”。
+
+---
+
+ **解决方案（最佳实践）**
+
+| 策略                | 代码示例                                                | 效果          |
+| ------------------- | ------------------------------------------------------- | ------------- |
+| **批量读 → 批量写** | 先统一读所有值到数组，再统一写样式                      | 1 次布局      |
+| **离线操作**        | 用 `documentFragment` 或 `display:none` 脱离文档流修改  | 0 次布局      |
+| **缓存值**          | 把 `offsetTop` 缓存到变量，避免重复读                   | 减少强制布局  |
+| **RAF 去抖**        | 把写操作放进 `requestAnimationFrame` 队列，下一帧统一写 | 最多 1 次布局 |
+| **CSS 替代 JS**     | 尽可能用 `transform`、`opacity` 合成层属性              | 跳过 Layout   |
+
+---
+
+ **速查表：会触发强制布局（重排）的常用属性**
+
+| 读操作（会触发）              | 写操作（会使缓存失效）                                |
+| ----------------------------- | ----------------------------------------------------- |
+| `offsetTop/Left/Width/Height` | 改变 `width`、`height`、`margin`、`padding`、`border` |
+| `clientTop/Left/Width/Height` | 改变 `font-size`、`line-height`                       |
+| `scrollTop/Left/Width/Height` | 改变 `content` 文本                                   |
+| `getComputedStyle()`          | 添加/删除样式类                                       |
+| `getBoundingClientRect()`     | 改变 `display`、`position`、`top/left`                |
+
+
+
+### Chrome DevTools Performance性能面板 
+
+--------------------------------------------------
+1. **三图：FPS、CPU、NET（最顶上的三行**）
+--------------------------------------------------
+1) **FPS（帧率图）**  
+   - 绿色竖条越高 = 帧率越高；**红色块** = 帧掉到底了，用户肉眼可见卡顿。  
+   - 60 FPS 对应 16.6 ms/帧，低于 30 FPS 基本必卡。
+
+2) **CPU（面积图）**  
+   - 颜色与 Summary 标签页完全一致：  
+     – 蓝色 Loading：HTML/字节下载 + 解析  
+     – 黄色 Scripting：JS 编译 + 执行  
+     – 紫色 Rendering：样式重算、布局（Reflow）  
+     – 绿色 Painting：重绘、合成（Paint）  
+     – 灰色 Other：垃圾回收、浏览器内务  
+     – 白色 Idle：主线程完全空闲  
+   - 图被颜色塞满 → CPU 跑满，长时间空白 → 还有优化空间。
+
+3) **NET（网络瀑布）**  
+   - 每根横条 = 一个资源，从左到右是发送 → 等待 → 下载；**越高并发条数越多**可看出是否受 HTTP/1.1 6 连接上限卡住。  
+   - 悬停可看到此刻屏幕截图，用来对照“白屏”“出现内容”时间点。
+
+--------------------------------------------------
+2. **两表：Summary、Timing**
+--------------------------------------------------
+1) **Summary**（选中一段区间才出现）  
+   把上面 CPU 面积图量化成毫秒数，一眼看出“JS 耗时还是渲染耗时”。
+
+2) **Timing**（虚线竖条）  
+   常用 6 条：  
+   - FP（First Paint）  
+   - FCP（First Contentful Paint）  
+   - FMP/LCP（First/Largest Contentful Paint，新版已合并为 LCP）  
+   - DCL（DOMContentLoaded）  
+   - L（onLoad）  
+   位置越靠左 = 用户越早看到东西；和 FPS 图一起看，可判断“首屏虽然快但帧率掉得一塌糊涂”这类场景。
+
+--------------------------------------------------
+3. **一火焰：Main Thread**
+--------------------------------------------------
+- 横轴时间，纵轴调用栈；**宽块 = 长任务**。  
+- 右上角出现红色小三角 → 触发“强制同步布局”或“长任务 (>50 ms)”，点块可在 Bottom-Up/Call Tree 里看具体代码行号。  
+- 常见优化目标：  
+  – 长 JS 任务 → 拆分、Web Worker  
+  – 高紫色条 → 减少 DOM 数量、缓存 offsetTop 等  
+  – 高绿色条 → 改用 transform/opacity 合成属性
+
+--------------------------------------------------
+4. **Frames、Raster、GPU**
+--------------------------------------------------
+- Frames：每帧的耗时，直接对应 FPS 图，选中某帧可看“这一 16 ms 究竟花在哪儿”。  
+- Raster & GPU：底层光栅化与 GPU 进程，**普通页面优化一般不需要碰**，遇到 canvas/WebGL 掉帧再关注。
+
+--------------------------------------------------
+5. **内存 & 截图行**
+--------------------------------------------------
+- HEAP：JS 堆大小，**持续上升不下降** = 疑似泄漏；可在 Memory 面板打快照确认。  
+- Screenshots：默认勾选，拖动时间轴可看到“用户那一刻到底看到什么”，用来对齐 FP/FCP 非常直观。
+
+
+
+
+
+###  Core Web Vitals（核心网页指标）
+
+---
+
+| 指标    | 全称                      | 衡量维度       | 良好标准 | 含义一句话                         |
+| ------- | ------------------------- | -------------- | -------- | ---------------------------------- |
+| **LCP** | Largest Contentful Paint  | **加载性能**   | ≤2.5 s   | 用户多久能看到“最大块”主要内容     |
+| **INP** | Interaction to Next Paint | **交互响应**   | ≤200 ms  | 用户点按钮后，多久能看到页面“反应” |
+| **CLS** | Cumulative Layout Shift   | **视觉稳定性** | ≤0.1     | 页面元素是否“跳动”或“乱移位”       |
+
+---
+
+#### 1. LCP（最大内容绘制时间）
+- **定义**：从页面开始加载到 **视口内最大元素（图片、视频、大段文本）完全渲染** 的时间。  
+- **举例**：打开一篇文章，首屏大图或标题文本块出现的时间就是 LCP。  
+- **优化方向**：
+  - 压缩/预加载关键图片  
+  - 使用 CDN 加速  
+  - 减少阻塞渲染的 JS/CSS
+
+#### 2. INP（交互至下一次绘制）
+- **定义**：用户 **首次点击、触摸、按键** 后，页面 **下一次视觉更新** 所需的 **最长时间**（取整页生命周期内最差的一次，忽略离群值）。  
+- **举例**：点“加入购物车”按钮，按钮状态变化/弹框出现的延迟就是 INP。  
+- **优化方向**：
+  - 减少主线程长任务（拆分 JS）  
+  - 用 Web Worker 做重计算  
+  - 避免同步 DOM 操作
+
+#### 3. CLS（累积布局偏移）
+- **定义**：页面 **整个生命周期内** 所有 **意外布局偏移** 的得分总和（0 表示完全稳定）。  
+- **举例**：文字加载完突然插入一张没设高度的图，导致 按钮被挤下去，用户点错 —— 这就是高 CLS。  
+- **优化方向**：
+  - 给图片/视频设 明确宽高 或 `aspect-ratio`  
+  - 避免动态插入内容无占位  
+  - 用 CSS `transform` 做动画，避免改变布局
 
 
 
@@ -2016,6 +2284,342 @@ const ctx = canvas.getContext('2d', { willReadFrequently: true });
 4. 拖动控制点调整大小，拖动内部移动位置
 5. 在矩形内输入说明文字
 6. 点击外部退出编辑模式
+
+
+
+
+
+你提的这个问题非常实际且关键。确实，随着功能模块增多，插件中直接在 `document` 上绑定大量 `addEventListener` 会导致以下问题：
+
+- **事件管理混乱**：分散在各文件中，难以追踪和维护。
+- **重复绑定风险**：模块重复加载或热更新时可能重复绑定。
+- **内存泄漏风险**：未正确移除的事件监听器会在页面卸载时残留。
+- **调试困难**：事件冲突或触发异常时难以定位来源。
+
+---
+
+### ✅ 解决方案：**集中事件管理器（EventManager）**
+
+你可以引入一个轻量级的事件管理器模块，统一注册、解绑、触发事件。以下是一个推荐的实现方式：
+
+---
+
+### 🔧 1. 创建 `EventManager.js`
+
+```js
+// utils/EventManager.js
+
+class EventManager {
+  constructor() {
+    this.listeners = new Map();
+  }
+
+  on(event, handler, options = {}) {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, new Set());
+    }
+    this.listeners.get(event).add(handler);
+    document.addEventListener(event, handler, options);
+  }
+
+  off(event, handler) {
+    const handlers = this.listeners.get(event);
+    if (handlers && handlers.has(handler)) {
+      document.removeEventListener(event, handler);
+      handlers.delete(handler);
+    }
+  }
+
+  offAll(event) {
+    const handlers = this.listeners.get(event);
+    if (handlers) {
+      handlers.forEach(h => document.removeEventListener(event, h));
+      handlers.clear();
+    }
+  }
+
+  clear() {
+    this.listeners.forEach((handlers, event) => {
+      handlers.forEach(h => document.removeEventListener(event, h));
+    });
+    this.listeners.clear();
+  }
+}
+
+export default new EventManager();
+```
+
+---
+
+### 🧩 2. 在各模块中使用 `EventManager`
+
+例如，在 `graffiti.js` 中：
+
+```js
+import eventManager from '../utils/EventManager.js';
+
+function startDrawing(e) { /* ... */ }
+function draw(e) { /* ... */ }
+function stopDrawing(e) { /* ... */ }
+
+export function setupEventListeners() {
+  eventManager.on('mousedown', startDrawing);
+  eventManager.on('mousemove', draw);
+  eventManager.on('mouseup', stopDrawing);
+  eventManager.on('mouseleave', stopDrawing);
+}
+```
+
+在 `rectangleAnnotation.js` 中：
+
+```js
+eventManager.on('mousedown', handleMouseDown);
+eventManager.on('mousemove', handleMouseMove);
+eventManager.on('mouseup', handleMouseUp);
+eventManager.on('dblclick', handleDblClick);
+```
+
+---
+
+### 🧹 3. 页面卸载或模块禁用时统一清理
+
+```js
+// 在插件卸载或页面跳转时调用
+eventManager.clear();
+```
+
+---
+
+### ✅ 优点总结
+
+| 优点           | 说明                               |
+| -------------- | ---------------------------------- |
+| ✅ 统一管理     | 所有 `document` 事件集中注册与移除 |
+| ✅ 防止重复绑定 | 内部自动去重，避免重复注册         |
+| ✅ 易于调试     | 可扩展为打印日志、调试模式         |
+| ✅ 内存安全     | 清理机制完善，防止泄漏             |
+
+---
+
+### ✅ 可选增强（调试/日志）
+
+你可以在 `EventManager` 中加入日志：
+
+```js
+on(event, handler, options = {}) {
+  console.log(`[EventManager] 注册事件: ${event}`);
+  // ...
+}
+```
+
+---
+
+### ✅ 总结
+
+是的，你目前的 `addEventListener` 数量已经偏多，**建议尽快引入 `EventManager` 模块** 进行集中管理。它不会破坏你现有逻辑，但能显著提升可维护性和稳定性。
+
+如果你愿意，我可以帮你重构一个模块（比如 `graffiti.js`）作为示例。需要吗？
+
+
+
+
+
+# 事件监听器集中管理优化
+
+在你的代码中，我注意到确实有很多分散的`addEventListener`调用，特别是在`graffiti.js`和`rectangleAnnotation.js`中。这会使代码难以维护，并可能导致事件冲突或内存泄漏。
+
+## 解决方案
+
+我将为你创建一个集中式事件管理器，它可以：
+1. 统一管理所有事件监听器
+2. 提供便捷的注册和注销方法
+3. 防止重复注册
+4. 在页面切换时自动清理事件
+
+下面是实现方案：
+
+```javascript
+// utils/eventManager.js
+class EventManager {
+  constructor() {
+    this.listeners = new Map();
+    this.documentListeners = new Map();
+  }
+
+  // 添加普通事件监听
+  add(element, event, callback, options = false) {
+    const key = `${event}-${callback.toString().hashCode()}`;
+    if (!this.listeners.has(key)) {
+      element.addEventListener(event, callback, options);
+      this.listeners.set(key, { element, event, callback, options });
+    }
+    return key;
+  }
+
+  // 添加document事件监听（常用）
+  addDocument(event, callback, options = false) {
+    const key = `${event}-${callback.toString().hashCode()}`;
+    if (!this.documentListeners.has(key)) {
+      document.addEventListener(event, callback, options);
+      this.documentListeners.set(key, { event, callback, options });
+    }
+    return key;
+  }
+
+  // 移除特定事件
+  remove(key) {
+    if (this.listeners.has(key)) {
+      const { element, event, callback, options } = this.listeners.get(key);
+      element.removeEventListener(event, callback, options);
+      this.listeners.delete(key);
+    } else if (this.documentListeners.has(key)) {
+      const { event, callback, options } = this.documentListeners.get(key);
+      document.removeEventListener(event, callback, options);
+      this.documentListeners.delete(key);
+    }
+  }
+
+  // 按事件类型批量移除
+  removeByEvent(event) {
+    // 移除普通监听器
+    for (const [key, value] of this.listeners.entries()) {
+      if (value.event === event) {
+        value.element.removeEventListener(value.event, value.callback, value.options);
+        this.listeners.delete(key);
+      }
+    }
+    
+    // 移除document监听器
+    for (const [key, value] of this.documentListeners.entries()) {
+      if (value.event === event) {
+        document.removeEventListener(value.event, value.callback, value.options);
+        this.documentListeners.delete(key);
+      }
+    }
+  }
+
+  // 移除所有事件监听
+  removeAll() {
+    // 移除普通监听器
+    for (const [key, { element, event, callback, options }] of this.listeners.entries()) {
+      element.removeEventListener(event, callback, options);
+      this.listeners.delete(key);
+    }
+    
+    // 移除document监听器
+    for (const [key, { event, callback, options }] of this.documentListeners.entries()) {
+      document.removeEventListener(event, callback, options);
+      this.documentListeners.delete(key);
+    }
+  }
+
+  // 获取所有监听器
+  getAllListeners() {
+    return {
+      normal: Array.from(this.listeners.values()),
+      document: Array.from(this.documentListeners.values())
+    };
+  }
+}
+
+// 为String添加hashCode方法用于生成唯一键
+String.prototype.hashCode = function() {
+  let hash = 0;
+  for (let i = 0; i < this.length; i++) {
+    const char = this.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0; // 转换为32位整数
+  }
+  return hash;
+};
+
+// 创建全局事件管理器实例
+const eventManager = new EventManager();
+
+export default eventManager;
+```
+
+## 使用示例
+
+在你的各个模块中，可以这样使用事件管理器：
+
+```javascript
+// graffiti.js 修改示例
+import eventManager from '../utils/eventManager.js';
+
+// 移除原有的setupEventListeners函数，改为以下方式
+function setupEventListeners() {
+  // 使用事件管理器注册事件
+  eventManager.addDocument('mousedown', startDrawing);
+  eventManager.addDocument('mousemove', draw);
+  eventManager.addDocument('mouseup', stopDrawing);
+  eventManager.addDocument('mouseleave', stopDrawing);
+  
+  // 监听窗口大小变化
+  const handleResize = () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      resizeCanvas();
+    }, 100);
+  };
+  
+  eventManager.add(window, 'resize', handleResize);
+}
+
+// 在需要清理事件的地方调用
+function deactivateGraffiti() {
+  // 移除所有与涂鸦相关的事件
+  eventManager.removeByEvent('mousedown');
+  eventManager.removeByEvent('mousemove');
+  eventManager.removeByEvent('mouseup');
+  eventManager.removeByEvent('mouseleave');
+  
+  // 或者更精确地移除特定函数的事件
+  // eventManager.remove('mousedown-' + startDrawing.toString().hashCode());
+}
+```
+
+## 页面切换时的事件清理
+
+你可以在SPA路由监控中添加事件清理：
+
+```javascript
+// MonitorSPARoutes.js 或类似文件中
+import eventManager from './utils/eventManager.js';
+
+// 修改你的路由监控函数
+export default function MonitorSPARoutes(callback) {
+  // 原有的路由监控逻辑...
+  
+  // 在检测到路由变化时，清理特定事件
+  const originalPushState = history.pushState;
+  history.pushState = function(...args) {
+    originalPushState.apply(this, args);
+    // 清理所有document事件，保留需要持久化的事件
+    eventManager.removeByEvent('mousemove');
+    eventManager.removeByEvent('mousedown');
+    eventManager.removeByEvent('mouseup');
+    // 其他需要清理的事件...
+    
+    // 执行回调
+    if (typeof callback === 'function') {
+      callback();
+    }
+  };
+  
+  // 类似地处理popstate和replaceState...
+}
+```
+
+## 优势
+
+1. **集中管理**：所有事件监听器都在一个地方管理
+2. **防止重复**：避免同一事件处理程序被多次注册
+3. **易于调试**：可以轻松查看所有已注册的事件监听器
+4. **简化清理**：在页面切换或功能禁用时轻松移除事件
+5. **减少内存泄漏**：确保不需要的事件监听器被正确清理
+
+这种集中式管理方式将使你的代码更加健壮和易于维护。
 
 
 

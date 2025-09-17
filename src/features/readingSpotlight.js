@@ -24,7 +24,7 @@ export function activateReadingSpotlight() {
   }
   
   readingSpotlightDiv.style.display = 'block';
-  window.addEventListener('mousemove', ReadingSpotlight);
+  document.addEventListener('mousemove', ReadingSpotlight);
 }
 
 export function deactivateReadingSpotlight() {

@@ -14,7 +14,7 @@ function Spotlight(e) {
 }
 
 export function activateSpotlight() {
-  window.addEventListener('mousemove', Spotlight);
+  document.addEventListener('mousemove', Spotlight);
 }
 
 export function deactivateSpotlight() {

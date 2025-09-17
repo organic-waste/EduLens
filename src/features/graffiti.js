@@ -237,10 +237,10 @@ function createControls(){
 
 //绘图过程监听
 function setupEventListeners(){
-  window.addEventListener('mousedown', startDrawing);
-  window.addEventListener('mousemove', draw);
-  window.addEventListener('mouseup', stopDrawing);
-  window.addEventListener('mouseleave', stopDrawing);  
+  document.addEventListener('mousedown', startDrawing);
+  document.addEventListener('mousemove', draw);
+  document.addEventListener('mouseup', stopDrawing);
+  document.addEventListener('mouseleave', stopDrawing);  
 
   //监听窗口大小变化并调整画布
   let resizeTimeout;
@@ -279,6 +279,7 @@ function startDrawing(e){
 function draw(e){
   if(!store.isDrawing||!drawingCtx||store.isDragging) return;
   if(!store.isEraser && !store.isPen) return;
+  console.log('store.isDragging: ', store.isDragging);
   const rect=drawingCanvas.getBoundingClientRect();
   const PosX=e.clientX-rect.left;
   const PosY=e.clientY-rect.top;

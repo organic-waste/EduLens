@@ -15,7 +15,7 @@ function Highlight(e) {
 }
 
 export function activateHighlight() {
-  window.addEventListener('mousemove', Highlight);
+  document.addEventListener('mousemove', Highlight);
 }
 
 export function deactivateHighlight() {
