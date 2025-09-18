@@ -40,6 +40,8 @@ export function activateRectangleAnnotation(){
         toolGroupDiv.appendChild(rectangleButton);
     }
     loadRectangles().then(()=>{
+        console.log("执行了初始的矩阵数据加载");
+        console.log('rectangles: ', rectangles);
         renderAllRectangles();
     });
     EditingRectangleEventListeners();
@@ -604,9 +606,11 @@ async function saveRectangles() {
     try{
         const pageKey = getPageKey();
         const result = await chrome.storage.local.get({rectangles: {}});
-        const allRectangles = result.rectangles;
-        allRectangles[pageKey] = rectangles;
-        await chrome.storage.local.set({rectangles:allRectangles});
+        const rects = result.rectangles;
+        rects[pageKey] = rectangles;
+        console.log('rects[pageKey]: ', rects[pageKey]);
+        console.log('pageKey: ', pageKey);
+        await chrome.storage.local.set({ rects });
     }catch(error){
         console.error(error);
     }
@@ -615,8 +619,9 @@ async function saveRectangles() {
 async function loadRectangles() {
     try{
         const pageKey = getPageKey();
-        const result = await chrome.storage.local.get({rectangles:{}});
-        rectangles = result.rectangles[pageKey]||[];
+        const result = await chrome.storage.local.get({rects:{}});
+        console.log('result: ', result.rects);
+        rectangles = result.rects[pageKey]||[];
     }catch(error){
         console.error(error);
         rectangles = [];

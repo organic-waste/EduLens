@@ -313,14 +313,16 @@ function clearCanvas(){
   }
 }
 
+/* 持久化 */
+
 async function saveDrawing() {
   if(!drawingCanvas) return;
   try{
-    const dataURL=drawingCanvas.toDataURL('image/png'); //指定以png的形式保存
-    const pageKey=getPageKey();
-    const result=await chrome.storage.local.get({canvas: {}})
-    const canvas=result.canvas;
-    canvas[pageKey]=dataURL;
+    const dataURL = drawingCanvas.toDataURL('image/png'); //指定以png的形式保存
+    const pageKey = getPageKey();
+    const result = await chrome.storage.local.get({canvas: {}})
+    const canvas = result.canvas;
+    canvas[pageKey] = dataURL;
     await chrome.storage.local.set({canvas});
 
   }catch (error) {
