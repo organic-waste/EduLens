@@ -16,7 +16,7 @@ let Position = { left: 0, top: 0 };
 
 function DraggablePanel(){
     if(panelDiv)return;
-    panelDiv=document.createElement('div');
+    panelDiv = document.createElement('div');
     panelDiv.className='draggable-panel';
     panelDiv.innerHTML=`
         <button class="toggle-btn">
@@ -55,16 +55,42 @@ function DraggablePanel(){
     // }else{
     //     cardDiv.style.left = (Position.left - 10- cardDiv.offsetWidth) + 'px';
     //     cardDiv.style.top = (Position.top- 5- cardDiv.offsetHeight) + 'px';
-    // }
+    // }t
 
     //将拖动范围限制在窗口内
-    function limitPosition(e){
-        const left = Math.max(0, Math.min(window.innerWidth - panelDiv.offsetWidth, e.clientX - offsetX));
-        const top = Math.max(0, Math.min(window.innerHeight - panelDiv.offsetHeight, e.clientY - offsetY));
-        panelDiv.style.left = left + 'px';
-        panelDiv.style.top = top + 'px';
-        Position.left = left;
-        Position.top = top;
+    function updatePosition(e = null){
+        //当移动面板时
+        if(e){
+            const left = Math.max(0, Math.min(window.innerWidth - panelDiv.offsetWidth, e.clientX - offsetX));
+            const top = Math.max(0, Math.min(window.innerHeight - panelDiv.offsetHeight, e.clientY - offsetY));
+            panelDiv.style.left = left + 'px';
+            panelDiv.style.top = top + 'px';
+            Position.left = left;
+            Position.top = top;
+        }
+        //保证点开面板时保持在窗口内
+        else{
+            const panelRect = panelDiv.getBoundingClientRect();
+            let newLeft = Position.left;
+            let newTop = Position.top;
+            
+            if (newLeft + panelRect.width*6 > window.innerWidth) {
+                newLeft = window.innerWidth - panelRect.width*6;
+            }
+            if (newLeft < 0) {
+                newLeft = 0;
+            }
+            if (newTop + panelRect.height*8 > window.innerHeight) {
+                newTop = window.innerHeight - panelRect.height*8;
+            }
+            if (newTop < 0) {
+                newTop = 0;
+            }
+            panelDiv.style.left = newLeft + 'px';
+            panelDiv.style.top = newTop + 'px';
+            Position.left = newLeft;
+            Position.top = newTop;
+        }
     }
 
     // 拖动逻辑
@@ -78,14 +104,14 @@ function DraggablePanel(){
         offsetY = e.clientY - panelDiv.offsetTop;
         //防止拖动时选中文本
         document.body.style.userSelect = 'none';
+        e.stopPropagation();
     });
 
     eventManager.on(document,'mousemove', (e) => {
         isMoved=true;
         //确保在拖动状态下才能移动
         if (store.isDragging) {
-            limitPosition(e);
-
+            updatePosition(e);
             // if(left<cardDiv.offsetWidth+20||top<cardDiv.offsetHeight+10){
             //     console.log('reposition');
             //     cardDiv.style.left = (left + 60) + 'px';
@@ -110,7 +136,7 @@ function DraggablePanel(){
             btnDiv.classList.add('open-panel');
             cardDiv.style.display='block';
             panelDiv.classList.add('open-panel');
-            limitPosition(e);
+            updatePosition();
             //确保面板打开后在视窗内
 
         }else{

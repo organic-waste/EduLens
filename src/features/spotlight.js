@@ -19,7 +19,7 @@ export function activateSpotlight() {
 }
 
 export function deactivateSpotlight() {
-  window.removeEventListener('mousemove', Spotlight);
+  eventManager.off(window,'mousemove', Spotlight);
   if (spotlightDiv) {
     spotlightDiv.remove();
     spotlightDiv = null;

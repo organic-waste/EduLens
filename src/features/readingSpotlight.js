@@ -30,7 +30,7 @@ export function activateReadingSpotlight() {
 }
 
 export function deactivateReadingSpotlight() {
-  window.removeEventListener('mousemove', ReadingSpotlight);
+  eventManager.off(window,'mousemove', ReadingSpotlight);
   if (readingSpotlightDiv) {
     readingSpotlightDiv.style.display = 'none';
   }

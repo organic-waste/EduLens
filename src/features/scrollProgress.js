@@ -51,7 +51,7 @@ export function activateScrollProgress() {
 }
 
 export function deactivateScrollProgress() {
-  window.removeEventListener('scroll', ScrollProgress);
+  eventManager.off(window,'scroll', ScrollProgress);
   if (scrollDiv) {
     scrollDiv.remove();
     scrollDiv = null;

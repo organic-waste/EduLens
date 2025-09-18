@@ -1420,6 +1420,98 @@ document.addEventListener('visibilitychange', handler);
 
 
 
+### 监听事件对象类型和其方法
+
+---
+
+**一、事件类型 → 事件对象类型对照表**
+
+| 事件类型（字符串）                                           | 事件对象类型      | 典型场景        |
+| ------------------------------------------------------------ | ----------------- | --------------- |
+| click / dblclick / mousedown / mouseup / mousemove / mouseover / mouseout / contextmenu | **MouseEvent**    | 鼠标            |
+| wheel                                                        | **WheelEvent**    | 滚轮            |
+| drag / dragstart / dragend / dragover / drop                 | **DragEvent**     | 拖拽            |
+| keydown / keyup / keypress                                   | **KeyboardEvent** | 键盘            |
+| touchstart / touchmove / touchend / touchcancel              | **TouchEvent**    | 触屏            |
+| input                                                        | **InputEvent**    | 输入框内容变化  |
+| focus / blur / focusin / focusout                            | **FocusEvent**    | 焦点            |
+| scroll / resize / load / error / abort …                     | **Event**         | 通用/无特殊数据 |
+
+---
+
+**二、各事件对象类型“独有”属性/方法**
+
+1. **MouseEvent（继承 WheelEvent、DragEvent）**
+
+- `clientX / clientY` 视口坐标  
+- `pageX / pageY` 文档坐标  
+- `screenX / screenY` 屏幕坐标  
+- `button` 按下的是哪个键（0 左 1 中 2 右）  
+- `buttons` 位掩码，同时按下的键集合  
+- `ctrlKey / shiftKey / altKey / metaKey` 修饰键布尔值  
+- `relatedTarget` 相关元素（mouseenter/mouseleave 中 from/to 的元素）
+
+2. **WheelEvent（继承 MouseEvent）**
+
+- `deltaX / deltaY / deltaZ` 滚动量  
+- `deltaMode` 单位（0=像素 1=行 2=页）
+
+3. **DragEvent（继承 MouseEvent）**
+
+- `dataTransfer` DataTransfer 对象（setData / getData / dropEffect …）
+
+4. **KeyboardEvent**
+
+- `key` 字符值（如 "a" "Enter"）  
+- `code` 物理键代码（如 "KeyA"）  
+- `location` 键盘区域（0 标准 1 左侧 2 右侧 3 小键盘）  
+- `repeat` 长按自动重复标志  
+- `ctrlKey / shiftKey / altKey / metaKey`（与鼠标相同）
+
+5. **TouchEvent**
+
+- `touches` 当前屏幕所有触点（TouchList）  
+- `targetTouches` 当前元素上的触点  
+- `changedTouches` 本次事件中改变的触点  
+- `altKey / metaKey / ctrlKey`（修饰键）
+
+6. **InputEvent**
+
+- `data` 输入的字符串（插入/删除内容）  
+- `inputType` 操作类型（"insertText" "deleteContentBackward" …）  
+- `isComposing` 是否处于输入法组合阶段
+
+7. **FocusEvent**
+
+- `relatedTarget` 焦点从哪个元素来/到哪个元素去
+
+---
+
+**三、所有事件对象共有的属性/方法**
+
+（定义在 Event.prototype，任何事件都能用）
+
+| 属性/方法                    | 说明                                             |
+| ---------------------------- | ------------------------------------------------ |
+| `type`                       | 事件名字符串（"click" 等）                       |
+| `target`                     | 真正触发事件的元素                               |
+| `currentTarget`              | 绑定监听器的元素（=== 回调里 this 若未箭头函数） |
+| `eventPhase`                 | 0 none 1 capturing 2 target 3 bubbling           |
+| `timeStamp`                  | 相对页面生命周期的事件发生时间（毫秒）           |
+| `bubbles`                    | 布尔，是否冒泡                                   |
+| `cancelable`                 | 布尔，是否可调用 preventDefault()                |
+| `composed`                   | 布尔，能否穿透 Shadow DOM                        |
+| `preventDefault()`           | 阻止默认行为                                     |
+| `stopPropagation()`          | 停止冒泡/捕获                                    |
+| `stopImmediatePropagation()` | 停止且同元素剩余监听器也不执行                   |
+| `composedPath()`             | 返回事件冒泡路径数组                             |
+
+
+
+
+
+
+
 
 
 ### 错误解决：
@@ -1535,9 +1627,22 @@ export async function activateGraffiti(){
 
 
 
+#### 保证面板在窗口内函数检测的长宽为以前的数据
 
 
+------
 
+**原因：**首先在`click`事件中刚调整面板状态为激活，随后便调用`updatePosition` 函数，此时DOM样式可能还没更新，使用requestAnimationFrame 确保 DOM 更新后再执行位置计算，但仍没有解决问题。
+
+```js
+        requestAnimationFrame(() => {
+            updatePosition();
+        });
+```
+
+后来发现 CSS中有`transition`动画对面板长宽进行过渡，导致调用`updatePosition()`时长宽数据还停留在未展开的时候，进而导致更新位置的函数使用的是关闭时的面板长宽数据。
+
+**解决：**可以使用`setTimeout()`来配合动画进行结束后再调整位置，但有等待延时，所以目前采用的是在判断函数中使用展开的面板数据来进行位置计算。
 
 
 
@@ -2231,7 +2336,8 @@ document.addEventListener('mouseup', () => {
 
 ---
 
-#### 1. LCP（最大内容绘制时间）
+1. **LCP（最大内容绘制时间）**
+
 - **定义**：从页面开始加载到 **视口内最大元素（图片、视频、大段文本）完全渲染** 的时间。  
 - **举例**：打开一篇文章，首屏大图或标题文本块出现的时间就是 LCP。  
 - **优化方向**：
@@ -2239,7 +2345,8 @@ document.addEventListener('mouseup', () => {
   - 使用 CDN 加速  
   - 减少阻塞渲染的 JS/CSS
 
-#### 2. INP（交互至下一次绘制）
+2. **INP（交互至下一次绘制）**
+
 - **定义**：用户 **首次点击、触摸、按键** 后，页面 **下一次视觉更新** 所需的 **最长时间**（取整页生命周期内最差的一次，忽略离群值）。  
 - **举例**：点“加入购物车”按钮，按钮状态变化/弹框出现的延迟就是 INP。  
 - **优化方向**：
@@ -2247,7 +2354,8 @@ document.addEventListener('mouseup', () => {
   - 用 Web Worker 做重计算  
   - 避免同步 DOM 操作
 
-#### 3. CLS（累积布局偏移）
+**3. CLS（累积布局偏移）**
+
 - **定义**：页面 **整个生命周期内** 所有 **意外布局偏移** 的得分总和（0 表示完全稳定）。  
 - **举例**：文字加载完突然插入一张没设高度的图，导致 按钮被挤下去，用户点错 —— 这就是高 CLS。  
 - **优化方向**：
@@ -2299,10 +2407,5 @@ document.addEventListener('mouseup', () => {
 4. 拖动控制点调整大小，拖动内部移动位置
 5. 在矩形内输入说明文字
 6. 点击外部退出编辑模式
-
-
-
-
-
 
 

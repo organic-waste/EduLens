@@ -20,7 +20,7 @@ export function activateHighlight() {
 }
 
 export function deactivateHighlight() {
-  window.removeEventListener('mousemove', Highlight);
+  eventManager.off(window,'mousemove', Highlight);
   if (highlightDiv) {
     highlightDiv.remove();
     highlightDiv = null;
