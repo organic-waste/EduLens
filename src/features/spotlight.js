@@ -1,4 +1,5 @@
 // 聚光灯
+import eventManager from '../utils/eventManager.js';
 
 let spotlightDiv = null;
 
@@ -14,7 +15,7 @@ function Spotlight(e) {
 }
 
 export function activateSpotlight() {
-  document.addEventListener('mousemove', Spotlight);
+  eventManager.on(document,'mousemove', Spotlight);
 }
 
 export function deactivateSpotlight() {

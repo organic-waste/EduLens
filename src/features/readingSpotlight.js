@@ -1,4 +1,6 @@
 // 阅读聚光灯
+import eventManager from '../utils/eventManager.js';
+
 let readingSpotlightDiv = null;
 
 function ReadingSpotlight(e) {
@@ -24,7 +26,7 @@ export function activateReadingSpotlight() {
   }
   
   readingSpotlightDiv.style.display = 'block';
-  document.addEventListener('mousemove', ReadingSpotlight);
+  eventManager.on(document,'mousemove', ReadingSpotlight);
 }
 
 export function deactivateReadingSpotlight() {

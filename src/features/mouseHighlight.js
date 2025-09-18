@@ -1,4 +1,5 @@
 // 鼠标高亮
+import eventManager from '../utils/eventManager.js';
 
 let highlightDiv = null;
 
@@ -15,7 +16,7 @@ function Highlight(e) {
 }
 
 export function activateHighlight() {
-  document.addEventListener('mousemove', Highlight);
+  eventManager.on(document,'mousemove', Highlight);
 }
 
 export function deactivateHighlight() {

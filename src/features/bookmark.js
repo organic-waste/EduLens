@@ -1,4 +1,5 @@
 //创建定位书签
+import eventManager from '../utils/eventManager.js';
 import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
 import { getId,getPageKey } from '../utils/getIdentity.js';
 
@@ -28,7 +29,7 @@ function createBookmarkEle(scrollTop,text,id){
   const deleteBtn=document.createElement('button');
   deleteBtn.className='delete-button';
   deleteBtn.textContent='×';
-  deleteBtn.addEventListener('click',(e)=>{
+  eventManager.on(deleteBtn,'click',(e)=>{
     e.stopPropagation(); //防止冒泡被面板上的其他事件捕获
     removeBookmark(bookmarkDiv);
   })
@@ -51,25 +52,25 @@ function createBookmarkEle(scrollTop,text,id){
     }
   }
 
-  bookmarkDiv.addEventListener('mouseenter',()=>{
+  eventManager.on(bookmarkDiv,'mouseenter',()=>{
     tooltip.style.opacity='1';
     tooltip.style.pointerEvents='all';
     switchPanel(true);
   })
 
-  bookmarkDiv.addEventListener('mouseleave',()=>{
+  eventManager.on(bookmarkDiv,'mouseleave',()=>{
     switchPanel(false);
   })
 
-  tooltip.addEventListener('mouseover',()=>{
+  eventManager.on(tooltip,'mouseover',()=>{
     switchPanel(true);
   })
   
-  tooltip.addEventListener('mouseleave',()=>{
+  eventManager.on(tooltip,'mouseleave',()=>{
     switchPanel(false);
   })
 
-  bookmarkDiv.addEventListener('click',()=>{
+  eventManager.on(bookmarkDiv,'click',()=>{
     window.scrollTo({
       top:scrollTop,
       behavior:'smooth'
@@ -152,7 +153,7 @@ export function activateBookmark() {
   btnDiv = document.createElement('button');
   btnDiv.className = 'button';
   btnDiv.textContent = '添加书签';
-  btnDiv.addEventListener('click', createBookmark); 
+  eventManager.on(btnDiv,'click', createBookmark); 
   addDiv.appendChild(btnDiv)
 
   cardDiv = document.getElementsByClassName('functions')[0];

@@ -1,4 +1,5 @@
 // 可拖动卡片面板
+import eventManager from '../utils/eventManager.js';
 import {activateScrollProgress} from './scrollProgress.js'
 import {activateBookmark} from './bookmark.js'
 import { activateGraffiti } from './graffiti.js';
@@ -67,7 +68,7 @@ function DraggablePanel(){
     }
 
     // 拖动逻辑
-    panelDiv.addEventListener('mousedown', (e) => {
+    eventManager.on(panelDiv,'mousedown', (e) => {
         isMoved=false;
         store.isDragging = true;
         //e.clientX —— 鼠标相对于视口的横坐标。
@@ -79,7 +80,7 @@ function DraggablePanel(){
         document.body.style.userSelect = 'none';
     });
 
-    document.addEventListener('mousemove', (e) => {
+    eventManager.on(document,'mousemove', (e) => {
         isMoved=true;
         //确保在拖动状态下才能移动
         if (store.isDragging) {
@@ -96,12 +97,12 @@ function DraggablePanel(){
         }
     });
 
-    document.addEventListener('mouseup', () => {
+    eventManager.on(document,'mouseup', () => {
         store.isDragging = false;
         document.body.style.userSelect = '';// 恢复文字可选中
     });
 
-    btnDiv.addEventListener('click', (e) => {
+    eventManager.on(btnDiv,'click', (e) => {
         if (isMoved) return; // 确保拖动过后不弹窗
 
         if(!isOpen){

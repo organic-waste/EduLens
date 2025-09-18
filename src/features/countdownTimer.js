@@ -1,4 +1,6 @@
 // 倒计时组件
+import eventManager from '../utils/eventManager.js';
+
 let countdownContainer = null;
 let countdownInput = null;
 let countdownButton = null;
@@ -96,7 +98,7 @@ export function activateCountdown() {
   countdownButton = document.createElement('button');
   countdownButton.className = 'button';
   countdownButton.textContent = '开始倒计时';
-  countdownButton.addEventListener('click', createCountdown);
+  eventManager.on(countdownButton,'click', createCountdown);
   
   inputArea.appendChild(countdownInput);
   inputArea.appendChild(countdownButton);
@@ -111,7 +113,7 @@ export function activateCountdown() {
   countdownCancel = document.createElement('button');
   countdownCancel.className = 'delete-button';
   countdownCancel.textContent = '×';
-  countdownCancel.addEventListener('click', cancelCountdown);
+  eventManager.on(countdownCancel,'click', cancelCountdown);
   
   displayArea.appendChild(countdownDisplay);
   displayArea.appendChild(countdownCancel);
@@ -125,7 +127,7 @@ export function activateCountdown() {
   }
   
   // 正则输入验证
-  countdownInput.addEventListener('input', (e) => {
+  eventManager.on(countdownInput,'input', (e) => {
     const value = e.target.value;
     if (!/^[0-9]*([.][0-9]{0,1})?$/.test(value)) {
       console.log("正则不匹配");

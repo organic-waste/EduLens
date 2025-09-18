@@ -1,4 +1,4 @@
-
+import eventManager from './eventManager.js';
 
 export default function MonitorSPARoutes(fn) {
 
@@ -20,12 +20,12 @@ export default function MonitorSPARoutes(fn) {
     childList: true,
   });
 
-  window.addEventListener('popstate', () => {
+  eventManager.on(window,'popstate', () => {
     // console.log('popstate');
     setTimeout(fn, 0);
   });
 
-  window.addEventListener('hashchange', () => {
+  eventManager.on(window,'hashchange', () => {
     // console.log('hashchange');
     setTimeout(fn, 0);
   });

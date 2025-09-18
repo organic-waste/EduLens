@@ -1,4 +1,5 @@
 // 滚动进度指示器
+import eventManager from '../utils/eventManager.js';
 
 let scrollDiv = null;
 let fillDiv = null;
@@ -45,7 +46,7 @@ export function activateScrollProgress() {
     }
 
   }
-  window.addEventListener('scroll', ScrollProgress);
+  eventManager.on(window,'scroll', ScrollProgress);
   ScrollProgress();
 }
 

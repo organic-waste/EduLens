@@ -1,5 +1,5 @@
 // 各功能之间的状态管理
-
+import eventManager from '../utils/eventManager.js';
 import { activateHighlight, deactivateHighlight } from '../features/mouseHighlight.js';
 import { activateSpotlight, deactivateSpotlight } from '../features/spotlight.js';
 import { activateReadingSpotlight, deactivateReadingSpotlight } from '../features/readingSpotlight.js';

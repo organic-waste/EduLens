@@ -1,4 +1,5 @@
 // 创建涂鸦
+import eventManager from '../utils/eventManager.js';
 import store from '../stores/marks.js';
 import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
 import { getPageKey } from '../utils/getIdentity.js';
@@ -113,7 +114,7 @@ function createControls(){
   colorPickerInput.type = 'color';
   colorPickerInput.value = store.currentColor;
   colorPickerInput.title = '选择颜色';
-  colorPickerInput.addEventListener('input', (e) => {
+  eventManager.on(colorPickerInput,'input', (e) => {
     store.currentColor = e.target.value;
     setToolMode('pen');
   });
@@ -134,11 +135,11 @@ function createControls(){
   brushSizeSlider.style.width = '12vh';
 
   // 阻止滑块拖动时触发面板拖动
-  brushSizeSlider.addEventListener('mousedown', (e) => {
+  eventManager.on(brushSizeSlider,'mousedown', (e) => {
     e.stopPropagation(); 
   });
 
-  brushSizeSlider.addEventListener('input', (e) => {
+  eventManager.on(brushSizeSlider,'input', (e) => {
     store.brushSize = parseInt(e.target.value, 10);
     brushSizeValueDisplay.value = store.brushSize;
     brushSizeValueDisplay.textContent = store.brushSize + 'px';
@@ -151,11 +152,11 @@ function createControls(){
   brushSizeValueDisplay.min = '1';
   brushSizeValueDisplay.max = '50';
   brushSizeValueDisplay.value = store.brushSize;
-  brushSizeValueDisplay.addEventListener('mousedown', (e) => {
+  eventManager.on(brushSizeValueDisplay,'mousedown', (e) => {
     e.stopPropagation();
   });
 
-  brushSizeValueDisplay.addEventListener('change', (e) => {
+  eventManager.on(brushSizeValueDisplay,'change', (e) => {
     let value = parseInt(e.target.value);
     // 限制范围
     if (value < 1) value = 1;
@@ -166,7 +167,7 @@ function createControls(){
   });
 
   //回车时失去焦点
-  brushSizeValueDisplay.addEventListener('keydown', (e) => {
+  eventManager.on(brushSizeValueDisplay,'keydown', (e) => {
     if (e.key === 'Enter') {
       e.target.blur();
     }
@@ -185,8 +186,8 @@ function createControls(){
   eraserButton.className = 'graffiti-icon-btn';
   eraserButton.title = '切换橡皮擦';
   eraserButton.innerHTML='<i class="fas fa-eraser  graffiti-icon"></i>'
-  eraserButton.addEventListener('click', () => setToolMode('eraser'));
-  eraserButton.addEventListener('mousedown', (e) => {
+  eventManager.on(eraserButton,'click', () => setToolMode('eraser'));
+  eventManager.on(eraserButton,'mousedown', (e) => {
     e.stopPropagation();
   });
 
@@ -196,8 +197,8 @@ function createControls(){
   penButton.className = 'graffiti-icon-btn'; 
   penButton.title = '画笔';
   penButton.innerHTML='<i class="fas fa-paint-brush graffiti-icon" ></i>'
-  penButton.addEventListener('click', () => setToolMode('pen'));
-  penButton.addEventListener('mousedown', (e) => {
+  eventManager.on(penButton,'click', () => setToolMode('pen'));
+  eventManager.on(penButton,'mousedown', (e) => {
     e.stopPropagation();
   });
 
@@ -207,8 +208,8 @@ function createControls(){
   clearButton.className = 'graffiti-icon-btn';
   clearButton.title = '清除所有涂鸦';
   clearButton.innerHTML='<i class="fa-solid fa-trash-can graffiti-icon"></i>'
-  clearButton.addEventListener('click', clearCanvas);
-  clearButton.addEventListener('mousedown', (e) => {
+  eventManager.on(clearButton,'click', clearCanvas);
+  eventManager.on(clearButton,'mousedown', (e) => {
     e.stopPropagation();
   });
 
@@ -218,8 +219,8 @@ function createControls(){
   saveButton.className = 'graffiti-icon-btn';
   saveButton.title = '保存当前涂鸦';
   saveButton.innerHTML='<i class="fa-solid fa-floppy-disk graffiti-icon"></i>'
-  saveButton.addEventListener('click', saveDrawing);
-  saveButton.addEventListener('mousedown', (e) => {
+  eventManager.on(saveButton,'click', saveDrawing);
+  eventManager.on(saveButton,'mousedown', (e) => {
     e.stopPropagation();
   });
 
@@ -237,10 +238,10 @@ function createControls(){
 
 //绘图过程监听
 function setupEventListeners(){
-  document.addEventListener('mousedown', startDrawing);
-  document.addEventListener('mousemove', draw);
-  document.addEventListener('mouseup', stopDrawing);
-  document.addEventListener('mouseleave', stopDrawing);  
+  eventManager.on(document,'mousedown', startDrawing);
+  eventManager.on(document,'mousemove', draw);
+  eventManager.on(document,'mouseup', stopDrawing);
+  eventManager.on(document,'mouseleave', stopDrawing);  
 
   //监听窗口大小变化并调整画布
   let resizeTimeout;
@@ -250,10 +251,10 @@ function setupEventListeners(){
       resizeCanvas();
     }, 100);
   };
-  window.addEventListener('resize',handleResize);
+  eventManager.on(window,'resize',handleResize);
   
   //让画布跟随页面滚动
-  // window.addEventListener('scroll',()=>{
+  // eventManager.on(window,'scroll',()=>{
   //   if(drawingContainer){
   //     drawingContainer.style.top=`${window.scrollY}px`;
   //     drawingContainer.style.left=`${window.scrollX}px`;

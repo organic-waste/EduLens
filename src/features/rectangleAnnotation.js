@@ -1,5 +1,5 @@
 // 创建矩形注释
-
+import eventManager from '../utils/eventManager.js';
 import store from '../stores/marks.js';
 import { getPageKey,getId } from '../utils/getIdentity.js';
 
@@ -35,8 +35,8 @@ export function activateRectangleAnnotation(){
         rectangleButton.className='graffiti-icon-btn';
         rectangleButton.title='添加矩形注释';
         rectangleButton.innerHTML='<i class="fas fa-vector-square graffiti-icon"></i>';
-        rectangleButton.addEventListener('click',toggleRectangleMode);
-        rectangleButton.addEventListener('mousedown',(e)=>e.stopPropagation());
+        eventManager.on(rectangleButton,'click',toggleRectangleMode);
+        eventManager.on(rectangleButton,'mousedown',(e)=>e.stopPropagation());
         toolGroupDiv.appendChild(rectangleButton);
     }
     loadRectangles().then(()=>{
@@ -79,11 +79,11 @@ function restorePageInteraction() {
 }
 
 function EditingRectangleEventListeners(){
-    document.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('mouseleave', handleMouseUp);
-    document.addEventListener('dblclick', handleDblClick);
+    eventManager.on(document,'mousedown', handleMouseDown);
+    eventManager.on(document,'mousemove', handleMouseMove);
+    eventManager.on(document,'mouseup', handleMouseUp);
+    eventManager.on(document,'mouseleave', handleMouseUp);
+    eventManager.on(document,'dblclick', handleDblClick);
 }
 
 function handleMouseDown(e){
@@ -314,19 +314,19 @@ function renderRectangles(rect){
     rectDiv.appendChild(textContainer);
     rectDiv.appendChild(tooltip);
 
-    textInput.addEventListener('input',(e) => {
+    eventManager.on(textInput,'input',(e) => {
         rect.text = e.target.value;
         tooltip.textContent = e.target.value;
         saveRectangles();
     })
-    textInput.addEventListener('mousedown', (e) => e.stopPropagation());
-    textInput.addEventListener('click', (e) => e.stopPropagation());
+    eventManager.on(textInput,'mousedown', (e) => e.stopPropagation());
+    eventManager.on(textInput,'click', (e) => e.stopPropagation());
 
-    deleteBtn.addEventListener('click',(e) => {
+    eventManager.on(deleteBtn,'click',(e) => {
         e.stopPropagation();
         removeRectangle(rect.id);
     })
-    deleteBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+    eventManager.on(deleteBtn,'mousedown', (e) => e.stopPropagation());
     drawingContainer.appendChild(rectDiv);
 }
 
@@ -410,7 +410,7 @@ function createHandles(rectDiv,rect){
         handle.dataset.type = h.type;
         handle.style.left = `${h.x}px`;
         handle.style.top = `${h.y}px`;
-        handle.addEventListener('mousedown', (e) => {
+        eventManager.on(handle,'mousedown', (e) => {
             e.stopPropagation();
             e.preventDefault();
             //获取container位置转为获取canvas的位置

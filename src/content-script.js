@@ -1,6 +1,7 @@
 import loadIcon from './utils/loadIcon.js';
 import store from './stores/functions.js';
 import {activateDraggablePanel} from './features/draggablePanel.js'
+import eventManager from './utils/eventManager.js';
 
 loadIcon();
 
@@ -15,7 +16,7 @@ function keydown(e,key,name){
   }
 }
 
-window.addEventListener('keydown', (e) => {
+eventManager.on(window,'keydown', (e) => {
   keydown(e,'h','mouseHighlight');
   keydown(e,'s','spotlight');
   keydown(e, 'r', 'readingSpotlight');
