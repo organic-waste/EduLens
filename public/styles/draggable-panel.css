@@ -9,7 +9,7 @@
     z-index: 9998;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     user-select: none;
-    transition: width 0.3s ease-in-out, height 0.3s ease-in-out,border-radius 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
 }
 .draggable-panel.open-panel{
     width: 30vh;
@@ -21,7 +21,7 @@
     z-index: 10001;
     cursor: grab;
     position: absolute;
-    top:	0;
+    top:0;
     right: 0;
     width: 5vh; 
     height: 5vh;

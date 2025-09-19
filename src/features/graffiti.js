@@ -3,6 +3,7 @@ import eventManager from '../utils/eventManager.js';
 import store from '../stores/marks.js';
 import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
 import { getPageKey } from '../utils/getIdentity.js';
+import { getOffsetPos } from '../utils/operate.js'
 import { activateRectangleAnnotation } from './rectangleAnnotation.js'
 
 let drawingCanvas = null;
@@ -267,12 +268,10 @@ function startDrawing(e){
   if(!store.isEraser && !store.isPen) return;
   store.isDrawing = true;
   drawingContainer.style.pointerEvents='auto';
-  const rect=drawingCanvas.getBoundingClientRect();
-  const PosX=e.clientX-rect.left;
-  const PosY=e.clientY-rect.top;
+  const { x , y } = getOffsetPos(e,drawingCanvas);
   if(drawingCtx){
     drawingCtx.beginPath();
-    drawingCtx.moveTo(PosX,PosY);//设置画笔初始点
+    drawingCtx.moveTo(x,y);//设置画笔初始点
   }
   draw(e);//确保点击时能画点
 }
@@ -281,17 +280,15 @@ function draw(e){
   if(!store.isDrawing||!drawingCtx||store.isDragging) return;
   if(!store.isEraser && !store.isPen) return;
   console.log('store.isDragging: ', store.isDragging);
-  const rect=drawingCanvas.getBoundingClientRect();
-  const PosX=e.clientX-rect.left;
-  const PosY=e.clientY-rect.top;
+  const { x , y } = getOffsetPos(e,drawingCanvas);
 
   drawingCtx.lineWidth=store.brushSize;
 
 
-  drawingCtx.lineTo(PosX,PosY);
+  drawingCtx.lineTo(x,y);
   drawingCtx.stroke();
   drawingCtx.beginPath();
-  drawingCtx.moveTo(PosX,PosY);
+  drawingCtx.moveTo(x,y);
 
 }
 

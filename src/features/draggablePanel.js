@@ -4,6 +4,8 @@ import {activateScrollProgress} from './scrollProgress.js'
 import {activateBookmark} from './bookmark.js'
 import { activateGraffiti } from './graffiti.js';
 import { activateCountdown } from './countdownTimer.js';
+import { getOffsetPos } from '../utils/operate.js'
+
 import store from '../stores/functions.js';
 
 let panelDiv=null;
@@ -70,9 +72,7 @@ function DraggablePanel(){
         }
         //保证点开面板时保持在窗口内
         else{
-            const panelRect = panelDiv.getBoundingClientRect();
-            let newLeft = Position.left;
-            let newTop = Position.top;
+            const {x:newLeft, y:newTop} = getOffsetPos(e,panelDiv);
             
             if (newLeft + panelRect.width*6 > window.innerWidth) {
                 newLeft = window.innerWidth - panelRect.width*6;
@@ -100,8 +100,8 @@ function DraggablePanel(){
         //e.clientX —— 鼠标相对于视口的横坐标。
         //box.offsetLeft —— 方块相对于定位祖先的横坐标
         //二者相减得到“鼠标点击点距离方块左边框”的距离,这样拖动时按钮不会瞬间跳到鼠标位置
-        offsetX = e.clientX - panelDiv.offsetLeft;
-        offsetY = e.clientY - panelDiv.offsetTop;
+        offsetX = e.clientX - panelDiv.left;
+        offsetY = e.clientY - panelDiv.top;
         //防止拖动时选中文本
         document.body.style.userSelect = 'none';
         e.stopPropagation();

@@ -1,6 +1,7 @@
 // 创建矩形注释
 import eventManager from '../utils/eventManager.js';
 import store from '../stores/marks.js';
+import { getOffsetPos } from '../utils/operate.js'
 import { getPageKey,getId } from '../utils/getIdentity.js';
 
 let isCreating = false; //是否还在创建矩阵中
@@ -90,9 +91,7 @@ function EditingRectangleEventListeners(){
 
 function handleMouseDown(e){
     if(e.button!==0)return;
-    const rect = drawingContainer.getBoundingClientRect();
-    const x = e.clientX-rect.left;
-    const y = e.clientY-rect.top;
+    const { x , y } = getOffsetPos(e,rect);
     
     //创建新矩阵时
     if(store.isRectangle&&!isEditing){
@@ -105,7 +104,6 @@ function handleMouseDown(e){
     }
     //矩阵处于编辑态时
     else if(isEditing&&currentRect){
-        const handle = getHandleAt(x,y,currentRect);
 
         //点击到矩阵内部
         if(isPointInRect(x,y,currentRect.x,currentRect.y,currentRect.width,currentRect.height)){
@@ -140,10 +138,7 @@ function handleMouseDown(e){
 }
 
 function handleMouseMove(e){
-    const rect = drawingContainer.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
+    const { x , y } = getOffsetPos(e,rect);
     //创建矩阵元素时
     if(isCreating){
         endX=x;
@@ -231,9 +226,7 @@ function handleMouseUp(e){
 
 function handleDblClick(e){
     if(store.isRectangle||isEditing) return;
-    const rect = drawingContainer.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const { x , y } = getOffsetPos(e,drawingContainer);
 
     const clickedRect = findTopmostRectangleAt(x,y);
     if(clickedRect){
