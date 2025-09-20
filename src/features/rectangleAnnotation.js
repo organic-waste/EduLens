@@ -1,7 +1,7 @@
 // 创建矩形注释
 import eventManager from '../utils/eventManager.js';
 import store from '../stores/marks.js';
-import { getOffsetPos } from '../utils/operate.js'
+import { getOffsetPos, createEl } from '../utils/operateEl.js'
 import { getPageKey,getId } from '../utils/getIdentity.js';
 
 let isCreating = false; //是否还在创建矩阵中
@@ -138,7 +138,7 @@ function handleMouseDown(e){
 }
 
 function handleMouseMove(e){
-    const { x , y } = getOffsetPos(e,rect);
+    const { x , y } = getOffsetPos(e,drawingContainer);
     //创建矩阵元素时
     if(isCreating){
         endX=x;

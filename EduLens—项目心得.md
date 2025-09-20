@@ -1573,6 +1573,52 @@ resizeObserver.observe(box);
 
 
 
+### `.append` 和 `.appendChild` 对比
+
+| 特性         | `.append()`                                     | `.appendChild()`                                     |
+| ------------ | ----------------------------------------------- | ---------------------------------------------------- |
+| **所属规范** | DOM Living Standard（现代）                     | DOM Level 3 Core（传统）                             |
+| **参数类型** | 灵活：DOM 节点、HTML 字符串、文本、甚至多个参数 | 严格：只能是一个 DOM 节点                            |
+| **返回值**   | 无（`undefined`）                               | 被添加的节点                                         |
+| **文本支持** | 直接支持插入文本                                | 不支持直接插入文本，需用 `document.createTextNode()` |
+| **性能**     | 现代浏览器优化，性能略优                        | 传统方法，性能略逊                                   |
+| **使用场景** | 现代开发，简洁灵活                              | 兼容旧环境或需返回节点引用                           |
+
+---
+
+**示例对比**
+
+`.append()` 示例
+
+```javascript
+const parent = document.getElementById('parent');
+parent.append('Hello', document.createElement('span'), 'World');
+// 直接插入文本、节点，支持多个参数
+```
+
+`.appendChild()` 示例
+
+```javascript
+const parent = document.getElementById('parent');
+const child = document.createElement('div');
+const text = document.createTextNode('Hello');
+child.appendChild(text); // 需显式创建文本节点
+parent.appendChild(child); // 只能插入节点，返回 child
+```
+
+
+
+### `.appendChild(createTextNode) `和 `.textContent` 对比
+
+| 维度               | appendChild(createTextNode)                | textContent = …                                  |
+| ------------------ | ------------------------------------------ | ------------------------------------------------ |
+| **做的事**         | 新建一个 Text 节点，插到元素子节点列表末尾 | 把元素的所有子节点清空，换成一个单独的文本节点   |
+| **副作用**         | 保留原有子节点，只追加                     | 会**移除原有所有子节点**（包括元素、注释、文本） |
+| **可追加多个文本** | 可以多次调用，产生多个同级文本节点         | 每次赋值会覆盖上一次内容                         |
+| **性能/代码量**    | 代码长，可能产生多余节点                   | 一行搞定，浏览器高度优化                         |
+| **返回值**         | 返回新建的 Text 节点                       | 无返回值（赋值语句）                             |
+| **兼容性**         | IE6+                                       | IE9+（旧版 IE 用 innerText）                     |
+
 
 
 ### store 写法对比
@@ -1949,6 +1995,26 @@ export async function activateGraffiti(){
 
 
 
+### `<html>` 和   `<body> `对比
+
+------
+
+把整张 HTML 页面想成一栋两层小楼：
+
+- `<html>` 元素 = 整栋楼的外壳（从地基到屋顶），它里面只允许放两个“房间”：  `<head>`  `<body>`  
+- `<body>` 元素 = 楼里真正“住人”的那一层，所有肉眼能看到的内容（文字、图片、按钮、画布……）都必须放在这一层。  
+
+|  对比点  | `<html>`                                                 | `<body>`                                                     |
+| :------: | -------------------------------------------------------- | ------------------------------------------------------------ |
+| 节点类型 | 根元素（Root Element）                                   | 根元素的唯一子元素之一                                       |
+| 可见内容 | 本身不可见，只当容器                                     | 存放所有可见内容                                             |
+| 默认样式 | 浏览器会给它加上与视口等高的块盒，滚动条通常也绑在它身上 | 默认 8px margin（可被 reset）                                |
+| 常见用途 | 取整页滚动值、设置 CSS 变量、全屏背景                    | 插入可见节点、局部滚动容器、页面级事件委托                   |
+| 能否缺失 | 写不写标签它都在；HTML 解析器会自动补                    | 源码里没写 `<body>` 标签也会自动补，但在 DOM 构建完成前访问 `document.body` 可能得到 `null` |
+| 获取方式 | `document.documentElement`                               | `document.body`                                              |
+
+
+
 ### `data-*`自定义数据
 
 ------
@@ -2097,6 +2163,98 @@ div[data-role="admin"] {
 | 36   | alias         | 箭头＋弯箭   | 创建快捷方式/别名          |
 | 37   | grab          | 张开手       | 同 #14（标准重名，无冲突） |
 | 38   | grabbing      | 握拳         | 同 #15（标准重名，无冲突） |
+
+
+
+### 封装创建 DOM 元素
+
+------------------------------------------------
+**第一种：Object.assign 速写法**
+
+```javascript
+box.append(
+  Object.assign(document.createElement('a'), {
+    href: '/page/2',
+    className: 'btn btn-primary',
+    textContent: 'Next page'
+  })
+);
+```
+
+1. 执行顺序  
+   ① `document.createElement('a')` → 新建一个空 `<a></a>`  
+   ② `Object.assign(target, ...sources)` 把后面字面量里的 **可枚举自有属性** 全部拷贝到 target 上。  
+   ③ 拷贝完成后，`<a>` 现在相当于：
+   
+   ```html
+   <a href="/page/2" class="btn btn-primary">Next page</a>
+   ```
+   ④ 把已经“装修好”的节点一次性 `box.append()` 进去。
+   
+2. 可以拷贝哪些属性  
+   – **HTML 标准属性**：`href / src / type / disabled …`  
+   – **IDL 属性（property）**：`className / htmlFor / textContent …`  
+   – **自定义属性**要用 `setAttribute` 的（如 `data-*`）就不能直接写进 `Object.assign`，因为 `data-id` 不是合法标识符，且 `setAttribute` 不会自动同步到 property。  
+   例：想加 `data-id="123"` 还得再补一句  
+   ```javascript
+   const a = Object.assign(document.createElement('a'), {…});
+   a.setAttribute('data-id', '123');
+   box.append(a);
+   ```
+
+3. 优缺点  
+   ✅ 一句话搞定，适合“临时、简单、属性少”的场景。  
+   ❌ 属性一多就换行难看；不能处理 `data-*` / 事件监听等；每次都得重复写。
+
+------------------------------------------------
+**第二种：小型工厂函数 el()**
+
+```javascript
+const el = (tag, attrs = {}, ...children) => {
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+  e.append(...children);
+  return e;
+};
+
+box.append(
+  el('div', { class: 'card', 'data-id': 123 }, 'Hello'),
+  el('button', { type: 'button', class: 'btn' }, 'Click me')
+);
+```
+
+1. 函数签名  
+   `el(标签名, {属性对象}, ...任意子节点或文本)`  
+   返回一个已经“带属性、带子节点”的 DOM 元素。
+
+2. 内部步骤  
+   ① `document.createElement(tag)`  
+   ② 遍历 `attrs` 对象，**全部走 `setAttribute`** → 因此 `data-*` / `role` / `aria-*` 都能写。  
+   ③ 把剩余参数（`children`）直接 `e.append(...children)`，所以子节点可以是文本、也可以是别的节点。 
+   ④ 返回建好的元素，供外面自由使用：可以 `append()`、可以 `insertAdjacentElement()`、也可以当模板再克隆。
+
+3. 使用示例扩展
+
+```javascript
+// 嵌套结构
+const card = el('article', { class: 'post' },
+  el('h2', {}, '标题'),
+  el('p',  {}, '正文内容')
+);
+box.append(card);
+
+// 列表一次性生成
+box.append(
+  ...[1,2,3].map(i =>
+    el('li', { class: 'item', 'data-index': i }, `第 ${i} 项`)
+  )
+);
+```
+
+4. 优缺点  
+   ✅ 属性、子节点、事件回调都能写；可复用、可组合、无依赖。  
+   ✅ 比模板引擎轻量，比字符串拼接安全（不会意外注入 HTML）。  
+   ❌ 属性值只能字符串（`setAttribute` 的限制）；需要写 JS，不适合富文本大块模板。
 
 
 

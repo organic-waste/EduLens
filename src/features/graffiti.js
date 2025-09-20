@@ -3,7 +3,7 @@ import eventManager from '../utils/eventManager.js';
 import store from '../stores/marks.js';
 import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
 import { getPageKey } from '../utils/getIdentity.js';
-import { getOffsetPos } from '../utils/operate.js'
+import { getOffsetPos } from '../utils/operateEl.js'
 import { activateRectangleAnnotation } from './rectangleAnnotation.js'
 
 let drawingCanvas = null;

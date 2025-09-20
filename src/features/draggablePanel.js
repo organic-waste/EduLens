@@ -4,7 +4,7 @@ import {activateScrollProgress} from './scrollProgress.js'
 import {activateBookmark} from './bookmark.js'
 import { activateGraffiti } from './graffiti.js';
 import { activateCountdown } from './countdownTimer.js';
-import { getOffsetPos } from '../utils/operate.js'
+import { getOffsetPos , createEl } from '../utils/operateEl.js'
 
 import store from '../stores/functions.js';
 
@@ -60,7 +60,7 @@ function DraggablePanel(){
     // }t
 
     //将拖动范围限制在窗口内
-    function updatePosition(e = null){
+    function updatePosition(e){
         //当移动面板时
         if(e){
             const left = Math.max(0, Math.min(window.innerWidth - panelDiv.offsetWidth, e.clientX - offsetX));
