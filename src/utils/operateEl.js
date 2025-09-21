@@ -3,7 +3,14 @@
 export function createEl(tag, attrs = {}, ...children){
     const el = document.createElement(tag);
     Object.entries(attrs).forEach(([key,value]) => {
-        el.setAttribute(key,value);
+        if(key === 'textContent'){
+            el.textContent = value;
+        }else if(key === 'innerHTML'){
+            el.innerHTML = value;
+        }else{
+            el.setAttribute(key,value);
+        }
+
     })
     el.append(...children);
     return el;

@@ -1808,10 +1808,93 @@ return x, y;   // 先算 x，再算 y，最终把 y 的值返回出去
    arr.map((v, i) => (console.log(i), v * 2));
    ```
 
-3. **压缩代码**（Uglify/Terser 常把变量声明合并）  
+3. **压缩代码**
+   
    ```js
    return i++, j++, k;
    ```
+
+
+
+### 解构类型及其语法
+
+------------------------------------------------
+一、两大基础类型
+
+| 类型         | 依据             | 写法示例             | 主要用途   |
+| ------------ | ---------------- | -------------------- | ---------- |
+| **对象解构** | 用 **键名** 匹配 | `const {a, b} = obj` | 取对象属性 |
+| **数组解构** | 用 **位置** 匹配 | `const [x, y] = arr` | 取序列元素 |
+
+------------------------------------------------
+二、六类使用场景
+
+1. **声明解构**  
+   
+   ```javascript
+   let {name, age} = user;
+   const [first, second] = arr;
+   ```
+   特点：顺便创建新变量，最常用（要求变量名和对象的键名相同）
+   
+2. **赋值解构（刷新已有变量）**  
+   
+   ```javascript
+   var name, age;
+   ({name, age} = user);   // 对象必须加 ()
+   [first, second] = arr;  // 数组无需 ()
+   ```
+   
+3. **函数参数解构**  
+   
+   ```javascript
+   function foo({name, age}) { ... }
+   function bar([x, y]) { ... }
+   ```
+   特点：签名即解构，调用时传对象/数组即可。
+   
+4. **嵌套解构**  
+   
+   ```javascript
+   const {user: {name}} = response;
+   const [a, [b, c]] = [1, [2, 3]];
+   ```
+   
+5. **剩余/展开解构**  
+   
+   ```javascript
+   const {a, ...rest} = {a: 1, b: 2, c: 3};
+   const [x, ...y] = [1, 2, 3];
+   ```
+   
+6. **带默认值解构**  
+   
+   ```javascript
+   const {x = 0, y = 0} = point;
+   const [a = 0, b = 0] = arr;
+   ```
+
+------------------------------------------------
+三、特殊用法
+
+- **字符串** → 可“类数组”解构  
+  
+  ```javascript
+  const [a, b] = 'hi';   // a='h', b='i'
+  ```
+  
+- **Map/Set** → 用数组解构  
+  
+  ```javascript
+  const [first] = new Set([10, 20]); // first=10
+  ```
+  
+- **NodeList** → 数组解构  
+  ```javascript
+  const [firstImg] = document.querySelectorAll('img');
+  ```
+
+
 
 
 
@@ -2800,12 +2883,4 @@ document.addEventListener('mouseup', () => {
 
 
 
-
-```
-从安全性建模的角度，MCAS系统的设计中缺少哪些关键安全机制？
-在当时的产业与时间压力下，彻底重设计机体而非依赖软件补丁，是否具有现实可能性？
-文章中提到的四个导致软件灾难的复合因素是什么？
-Boeing 737MAX案例中，MCAS系统的设计和实施存在哪些问题？这些问题如何影响飞行安全？
-采取了哪些措施如何帮助解决安全问题？
-```
 

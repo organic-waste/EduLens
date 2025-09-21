@@ -1,5 +1,6 @@
 // 滚动进度指示器
 import eventManager from '../utils/eventManager.js';
+import { createEl } from '../utils/operateEl.js';
 
 let scrollDiv = null;
 let fillDiv = null;
@@ -22,14 +23,11 @@ function ScrollProgress() {
 
 export function activateScrollProgress() {
   if (!scrollDiv) {
-    scrollDiv = document.createElement('div');
-    scrollDiv.className = 'scroll-percent';
+  scrollDiv=createEl('div',{class:'scroll-percent'});
+  fillDiv=createEl('div',{class:'scroll-fill'});
+  scrollDiv.appendChild(fillDiv);
 
-    fillDiv = document.createElement('div');
-    fillDiv.className = 'scroll-fill';
-    scrollDiv.appendChild(fillDiv);
-
-    cardDiv=document.getElementsByClassName("card-content")[0];
+  cardDiv=document.querySelector('.card-content');
 
     // const counterDiv = document.createElement('div');
     // counterDiv.className = 'scroll-counter';
@@ -39,8 +37,7 @@ export function activateScrollProgress() {
     // scrollDiv.appendChild(counterDiv);
 
     if(cardDiv){
-      const funcDiv=document.createElement('div');
-      funcDiv.className='functions';
+      const funcDiv=createEl('div',{class:'functions'});
       funcDiv.appendChild(scrollDiv);
       cardDiv.appendChild(funcDiv);
     }

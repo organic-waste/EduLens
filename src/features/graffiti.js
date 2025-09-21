@@ -3,7 +3,7 @@ import eventManager from '../utils/eventManager.js';
 import store from '../stores/marks.js';
 import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
 import { getPageKey } from '../utils/getIdentity.js';
-import { getOffsetPos } from '../utils/operateEl.js'
+import { getOffsetPos, createEl } from '../utils/operateEl.js'
 import { activateRectangleAnnotation } from './rectangleAnnotation.js'
 
 let drawingCanvas = null;
@@ -21,24 +21,18 @@ let graffitiControlsDiv = null;
 function createDrawingCanvas(){
   drawingContainer=document.getElementById('graffiti-container');
   if(!drawingContainer){
-    drawingContainer=document.createElement('div');
-    drawingContainer.id = 'graffiti-container';
+    drawingContainer=createEl('div',{id:'graffiti-container'});
     document.body.appendChild(drawingContainer);
   }
-  drawingCanvas = document.getElementById('graffiti-canvas');
-  if (!drawingCanvas) {
-    drawingCanvas = document.createElement('canvas');
-    drawingCanvas.id = 'graffiti-canvas';
-    drawingCanvas.width = document.documentElement.scrollWidth;
-    drawingCanvas.height = document.documentElement.scrollHeight;
+  drawingCanvas=document.getElementById('graffiti-canvas');
+  if(!drawingCanvas){
+    drawingCanvas=createEl('canvas',{id:'graffiti-canvas',width:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight});
     drawingContainer.appendChild(drawingCanvas);
-
-    drawingCtx=drawingCanvas.getContext('2d', { willReadFrequently: true });
+    drawingCtx=drawingCanvas.getContext('2d',{willReadFrequently:true}); 
     setupCanvasContext();
   }else{
-    drawingCtx=drawingCanvas.getContext('2d', { willReadFrequently: true });
+    drawingCtx=drawingCanvas.getContext('2d',{willReadFrequently:true});
     setupCanvasContext();
-    //若画布存在，调整画布大小
     resizeCanvas();
   }
 }
@@ -104,42 +98,23 @@ function setToolMode(mode){
 function createControls(){
   const cardDiv=document.querySelector('.functions');
   if(document.getElementById('graffiti-controls')) return;
-
-  graffitiControlsDiv = document.createElement('div');
-  graffitiControlsDiv.id = 'graffiti-controls';
-  graffitiControlsDiv.className = 'function'; 
+  graffitiControlsDiv=createEl('div',{id:'graffiti-controls',class:'function'});
 
   //颜色选择器
-  colorPickerInput = document.createElement('input');
-  colorPickerInput.id ='color-input';
-  colorPickerInput.type = 'color';
-  colorPickerInput.value = store.currentColor;
-  colorPickerInput.title = '选择颜色';
+  colorPickerInput=createEl('input',{id:'color-input',type:'color',value:store.currentColor,title:'选择颜色'});
   eventManager.on(colorPickerInput,'input', (e) => {
     store.currentColor = e.target.value;
     setToolMode('pen');
   });
 
   // 笔刷大小滑块
-  const brushSizeDiv = document.createElement('div');
-  brushSizeDiv.style.display = 'flex';
-  brushSizeDiv.style.alignItems = 'center';
-  brushSizeDiv.style.gap = '0.3vh';
-  brushSizeDiv.title = '调整笔刷大小';
-
-  brushSizeSlider = document.createElement('input');
-  brushSizeSlider.id='brush-slider';
-  brushSizeSlider.type = 'range';
-  brushSizeSlider.min = '1';
-  brushSizeSlider.max = '50';
-  brushSizeSlider.value = store.brushSize.toString();
-  brushSizeSlider.style.width = '12vh';
-
+  const brushSizeDiv=createEl('div',{style:'display:flex;align-items:center;gap:0.3vh;',title:'调整笔刷大小'});
+  brushSizeSlider=createEl('input',{id:'brush-slider',type:'range',min:'1',max:'50',value:String(store.brushSize),style:'width:12vh;'});
+  
   // 阻止滑块拖动时触发面板拖动
   eventManager.on(brushSizeSlider,'mousedown', (e) => {
     e.stopPropagation(); 
   });
-
   eventManager.on(brushSizeSlider,'input', (e) => {
     store.brushSize = parseInt(e.target.value, 10);
     brushSizeValueDisplay.value = store.brushSize;
@@ -147,11 +122,7 @@ function createControls(){
   });
 
 
-  brushSizeValueDisplay = document.createElement('input');
-  brushSizeValueDisplay.id='brush-input';
-  brushSizeValueDisplay.type = 'number';
-  brushSizeValueDisplay.min = '1';
-  brushSizeValueDisplay.max = '50';
+  brushSizeValueDisplay=createEl('input',{id:'brush-input',type:'number',min:'1',max:'50',value:store.brushSize});
   brushSizeValueDisplay.value = store.brushSize;
   eventManager.on(brushSizeValueDisplay,'mousedown', (e) => {
     e.stopPropagation();
@@ -178,62 +149,38 @@ function createControls(){
   brushSizeDiv.appendChild(brushSizeValueDisplay);
 
   //工具组
-  const toolGroupDiv = document.createElement('div');
-  toolGroupDiv.className = 'tool-group';
+  const toolGroupDiv=createEl('div',{class:'tool-group'});
 
   // 橡皮擦
-  eraserButton = document.createElement('button');
-  eraserButton.id = 'eraser-btn';
-  eraserButton.className = 'graffiti-icon-btn';
-  eraserButton.title = '切换橡皮擦';
-  eraserButton.innerHTML='<i class="fas fa-eraser  graffiti-icon"></i>'
+  eraserButton=createEl('button',{id:'eraser-btn',class:'graffiti-icon-btn',title:'切换橡皮擦',innerHTML:'<i class="fas fa-eraser graffiti-icon"></i>'});
   eventManager.on(eraserButton,'click', () => setToolMode('eraser'));
   eventManager.on(eraserButton,'mousedown', (e) => {
     e.stopPropagation();
   });
 
   //笔
-  penButton = document.createElement('button'); 
-  penButton.id = 'pen-btn';
-  penButton.className = 'graffiti-icon-btn'; 
-  penButton.title = '画笔';
-  penButton.innerHTML='<i class="fas fa-paint-brush graffiti-icon" ></i>'
+  penButton=createEl('button',{id:'pen-btn',class:'graffiti-icon-btn',title:'画笔',innerHTML:'<i class="fas fa-paint-brush graffiti-icon"></i>'});
   eventManager.on(penButton,'click', () => setToolMode('pen'));
   eventManager.on(penButton,'mousedown', (e) => {
     e.stopPropagation();
   });
 
   //清屏按钮
-  clearButton = document.createElement('button');
-  clearButton.id = 'clear-btn';
-  clearButton.className = 'graffiti-icon-btn';
-  clearButton.title = '清除所有涂鸦';
-  clearButton.innerHTML='<i class="fa-solid fa-trash-can graffiti-icon"></i>'
+  clearButton=createEl('button',{id:'clear-btn',class:'graffiti-icon-btn',title:'清除所有涂鸦',innerHTML:'<i class="fa-solid fa-trash-can graffiti-icon"></i>'});
   eventManager.on(clearButton,'click', clearCanvas);
   eventManager.on(clearButton,'mousedown', (e) => {
     e.stopPropagation();
   });
 
   //保存按钮
-  saveButton = document.createElement('button');
-  saveButton.id = 'save-btn';
-  saveButton.className = 'graffiti-icon-btn';
-  saveButton.title = '保存当前涂鸦';
-  saveButton.innerHTML='<i class="fa-solid fa-floppy-disk graffiti-icon"></i>'
+  saveButton=createEl('button',{id:'save-btn',class:'graffiti-icon-btn',title:'保存当前涂鸦',innerHTML:'<i class="fa-solid fa-floppy-disk graffiti-icon"></i>'});
   eventManager.on(saveButton,'click', saveDrawing);
   eventManager.on(saveButton,'mousedown', (e) => {
     e.stopPropagation();
   });
 
-  toolGroupDiv.appendChild(eraserButton);
-  toolGroupDiv.appendChild(penButton);
-  toolGroupDiv.appendChild(clearButton);
-  toolGroupDiv.appendChild(saveButton);
-
-  graffitiControlsDiv.appendChild(colorPickerInput);
-  graffitiControlsDiv.appendChild(brushSizeDiv);
-  graffitiControlsDiv.appendChild(toolGroupDiv); 
-
+  toolGroupDiv.append(eraserButton,penButton,clearButton,saveButton);
+  graffitiControlsDiv.append(colorPickerInput,brushSizeDiv,toolGroupDiv);
   cardDiv.appendChild(graffitiControlsDiv);
 }
 
@@ -279,7 +226,6 @@ function startDrawing(e){
 function draw(e){
   if(!store.isDrawing||!drawingCtx||store.isDragging) return;
   if(!store.isEraser && !store.isPen) return;
-  console.log('store.isDragging: ', store.isDragging);
   const { x , y } = getOffsetPos(e,drawingCanvas);
 
   drawingCtx.lineWidth=store.brushSize;

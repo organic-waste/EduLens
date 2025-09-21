@@ -1,5 +1,6 @@
 // 倒计时组件
 import eventManager from '../utils/eventManager.js';
+import { createEl } from '../utils/operateEl.js';
 
 let countdownContainer = null;
 let countdownInput = null;
@@ -29,19 +30,15 @@ function createCountdown() {
 
 function startCountdown() {
   clearInterval(countdownInterval);
-  
   countdownInterval = setInterval(() => {
     remainingTime -= 1000;
-    
     if (remainingTime <= 0) {
       clearInterval(countdownInterval);
       countdownComplete();
       return;
     }
-    
     updateDisplay();
-  }, 1000);
-  
+  }, 1000)
   updateDisplay();
 }
 
@@ -53,19 +50,13 @@ function updateDisplay() {
 
 function countdownComplete() {
   countdownDisplay.textContent = '倒计时结束';
-  
-  setTimeout(() => {
-    resetCountdown();
-  }, 2000);
+  setTimeout(resetCountdown,2000);
 }
 
 function cancelCountdown() {
   clearInterval(countdownInterval);
   countdownDisplay.textContent = '终止倒计时';
-  
-  setTimeout(() => {
-    resetCountdown();
-  }, 1000);
+  setTimeout(resetCountdown,1000);
 }
 
 function resetCountdown() {
@@ -83,43 +74,21 @@ function resetCountdown() {
 
 export function activateCountdown() {
   if (countdownContainer) return;
-  
-  countdownContainer = document.createElement('div');
-  countdownContainer.className = 'countdown-container';
-  
-  const inputArea = document.createElement('div');
-  inputArea.className = 'function countdown-input-area';
-  
-  countdownInput = document.createElement('input');
-  countdownInput.type = 'text';
-  countdownInput.className = 'input';
-  countdownInput.placeholder = '输入分钟数';
-  
-  countdownButton = document.createElement('button');
-  countdownButton.className = 'button';
-  countdownButton.textContent = '开始倒计时';
+  countdownContainer = createEl('div',{class:'countdown-container'});
+
+  const inputArea = createEl('div',{class:'function countdown-input-area'});
+  countdownInput = createEl('input',{type:'text',class:'input',placeholder:'输入分钟数'});
+  countdownButton = createEl('button',{class:'button',textContent:'开始倒计时'});
   eventManager.on(countdownButton,'click', createCountdown);
-  
-  inputArea.appendChild(countdownInput);
-  inputArea.appendChild(countdownButton);
-  
-  const displayArea = document.createElement('div');
-  displayArea.className = 'function countdown-display-area';
-  displayArea.style.display = 'none'; 
-  
-  countdownDisplay = document.createElement('div');
-  countdownDisplay.className = 'countdown-display';
-  
-  countdownCancel = document.createElement('button');
-  countdownCancel.className = 'delete-button';
-  countdownCancel.textContent = '×';
+  inputArea.append(countdownInput,countdownButton);
+
+  const displayArea = createEl('div',{class:'function countdown-display-area',style:'display:none;'});
+  countdownDisplay = createEl('div',{class:'countdown-display'});
+  countdownCancel = createEl('button',{class:'delete-button',textContent:'×'});
   eventManager.on(countdownCancel,'click', cancelCountdown);
-  
-  displayArea.appendChild(countdownDisplay);
-  displayArea.appendChild(countdownCancel);
-  
-  countdownContainer.appendChild(inputArea);
-  countdownContainer.appendChild(displayArea);
+  displayArea.append(countdownDisplay,countdownCancel);
+
+  countdownContainer.append(inputArea,displayArea);
 
   const functionsDiv = document.querySelector('.functions');
   if (functionsDiv) {

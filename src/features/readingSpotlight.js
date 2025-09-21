@@ -1,5 +1,6 @@
 // 阅读聚光灯
 import eventManager from '../utils/eventManager.js';
+import { createEl } from '../utils/operateEl.js';
 
 let readingSpotlightDiv = null;
 
@@ -16,8 +17,7 @@ function ReadingSpotlight(e) {
 
 export function activateReadingSpotlight() {
   if (!readingSpotlightDiv) {
-    readingSpotlightDiv = document.createElement('div');
-    readingSpotlightDiv.className = 'reading-spotlight';
+    readingSpotlightDiv = createEl('div',{class:'reading-spotlight'});
     document.body.appendChild(readingSpotlightDiv);
     
     const vh = window.innerHeight / 100;

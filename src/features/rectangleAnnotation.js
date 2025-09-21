@@ -31,18 +31,12 @@ export function activateRectangleAnnotation(){
     drawingContainer=document.getElementById('graffiti-container');
     const toolGroupDiv=document.querySelector('#graffiti-controls .tool-group');
     if(toolGroupDiv && !document.getElementById('rectangle-btn')){
-        rectangleButton=document.createElement('button');
-        rectangleButton.id='rectangle-btn';
-        rectangleButton.className='graffiti-icon-btn';
-        rectangleButton.title='添加矩形注释';
-        rectangleButton.innerHTML='<i class="fas fa-vector-square graffiti-icon"></i>';
+        rectangleButton = createEl('button',{id: 'rectangle-btn', class:'graffiti-icon-btn', title:'添加矩形注释', innerHTML:'<i class="fas fa-vector-square graffiti-icon"></i>'})
         eventManager.on(rectangleButton,'click',toggleRectangleMode);
         eventManager.on(rectangleButton,'mousedown',(e)=>e.stopPropagation());
         toolGroupDiv.appendChild(rectangleButton);
     }
     loadRectangles().then(()=>{
-        console.log("执行了初始的矩阵数据加载");
-        console.log('rectangles: ', rectangles);
         renderAllRectangles();
     });
     EditingRectangleEventListeners();
@@ -91,7 +85,7 @@ function EditingRectangleEventListeners(){
 
 function handleMouseDown(e){
     if(e.button!==0)return;
-    const { x , y } = getOffsetPos(e,rect);
+    const { x , y } = getOffsetPos(e,drawingContainer);
     
     //创建新矩阵时
     if(store.isRectangle&&!isEditing){
@@ -239,10 +233,7 @@ function handleDblClick(e){
 
 function createPreviewRectangle(){
     if(previewDiv) removePreviewRectangle();
-    previewDiv = document.createElement('div');
-    previewDiv.className = 'annotation-preview';
-    previewDiv.style.borderColor = store.currentColor;
-    previewDiv.style.borderWidth = store.brushSize;
+    previewDiv = createEl('div',{class: 'annotation-preview', style:`border-color:${store.currentColor},border-width: ${store.brushSize}`})
     drawingContainer.appendChild(previewDiv);
 }
 
@@ -271,43 +262,17 @@ function renderAllRectangles(){
 }
 
 function renderRectangles(rect){
-    const rectDiv = document.createElement('div');
-    rectDiv.className = 'annotation-rect';
+    const rectDiv=createEl('div',{class:'annotation-rect','data-id':rect.id,style:`left:${rect.x}px;top:${rect.y}px;width:${rect.width}px;height:${rect.height}px;border-color:${rect.color};`});
     rectDiv.dataset.id = rect.id;
-    rectDiv.style.left = `${rect.x}px`;
-    rectDiv.style.top = `${rect.y}px`;
-    rectDiv.style.width = `${rect.width}px`;
-    rectDiv.style.height = `${rect.height}px`;
-    rectDiv.style.borderColor = rect.color;
-    
-    //文本区域
-    const textContainer = document.createElement('div');
-    textContainer.className = 'annotation-text-container';
 
-    const textInput = document.createElement('input');
-    textInput.type = 'text';
-    textInput.className = 'annotation-text-input';
-    textInput.id = `annotation-input-${rect.id}`;
-    textInput.name = `annotation-text-${rect.id}`;
-    textInput.value = rect.text;
-    textInput.style.display = 'none';
+    const textContainer=createEl('div',{class:'annotation-text-container'});
+    const textInput=createEl('input',{type:'text',class:'annotation-text-input',id:`annotation-input-${rect.id}`,name:`annotation-text-${rect.id}`,value:rect.text,style:'display:none;'});
+    const deleteBtn=createEl('button',{class:'annotation-delete-btn delete-button',textContent:'×',title:'删除注释'});
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'annotation-delete-btn delete-button';
-    deleteBtn.textContent = '×';
-    deleteBtn.title = '删除注释';
+    textContainer.append(textInput,deleteBtn);
 
-    textContainer.appendChild(textInput);
-    textContainer.appendChild(deleteBtn);
-
-    // Tooltip
-    const tooltip = document.createElement('div');
-    tooltip.className = 'annotation-tooltip';
-    tooltip.textContent = rect.text;
-    tooltip.style.color = store.currentColor;
-
-    rectDiv.appendChild(textContainer);
-    rectDiv.appendChild(tooltip);
+    const tooltip=createEl('div',{class:'annotation-tooltip',textContent:rect.text,style:`color:${store.currentColor};`});
+    rectDiv.append(textContainer,tooltip);
 
     eventManager.on(textInput,'input',(e) => {
         rect.text = e.target.value;
@@ -601,8 +566,6 @@ async function saveRectangles() {
         const result = await chrome.storage.local.get({rectangles: {}});
         const rects = result.rectangles;
         rects[pageKey] = rectangles;
-        console.log('rects[pageKey]: ', rects[pageKey]);
-        console.log('pageKey: ', pageKey);
         await chrome.storage.local.set({ rects });
     }catch(error){
         console.error(error);
@@ -613,7 +576,6 @@ async function loadRectangles() {
     try{
         const pageKey = getPageKey();
         const result = await chrome.storage.local.get({rects:{}});
-        console.log('result: ', result.rects);
         rectangles = result.rects[pageKey]||[];
     }catch(error){
         console.error(error);

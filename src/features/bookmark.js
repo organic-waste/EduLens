@@ -2,6 +2,7 @@
 import eventManager from '../utils/eventManager.js';
 import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
 import { getId,getPageKey } from '../utils/getIdentity.js';
+import { createEl } from '../utils/operateEl.js';
 
 let addDiv = null;
 let btnDiv = null;
@@ -9,36 +10,26 @@ let cardDiv = null;
 let inputDiv = null; 
 let oldPageKey=null;        
 
-
-
 function createBookmarkEle(scrollTop,text,id){
-  const bookmarkDiv=document.createElement('div');
-  bookmarkDiv.className='bookmark-marker';
   const docHeight   = document.documentElement.scrollHeight;
   const winHeight   = window.innerHeight;
   const progressPct = (scrollTop / (docHeight - winHeight)) * 100;
   const percent = Math.round(progressPct);  
-  bookmarkDiv.style.top=percent-2+'%';
-  bookmarkDiv.dataset.id=id;
 
-  const tooltip=document.createElement('div');
-  tooltip.className='bookmark-tooltip';
-  tooltip.textContent=text;
-  tooltip.style.top=percent-2+'%';
+  const bookmarkDiv=createEl('div',{class:'bookmark-marker',style:`top:${percent-2}%;`,'data-id':id});
 
-  const deleteBtn=document.createElement('button');
-  deleteBtn.className='delete-button';
-  deleteBtn.textContent='×';
+  const tooltip=createEl('div',{class:'bookmark-tooltip',style:`top:${percent-2}%;`,textContent:text});
+
+  const deleteBtn=createEl('button',{class:'delete-button',textContent:'×'});
   eventManager.on(deleteBtn,'click',(e)=>{
-    e.stopPropagation(); //防止冒泡被面板上的其他事件捕获
+    e.stopPropagation();
     removeBookmark(bookmarkDiv);
-  })
+  });
 
-  tooltip.appendChild(deleteBtn);
-  bookmarkDiv.appendChild(tooltip);
+  tooltip.append(deleteBtn);
+  bookmarkDiv.append(tooltip);
 
   let closePanel=null;
-
   function switchPanel(method){
     if(!method){
       closePanel=setTimeout(()=>{
@@ -46,9 +37,7 @@ function createBookmarkEle(scrollTop,text,id){
         tooltip.style.pointerEvents='none';
       },500)
     }else{
-      if(closePanel){
-        clearTimeout(closePanel);
-      }
+      if(closePanel) clearTimeout(closePanel);
     }
   }
 
