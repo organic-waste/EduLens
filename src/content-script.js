@@ -1,9 +1,8 @@
-import loadIcon from './utils/loadIcon.js';
+import { injectStyles, injectIcon}from './utils/injectAssets.js';
 import store from './stores/functions.js';
 import {activateDraggablePanel} from './features/draggablePanel.js'
 import eventManager from './utils/eventManager.js';
 
-loadIcon();
 
 //统一的键盘管理
 function keydown(e,key,name){
@@ -22,8 +21,13 @@ eventManager.on(window,'keydown', (e) => {
   keydown(e, 'r', 'readingSpotlight');
 });
 
+(async function activatePlugin() {
+  await injectStyles();
+  injectIcon();
+  activateDraggablePanel();
+})()
 
-activateDraggablePanel();
+
 
 
 

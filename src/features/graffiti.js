@@ -19,10 +19,11 @@ let penButton = null;
 let graffitiControlsDiv = null;
 
 function createDrawingCanvas(){
+  const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
   drawingContainer=document.getElementById('graffiti-container');
   if(!drawingContainer){
     drawingContainer=createEl('div',{id:'graffiti-container'});
-    document.body.appendChild(drawingContainer);
+    shadowRoot.appendChild(drawingContainer);
   }
   drawingCanvas=document.getElementById('graffiti-canvas');
   if(!drawingCanvas){
@@ -72,7 +73,7 @@ function setToolMode(mode){
     case 'pen':
       store.updateState({
         isEraser: false,
-        isPen: true,
+        isPen: !store.isPen,
         isRectangle: false
       });
       drawingCtx.globalCompositeOperation='source-over';
@@ -80,7 +81,7 @@ function setToolMode(mode){
       break;
     case 'eraser':
       store.updateState({
-        isEraser: true,
+        isEraser:!store.isEraser,
         isPen: false,
         isRectangle: false
       });

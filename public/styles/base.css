@@ -9,6 +9,10 @@
     --emphasis-error-color:#d44343;
 }
 
+/* 清除外界的样式，防止被影响 */
+:host, ::before, ::after { all: unset; }
+*, *::before, *::after   { box-sizing: border-box; }
+
 /* 通用样式 */
 .delete-button {
     margin-left: 6px;

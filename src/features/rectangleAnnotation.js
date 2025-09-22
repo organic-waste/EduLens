@@ -582,5 +582,3 @@ async function loadRectangles() {
         rectangles = [];
     }
 }
-
-export { saveRectangles , loadRectangles };

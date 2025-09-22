@@ -17,8 +17,9 @@ function ReadingSpotlight(e) {
 
 export function activateReadingSpotlight() {
   if (!readingSpotlightDiv) {
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
     readingSpotlightDiv = createEl('div',{class:'reading-spotlight'});
-    document.body.appendChild(readingSpotlightDiv);
+    shadowRoot.appendChild(readingSpotlightDiv);
     
     const vh = window.innerHeight / 100;
     const initialTop = (window.innerHeight / 2) - (6 * vh / 2);

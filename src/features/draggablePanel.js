@@ -30,8 +30,12 @@ function DraggablePanel(){
             </svg>
         </button>
         `
-
-    document.body.appendChild(panelDiv);
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+  if (!shadowRoot) {
+    console.error('Shadow root not initialized!');
+    return;
+  }
+    shadowRoot.appendChild(panelDiv);
     let btnDiv=document.getElementsByClassName('toggle-btn')[0];
 
     cardDiv = document.createElement('div');

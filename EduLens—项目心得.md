@@ -2249,7 +2249,7 @@ div[data-role="admin"] {
 
 
 
-### 封装创建 DOM 元素
+### 封装创建 DOM 元素方法
 
 ------------------------------------------------
 **第一种：Object.assign 速写法**
@@ -2341,11 +2341,57 @@ box.append(
 
 
 
+### Shadow DOM 隔离
+
+------
+
+Shadow DOM（影子 DOM）是浏览器提供的一种封装机制，它允许你将**隐藏的 DOM 树**附加到普通的 DOM 元素上，从而实现**样式、结构和行为的隔离**。
+
+**核心特点：**
+
+| 特性             | 说明                                          |
+| ---------------- | --------------------------------------------- |
+| ✅ **样式隔离**   | 外部 CSS 不会影响 Shadow DOM 内部             |
+| ✅ **结构隔离**   | `document.querySelector` 无法直接访问内部元素 |
+| ✅ **作用域 DOM** | 内部 ID、class 不会和外部冲突                 |
+| ✅ **可复用组件** | 非常适合构建通用插件或 UI 组件                |
+
+**注意**：
+
+- Shadow DOM 内部样式不会继承外部样式（包括字体、颜色等），因此你需要手动引入基础样式，如事件冒泡、样式变量、字体等需要额外处理。
+- 不要用 `document` 相关方法去查 Shadow DOM 内的元素（已经隔离会查询不到）
+
+---
+
+**简单示例**：
+
+```html
+<div id="host"></div>
+
+<script>
+  const host = document.getElementById('host');
+  const shadow = host.attachShadow({ mode: 'open' });
+
+  shadow.innerHTML = `
+    <style>
+      p { color: red; }
+    </style>
+    <p>我在 Shadow DOM 里，外部样式影响不到</p>
+  `;
+</script>
+```
+
+
+
+
+
 
 
 ### 错误解决：
 
 #### `transition` 动画过渡失效
+
+------
 
 **问题：**通过控制`display`属性来实现面板的开关（撑开父元素），但父元素的长宽过渡动画失效
 
@@ -2363,15 +2409,19 @@ transition: width height 1.4s ease-in-out; //错误写法
 transition: width 0.4s ease-in-out, height 0.4s ease-in-out; //正确写法
 ```
 
-------
+
 
 #### `transform-origin` 不生效问题
 
-**解决：**面板打开时没有使用 transform 变换，而是直接改变 width/height，所以 transform-origin 不会影响动画效果
-
 ------
 
+**解决：**面板打开时没有使用 transform 变换，而是直接改变 width/height，所以 transform-origin 不会影响动画效果
+
+
+
 #### `addEventListener` 传参出错
+
+------
 
 **解决：**
 
@@ -2381,9 +2431,11 @@ element.addEventListener('click', handleClick());
 // 不需要在函数名后面加上括号
 ```
 
-------
+
 
 #### `flex:1` 没有自动占据剩余空间
+
+------
 
 **原因：**`.bookmark-input` 写了 `flex: 1` 并不代表它“只能占剩余空间”，它还受到 `min-width: auto` 的默认行为影响. input 的默认最小尺寸 是 `min-width: auto`，也就是说：它不会缩小到比自身内容还窄。
 
@@ -2397,6 +2449,23 @@ element.addEventListener('click', handleClick());
 ```
 
 
+
+#### 注入的CSS样式被网站样式覆盖
+
+------
+
+**问题：**开发者工具中显示部分元素为“淡灰色”（该样式未生效）或者被划（被其他规则覆盖）
+
+**原因：**
+
+虽然这些浏览器插件 CSS 是通过 **Content Script 沙箱机制**注入的（即不属于页面原始代码），但它们最终仍然是被添加到了页面的 DOM 树中，作为 `<style>` 或外链 `<link>` 存在。因此：它们的 **CSS 优先级规则仍然遵循标准浏览器的层叠规则**，仍然可能会被更高优先级样式覆盖：
+
+- 网站很可能已经定义了同名类（比如 `.card-header`）或者使用了通用样式（如 `*`, `button`, `div` 的重置样式）。
+- 使用了高特异性的选择器，如：`div.card-header { ... }.some-parent .card-header { ... }`
+- 用了 `!important` 强制覆盖。
+- 通过 JavaScript 动态插入 `<style>` 标签，导致你的插件样式“后加载”，但优先级不够。
+
+**解决：**使用 **Shadow DOM** 让插件 UI 与宿主页面样式隔离
 
 
 
@@ -2879,7 +2948,6 @@ document.addEventListener('mouseup', () => {
 **原因：**
 
 **解决：**
-
 
 
 

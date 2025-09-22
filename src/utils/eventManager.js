@@ -38,27 +38,29 @@ class EventManager{
     offElement(element){
         const listeners = Array.from(this.listeners.keys());
         listeners.forEach((key)=>{
-            const Info = key.split(',');
-            console.log("offElement",Info);
-            if(element === Info[0]){
-                console.log("success");
-                element.removeEventListener(Info[1]);
-                this.listeners.key.clear();
+            const [el, event] = key.split(',');
+            if(element === el){
+                element.removeEventListener(event);
+                this.listeners.delete(key);
             }
         })
     }
 
     //清空全部事件监听器
     clear(){
-        const listeners = Array.from(this.listeners.keys());        
-        listeners.forEach((key) =>{
-            const Info = key.split(',');
-            Info[0].removeEventListener(Info[1],h);
+        const listeners = Array.from(this.listeners.entries());        
+        listeners.forEach((item) =>{
+            const key = item[0];
+            const [el, event] = key.split(',');
+            const handlers = item[1];
+            handlers.forEach((handler)=>{
+                el.removeEventListener(event,handler);
+            })
+            this.listeners.delete(key);
+            
         })
         this.listeners.clear();
     }
-
-
 }
 
 export default new EventManager();

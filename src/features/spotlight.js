@@ -6,8 +6,9 @@ let spotlightDiv = null;
 
 function Spotlight(e) {
   if (!spotlightDiv) {
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
     spotlightDiv = createEl('div',{class:'spotlight',left:'0px',top:'0px'});
-    document.body.appendChild(spotlightDiv);
+    shadowRoot.appendChild(spotlightDiv);
   }
   spotlightDiv.style.transform = `translate(${e.clientX - 60}px, ${e.clientY - 60}px)`;
 }

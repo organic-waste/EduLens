@@ -46,7 +46,6 @@ function createBookmarkEle(scrollTop,text,id){
     tooltip.style.pointerEvents='all';
     switchPanel(true);
   })
-
   eventManager.on(bookmarkDiv,'mouseleave',()=>{
     switchPanel(false);
   })
@@ -54,7 +53,6 @@ function createBookmarkEle(scrollTop,text,id){
   eventManager.on(tooltip,'mouseover',()=>{
     switchPanel(true);
   })
-  
   eventManager.on(tooltip,'mouseleave',()=>{
     switchPanel(false);
   })
@@ -68,6 +66,7 @@ function createBookmarkEle(scrollTop,text,id){
 
   const scrollDiv=document.getElementsByClassName('scroll-percent')[0];
   scrollDiv.appendChild(bookmarkDiv);
+  switchPanel(true);
 }
 
 async function getBookmark(){
@@ -107,7 +106,7 @@ async function removeBookmark(el){
   el.remove();
 }
 
-export async function loadBookmarks(){
+async function loadBookmarks(){
   const pageKey=getPageKey();
   if(pageKey===oldPageKey) return;
   let bookmarks= await getBookmark();
