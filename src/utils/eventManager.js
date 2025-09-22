@@ -2,64 +2,84 @@
 
 class EventManager{
     constructor(){
-        //用 Map 而不用对象 {}，是因为 Map 的 key 可以是任意类型，并且自带迭代器，删除性能更好
-        this.listeners = new Map();
+        //使用 WeakMap 为对DOM元素的弱引用，在删除DOM后可以自动删除Map中的数据并进行自动垃圾回收
+        this.listenerMap = new WeakMap();
     }
+
     //添加监听器
     on(element,event,handler,options = {}){
-        const key = `${element},${event}`;
-        if(!this.listeners.has(key)){
-            this.listeners.set(key,new Set());
+        if(!this.listenerMap.has(element)){
+            this.listenerMap.set(element,new Map());//由于 WeakMap 的键只能为对象或者DOM元素，而此时的键为event字符串，所以只能使用Map (并不会组织外层垃圾回收)
         }
-        this.listeners.get(key).add(handler);
-        element.addEventListener(event,handler,options);
+        const eventMap = this.listenerMap.get(element);
+        if(!eventMap.has(event)){
+            eventMap.set(event, new Set()); //保证可以自动去重，且增删更快
+        }
+        eventMap.get(event).add(handler);
+
+        element.addEventListener(event, handler, options);
     }
+
     //删除特定事件中的特定回调
     off(element,event,handler){
-        const key = `${element},${event}`;
-        const handlers = this.listeners.get(key);
-        if(handlers && handlers.has(handler)){
+        const eventMap = this.listenerMap.get(element);
+        if(!eventMap) return;
+
+        const handlerSet = eventMap.get(event);
+        if(handlerSet && handlerSet.has(handler)){
             element.removeEventListener(event,handler);
-            handlers.delete(handler);  //确保在Set结构中也删除
+            handlerSet.delete(handler);
+        }
+        //若已被清空则也删除父结构
+        if(handlerSet.size === 0){
+            eventMap.delete(event);
+        }
+        if(eventMap.size === 0){
+            this.listenerMap.delete(element);
         }
     }
+
     //删除特定事件中的全部回调
     offEvent(element,event){
-        const key = `${element},${event}`;
-        const handlers = this.listeners.get(key);
-        if(handlers){
-            handlers.forEach(h =>{
-                element.removeEventListener(event,h);
+        const eventMap = this.listenerMap.get(element);
+        if(!eventMap) return;
+
+        const handlerSet = eventMap.get(event);
+        if(handlerSet){
+            handlerSet.forEach((handler)=>{
+                element.removeEventListener(event,handler);
             })
-            handlers.clear();
+            eventMap.delete(event);
+        }
+        if(eventMap.size === 0){
+            this.listenerMap.delete(element);
         }
     }
+
     //删除特定对象的全部事件
     offElement(element){
-        const listeners = Array.from(this.listeners.keys());
-        listeners.forEach((key)=>{
-            const [el, event] = key.split(',');
-            if(element === el){
-                element.removeEventListener(event);
-                this.listeners.delete(key);
-            }
+        const eventMap = this.listenerMap.get(element);
+        if(!eventMap) return; 
+
+        eventMap.forEach((handlerSet, event)=>{
+            handlerSet.forEach((handler)=>{
+                element.removeEventListener(event,handler);
+            })
         })
+        this.listenerMap.delete(element);
     }
 
     //清空全部事件监听器
     clear(){
-        const listeners = Array.from(this.listeners.entries());        
-        listeners.forEach((item) =>{
-            const key = item[0];
-            const [el, event] = key.split(',');
-            const handlers = item[1];
-            handlers.forEach((handler)=>{
-                el.removeEventListener(event,handler);
+        if(!this.listenerMap) return; 
+        this.listenerMap.forEach(eventMap, element=>{
+            eventMap.forEach((handlerSet,event)=>{
+                handlerSet.forEach((handler)=>{
+                    element.removeEventListener(event,handler);
+                })
             })
-            this.listeners.delete(key);
-            
         })
-        this.listeners.clear();
+        this.listenerMap = new WeakMap(); 
     }
 }
 

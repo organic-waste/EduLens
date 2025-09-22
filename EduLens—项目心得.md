@@ -1896,6 +1896,76 @@ return x, y;   // 先算 x，再算 y，最终把 y 的值返回出去
 
 
 
+### `WeakMap` 数据结构
+
+------
+
+> `WeakMap` 是 JavaScript 中的一种特殊数据结构，它是 **“键值对”集合**，但它的“键”必须是**对象（包括 DOM 元素）**，不能是字符串或数字。
+
+**常见用途：**
+
+- 把额外信息关联到一个对象上
+- 管理某个 DOM 元素的事件、状态、配置等
+- 防止内存泄漏
+
+---
+
+**`WeakMap` vs 普通 `Map` 的关键区别**
+
+| 特性                       | `Map` | `WeakMap`                                 |
+| -------------------------- | ----- | ----------------------------------------- |
+| 键可以是任意类型           | ✅ 是  | ❌ 否（只能是**对象/元素**，不能是字符串） |
+| 强引用（阻止垃圾回收）     | ✅ 是  | ❌ 否                                      |
+| 弱引用（不阻止垃圾回收）   | ❌ 否  | ✅ 是 （核心优势）                         |
+| 可遍历所有 key             | ✅ 是  | ❌ 否                                      |
+| 支持 `.clear()` 和 `.size` | ✅ 是  | ❌ 否                                      |
+
+---
+
+**普通 `Map`：强引用 → 内存泄漏风险**
+
+```js
+const map = new Map();
+const div = document.createElement('div');
+map.set(div, 'some data');
+
+// 如果你把 div 从页面删除了
+document.body.removeChild(div);
+// 但是 map 还持有 div 的引用！
+// 所以浏览器不会释放 div 的内存 → 内存泄漏
+```
+
+ **`WeakMap`：弱引用 → 自动清理**
+
+```js
+const wm = new WeakMap();
+const div = document.createElement('div');
+wm.set(div, 'some data');
+
+// 删除 div
+document.body.removeChild(div);
+
+// 当没有任何其他变量引用 div 时，
+// 浏览器会自动回收 div 的内存
+// 并且 wm 中对应的条目也会自动消失
+```
+
+------
+
+**应用场景：**
+
+| 场景                                          | 推荐使用 `WeakMap`？ |
+| --------------------------------------------- | -------------------- |
+| 给 DOM 元素存一些私有数据（如状态、事件回调） | ✅ 是！非常推荐       |
+| 缓存函数计算结果（key 是对象）                | ✅ 是                 |
+| 需要遍历所有 key 或统计数量                   | ❌ 不行，用 `Map`     |
+| key 是字符串或数字                            | ❌ 不行，用 `Map`     |
+| 担心内存泄漏                                  | ✅ 优先考虑 `WeakMap` |
+
+
+
+
+
 
 
 ### 错误解决：
@@ -2027,6 +2097,28 @@ export async function activateGraffiti(){
 后来发现 CSS中有`transition`动画对面板长宽进行过渡，导致调用`updatePosition()`时长宽数据还停留在未展开的时候，进而导致更新位置的函数使用的是关闭时的面板长宽数据。
 
 **解决：**可以使用`setTimeout()`来配合动画进行结束后再调整位置，但有等待延时，所以目前采用的是在判断函数中使用展开的面板数据来进行位置计算。
+
+
+
+#### `EventManager` 中事件监听器始终不匹配 
+
+------
+
+**问题：**
+
+```js
+const key = `${element},${event}`;
+```
+
+把 DOM 对象直接拼接到字符串里，会被自动转换成 `[object HTMLDivElement]`，而不是期望的变量名（如 `"bookmarkDiv"`）
+
+**原因：**因为传入的`bookmarkDiv` 是一个 **DOM 元素对象**，不是一个字符串，对于 DOM 元素，默认的 `.toString()` 返回的就是`[object HTMLDivElement]`
+
+**解决：**改为用 DOM 元素本身作为 Map 的 key
+
+
+
+
 
 
 
@@ -2950,5 +3042,104 @@ document.addEventListener('mouseup', () => {
 **解决：**
 
 
+
+```js
+// eventManager.js
+class EventManager {
+  constructor() {
+    // WeakMap: element → (Map: event → Set of handlers)
+    this.listenerMap = new WeakMap();
+  }
+
+  /**
+   * 绑定事件
+   */
+  on(element, event, handler, options = {}) {
+    if (!this.listenerMap.has(element)) {
+      this.listenerMap.set(element, new Map());
+    }
+    const eventMap = this.listenerMap.get(element);
+    if (!eventMap.has(event)) {
+      eventMap.set(event, new Set());
+    }
+    eventMap.get(event).add(handler);
+
+    element.addEventListener(event, handler, options);
+  }
+
+  /**
+   * 解绑特定事件的特定回调
+   */
+  off(element, event, handler) {
+    const eventMap = this.listenerMap.get(element);
+    if (!eventMap) return;
+
+    const handlerSet = eventMap.get(event);
+    if (handlerSet && handlerSet.has(handler)) {
+      element.removeEventListener(event, handler);
+      handlerSet.delete(handler);
+
+      // 清理空集合
+      if (handlerSet.size === 0) {
+        eventMap.delete(event);
+      }
+      if (eventMap.size === 0) {
+        this.listenerMap.delete(element);
+      }
+    }
+  }
+
+  /**
+   * 解绑某个元素上的某个事件的所有回调
+   */
+  offEvent(element, event) {
+    const eventMap = this.listenerMap.get(element);
+    if (!eventMap) return;
+
+    const handlerSet = eventMap.get(event);
+    if (handlerSet) {
+      handlerSet.forEach(h => {
+        element.removeEventListener(event, h);
+      });
+      eventMap.delete(event);
+
+      if (eventMap.size === 0) {
+        this.listenerMap.delete(element);
+      }
+    }
+  }
+
+  /**
+   * 解绑某个元素的所有事件
+   */
+  offElement(element) {
+    const eventMap = this.listenerMap.get(element);
+    if (!eventMap) return;
+
+    for (const [event, handlerSet] of eventMap.entries()) {
+      handlerSet.forEach(h => {
+        element.removeEventListener(event, h);
+      });
+    }
+    this.listenerMap.delete(element);
+  }
+
+  /**
+   * 清空所有绑定的事件（慎用）
+   */
+  clear() {
+    for (const [element, eventMap] of this.listenerMap.entries()) {
+      for (const [event, handlerSet] of eventMap.entries()) {
+        handlerSet.forEach(h => {
+          element.removeEventListener(event, h);
+        });
+      }
+    }
+    this.listenerMap = new WeakMap(); // 重置
+  }
+}
+
+export default new EventManager();
+```
 
 
