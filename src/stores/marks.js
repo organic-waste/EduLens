@@ -6,6 +6,7 @@ class MarkStore {
 
     this.isEraser = false;
     this.isPen = false;
+    this.isLine = false;  
     this.isRectangle = false;
 
     this.currentColor = '#FF0000';
@@ -25,12 +26,14 @@ class MarkStore {
     const penBtn = shadowRoot.getElementById('pen-btn');
     const eraserBtn = shadowRoot.getElementById('eraser-btn');
     const rectangleBtn = shadowRoot.getElementById('rectangle-btn');
+    const lineBtn = shadowRoot.getElementById('line-btn');
 
-    if (!penBtn || !eraserBtn || !rectangleBtn) return;
+    if (!penBtn || !eraserBtn || !rectangleBtn || !lineBtn) return;
 
     penBtn.classList.toggle('active', this.isPen);
     eraserBtn.classList.toggle('active', this.isEraser);
     rectangleBtn.classList.toggle('active', this.isRectangle);
+    lineBtn.classList.toggle('active', this.isLine);
   }
 }
 

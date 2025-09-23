@@ -2849,9 +2849,140 @@ const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
 
 
+### `CanvasRenderingContext2D` API 总结
+
+---
+
+1. **矩形（立刻画）**
+
+- `fillRect(x,y,w,h)`        → 填充实心矩形  
+- `strokeRect(x,y,w,h)`      → 描边空心矩形  
+- `clearRect(x,y,w,h)`       → 橡皮擦，像素变透明
+
+---
+
+2. **路径（先描述再画）**
+
+- `beginPath()`              → 清空当前路径  
+- `moveTo(x,y)`              → 提笔移到起点  
+- `lineTo(x,y)`              → 直线连到该点  
+- `bezierCurveTo(cp1x,cp1y,cp2x,cp2y,x,y)` → 三次贝塞尔  
+- `quadraticCurveTo(cpx,cpy,x,y)`         → 二次贝塞尔  
+- `arc(x,y,r,sa,ea,ccw)`     → 画圆弧  
+- `arcTo(x1,y1,x2,y2,r)`     → 两切线间圆弧  
+- `ellipse(x,y,rx,ry,rot,sa,ea,ccw)` → 椭圆弧  
+- `closePath()`              → 回到起点闭合  
+- `fill(rule?)`              → 把路径填成实心  
+- `stroke()`                 → 把路径描成边  
+- `clip(rule?)`              → 把路径当剪刀，后续只画里面  
+- `isPointInPath(x,y,fillRule?)` → 判断点是否在路径内  
+- `isPointInStroke(x,y)`     → 判断点是否在路径边上
+
+---
+
+3. **文本**
+
+- `fillText(text,x,y,maxW?)`   → 填充文字  
+- `strokeText(text,x,y,maxW?)` → 描边文字  
+- `measureText(text).width`  → 返回文字宽度（像素）
+
+---
+
+4. **图像**
+
+- `drawImage(img,sx,sy,sw,sh,dx,dy,dw,dh)` → 9 参数重采样，3/5 参数也可
+
+---
+
+5. **像素**
+
+- `getImageData(sx,sy,sw,sh)`  → 把区域像素读成 `ImageData`  
+- `putImageData(imData,dx,dy,dirtyX,dirtyW,dirtyH)` → 把像素写回去  
+- `createImageData(sw,sh)` 或 `createImageData(existing)` → 新建空白像素块  
+- `ImageData.data`            → `Uint8ClampedArray`，RGBA 顺序
+
+---
+
+6. **样式/颜色**
+
+- `fillStyle`                 → 填充颜色/渐变/图案  
+- `strokeStyle`               → 描边颜色/渐变/图案  
+- `globalAlpha`               → 全局透明度 0-1  
+- `globalCompositeOperation`  → 像素混合模式（source-over、multiply 等）
+
+---
+
+7. **线型**
+
+- `lineWidth`                 → 线宽  
+- `lineCap`                   → 线头样式 butt/round/square  
+- `lineJoin`                  → 拐角样式 miter/round/bevel  
+- `miterLimit`                → 尖角长度上限  
+- `setLineDash(segments)`     → 设虚线数组  
+- `getLineDash()`             → 读虚线数组  
+- `lineDashOffset`            → 虚线偏移
+
+---
+
+8. **文本样式**
+
+- `font`                      → 同 CSS font 字符串  
+- `textAlign`                 → start/end/left/right/center  
+- `textBaseline`              → top/hanging/middle/alphabetic/ideographic/bottom  
+- `direction`                 → ltr/rtl/inherit
+
+---
+
+9. **渐变与图案**
+
+- `createLinearGradient(x0,y0,x1,y1)`   → 线性渐变  
+- `createRadialGradient(x0,y0,r0,x1,y1,r1)` → 径向渐变  
+- `createConicGradient(start,xc,yc)`  → 圆锥渐变（实验）  
+- `gradient.addColorStop(offset,color)` → 给渐变加色标  
+- `createPattern(img,repetition)`     → 用图片做重复图案
+
+---
+
+10. **阴影**
+
+- `shadowColor`  
+- `shadowBlur`  
+- `shadowOffsetX`  
+- `shadowOffsetY`
+
+---
+
+11. **变换**
+
+- `save()`                    → 把当前状态压栈  
+- `restore()`                 → 出栈恢复  
+- `reset()`                   → 清空全部状态（实验）  
+- `canvas`                    → 反向引用到 `<canvas>`  
+- `currentTransform`          → 读/设当前 `DOMMatrix`  
+- `setTransform(a,b,c,d,e,f)` 或 `setTransform(matrix)` → 直接设矩阵  
+- `transform(a,b,c,d,e,f)`    → 乘上矩阵  
+- `translate(x,y)`  
+- `rotate(angle)`  
+- `scale(x,y)`
+
+---
+
+12. **平滑开关**
+
+- `imageSmoothingEnabled`     → 是否对图像进行平滑缩放  
+- `imageSmoothingQuality`     → low/medium/high
+
+
+
+
+
+
+
 ### 错误解决：
 
 #### `Store` 中变量值冲突
+
+------
 
 **问题：**开启画笔功能后拖动面板仍会在面板后面留下笔迹，拖动面板时控制台会打印“graffiti.js.js:282 store.isDragging:  false”但是此时面板还是能跟随鼠标拖动
 
@@ -2910,6 +3041,20 @@ document.addEventListener('mouseup', () => {
 ------------------------------------------------
 一句话总结  
 面板拖动时把 `graffiti-canvas` 的 `pointerEvents` 设成 `none`，让画布直接“失焦”，就再也不会“拖一路画一路”了。
+
+
+
+#### 没有调用 `MoveTo` 但线条仍从新位置出发
+
+------
+
+**原因：**没有调用 `beginPath()`，Canvas会把所有 `moveTo` 和 `lineTo` 都当作同一个路径的一部分。即使你没有显式调用 `moveTo`，如果之前的路径还在，Canvas可能仍然在使用之前的起点。
+
+**解决：**使用 `beginPath()`开始一个新的路径并清除之前所有的子路径（moveTo, lineTo, arc等）
+
+### 
+
+
 
 
 
