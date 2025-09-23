@@ -32,7 +32,7 @@ export async function injectStyles() {
     host.id = 'edulens-host';
     host.style.display = 'contents'; //不占布局
     document.body.appendChild(host);
-    shadowRoot = host.attachShadow({ mode: 'open'});
+    shadowRoot = host.attachShadow({ mode: 'open'}); // 外部可以通过 host.shadowRoot 访问
 
     //获取所有CSS文件
     const cssPromises = CSS_FILES.map(async (file) =>{

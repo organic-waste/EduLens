@@ -84,11 +84,12 @@ function restorePageInteraction() {
 }
 
 function EditingRectangleEventListeners(){
-    eventManager.on(document,'mousedown', handleMouseDown);
-    eventManager.on(document,'mousemove', handleMouseMove);
-    eventManager.on(document,'mouseup', handleMouseUp);
-    eventManager.on(document,'mouseleave', handleMouseUp);
-    eventManager.on(document,'dblclick', handleDblClick);
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+    eventManager.on(shadowRoot,'mousedown', handleMouseDown);
+    eventManager.on(shadowRoot,'mousemove', handleMouseMove);
+    eventManager.on(shadowRoot,'mouseup', handleMouseUp);
+    eventManager.on(shadowRoot,'mouseleave', handleMouseUp);
+    eventManager.on(shadowRoot,'dblclick', handleDblClick);
 }
 
 function handleMouseDown(e){
@@ -241,7 +242,7 @@ function handleDblClick(e){
 
 function createPreviewRectangle(){
     if(previewDiv) removePreviewRectangle();
-    previewDiv = createEl('div',{class: 'annotation-preview', style:`border-color:${store.currentColor},border-width: ${store.brushSize}`})
+    previewDiv = createEl('div',{class: 'annotation-preview', style:`border-color:${store.currentColor},border-width: ${store.brushSize}px`})
     drawingContainer.appendChild(previewDiv);
 }
 
@@ -522,6 +523,7 @@ function doMove(currentX, currentY) {
     currentRect.x = newX;
     currentRect.y = newY;
 
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
     const rectDiv = shadowRoot.querySelector(`.annotation-rect[data-id="${currentRect.id}"]`);
     if (rectDiv) {
         rectDiv.style.left = `${newX}px`;
@@ -536,7 +538,8 @@ function isPointInRect(px,py,rx,ry,rw,rh){
 }
 
 function findTopmostRectangleAt(x,y){
-    const elements = document.elementsFromPoint(x + window.scrollX , y + window.scrollY);
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+    const elements = shadowRoot.elementsFromPoint(x + window.scrollX , y + window.scrollY);
     for(const el of elements){
         if(el.classList && el.classList.contains('annotation-rect')){
             const rectId = el.dataset.id;

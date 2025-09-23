@@ -25,6 +25,7 @@ eventManager.on(window,'keydown', (e) => {
   await injectStyles();
   // injectIcon();
   activateDraggablePanel();
+  console.log('eventManager.listenerMap: ', eventManager.listenerMap);
 })()
 
 
