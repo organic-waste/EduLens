@@ -10,7 +10,8 @@ class MarkStore {
     this.isRectangle = false;
 
     this.currentColor = '#FF0000';
-    this.brushSize = 5;
+    this.penBrushSize = 5;
+    this.eraserBrushSize = 10;
 
     this.currentHoveredRectId = null;
     this.hoverTimeout = null;
