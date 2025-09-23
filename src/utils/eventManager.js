@@ -9,7 +9,7 @@ class EventManager{
     //添加监听器
     on(element,event,handler,options = {}){
         if(!this.listenerMap.has(element)){
-            this.listenerMap.set(element,new Map());//由于 WeakMap 的键只能为对象或者DOM元素，而此时的键为event字符串，所以只能使用Map (并不会组织外层垃圾回收)
+            this.listenerMap.set(element, new Map());//由于 WeakMap 的键只能为对象或者DOM元素，而此时的键为event字符串，所以只能使用Map (并不会组织外层垃圾回收)
         }
         const eventMap = this.listenerMap.get(element);
         if(!eventMap.has(event)){

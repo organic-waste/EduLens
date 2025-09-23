@@ -1,11 +1,12 @@
 // 注入图标样式文件
 export function injectIcon(){
-  if (!document.querySelector('#fa-content-script')) {
+  const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+  if (!shadowRoot.querySelector('#fa-content-script')) {
   const fa = document.createElement('link');
   fa.id = 'fa-content-script'; //加 `id` 是为了避免重复注入
   fa.rel = 'stylesheet';
   fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
-  (document.head || document.documentElement).appendChild(fa);
+  shadowRoot.appendChild(fa);
   }
 }
 
@@ -36,7 +37,7 @@ export async function injectStyles() {
     //获取所有CSS文件
     const cssPromises = CSS_FILES.map(async (file) =>{
         try{
-            const url = chrome.runtime.getURL(file);  //扩展里的任何“静态文件”(css/png/html) 在运行时都要先过 chrome.runtime.getURL，否则浏览器会按“当前页面域名”去拼路径
+            const url = chrome.runtime.getURL(file);  //扩展里的任何静态文件(css/png/html) 在运行时都要先过 chrome.runtime.getURL，否则浏览器会按“当前页面域名”去拼路径
             const response = await fetch(url);
             if(!response.ok){
                 throw new Error(`Failed to load ${file}`);

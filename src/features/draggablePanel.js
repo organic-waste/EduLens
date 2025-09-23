@@ -15,8 +15,8 @@ let isMoved=false;
 let offsetX = 0, offsetY = 0;
 let Position = { left: 0, top: 0 };
 
-
 function DraggablePanel(){
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
     if(panelDiv)return;
     panelDiv = document.createElement('div');
     panelDiv.className='draggable-panel';
@@ -30,13 +30,9 @@ function DraggablePanel(){
             </svg>
         </button>
         `
-    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
-  if (!shadowRoot) {
-    console.error('Shadow root not initialized!');
-    return;
-  }
+
     shadowRoot.appendChild(panelDiv);
-    let btnDiv=document.getElementsByClassName('toggle-btn')[0];
+    let btnDiv = panelDiv.getElementsByClassName('toggle-btn')[0];
 
     cardDiv = document.createElement('div');
     cardDiv.className = 'draggable-card';

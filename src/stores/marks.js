@@ -21,9 +21,10 @@ class MarkStore {
   }
   //保证各功能之间互斥
   updateUI() {
-    const penBtn = document.getElementById('pen-btn');
-    const eraserBtn = document.getElementById('eraser-btn');
-    const rectangleBtn = document.getElementById('rectangle-btn');
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+    const penBtn = shadowRoot.getElementById('pen-btn');
+    const eraserBtn = shadowRoot.getElementById('eraser-btn');
+    const rectangleBtn = shadowRoot.getElementById('rectangle-btn');
 
     if (!penBtn || !eraserBtn || !rectangleBtn) return;
 

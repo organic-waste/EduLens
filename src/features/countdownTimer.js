@@ -73,6 +73,7 @@ function resetCountdown() {
 }
 
 export function activateCountdown() {
+  const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
   if (countdownContainer) return;
   countdownContainer = createEl('div',{class:'countdown-container'});
 
@@ -90,9 +91,9 @@ export function activateCountdown() {
 
   countdownContainer.append(inputArea,displayArea);
 
-  const functionsDiv = document.querySelector('.functions');
-  if (functionsDiv) {
-    functionsDiv.appendChild(countdownContainer);
+  const funcDiv = shadowRoot.querySelector('.functions');
+  if (funcDiv) {
+    funcDiv.appendChild(countdownContainer);
   }
   
   // 正则输入验证

@@ -102,36 +102,12 @@
     background-color: #f3f3f3;
 }
 
-.graffiti-icon-btn {
-    width: 4vh;
-    height: 4vh;
-    padding: 0;
-    background: var(--main-color);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-shrink: 0;
-}
 
-.graffiti-icon-btn:hover {
-    background: var(--emphasis-color);
-}
-
-.graffiti-icon-btn.active {
-    background: var(--emphasis-color); 
-    box-shadow: 0 0 0 2px rgba(124, 161, 212, 0.5); 
-}
-
-.graffiti-icon {
+/* .graffiti-icon {
     width: 50%;
     height: 50%;
     pointer-events: none; 
-}
+} */
 .tool-group {
     display: flex;
     justify-content: space-evenly;

@@ -1970,9 +1970,9 @@ document.body.removeChild(div);
 
 ### 错误解决：
 
-------
-
 #### `.offsetWidth` `.offsetHeight`无法获取到正确宽高
+
+------
 
 **原因：**
 
@@ -1989,9 +1989,11 @@ document.body.appendChild(cardDiv);
 console.log(cardDiv.offsetWidth, cardDiv.offsetHeight);
 ```
 
-------
+
 
 #### 报错`HierarchyRequestError: Only one element on document allowed`
+
+------
 
 **原因：**当前页面里已经有 `<html>`（或 `<body>`、`<head>`）这类顶级节点，而又试图再往 `document` 上 `appendChild` 一次，于是浏览器直接报错**（浏览器只接受一个 `document.documentElement`）**
 
@@ -2002,9 +2004,11 @@ document.appendChild(panel);   // 错误写法
 document.body.appendChild(panel);  // 正确写法
 ```
 
-------
+
 
 #### 获取`Dom`元素失败
+
+------
 
 **问题：**在 `activateGraffiti()` 中，`createControls()` 明明先执行了，但后续执行 `activateRectangleAnnotation()` 时却获取不到 `.tool-group` 元素（即 `toolGroupDiv` 是 `null`）
 
@@ -2117,6 +2121,77 @@ const key = `${element},${event}`;
 **解决：**改为用 DOM 元素本身作为 Map 的 key
 
 
+
+#### `shadowRoot` 变量赋值后仍为`undefined`
+
+------
+
+**问题：** `draggablePanel.js.js:34 Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'appendChild')`
+
+```js
+shadowRoot.appendChild(panelDiv); //`shadowRoot` 是 `undefined`
+```
+
+------
+
+**原因：**变量提升 + 异步加载顺序错乱
+
+```js
+const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+```
+
+在 `function DraggablePanel()` **外面、顶部**，这意味着它只会在模块加载时执行一次，此时 `window.__EDULENS_SHADOW_ROOT__` 还没被赋值。
+
+**执行顺序**如下：
+
+1. `content-script.js` 开始运行
+
+2. 导入 `draggablePanel.js` →  立刻执行顶层代码：
+
+   ```
+   const shadowRoot = window.__EDULENS_SHADOW_ROOT__; // 此时是 undefined！
+   ```
+
+3. 执行 `await injectStyles()` → 异步加载 CSS 并设置 `window.__EDULENS_SHADOW_ROOT__`
+
+4. 调用 `activateDraggablePanel()` → 进入 `DraggablePanel()` 函数
+
+5. 使用早已缓存的 `shadowRoot`（仍然是 `undefined`）→ 报错！
+
+------
+
+**解决**：不要在模块顶层捕获 `shadowRoot`，而是在函数内动态获取。（**永远不要在模块顶层依赖异步初始化的全局变量**）
+
+
+
+#### 报错：`shadowRoot.getElementsByClassName is not a function`
+
+------
+
+**问题：**`bookmark.js.js:148 Uncaught (in promise) TypeError: shadowRoot.getElementsByClassName is not a function`
+
+```js
+const cardDiv = shadowRoot.getElementsByClassName('functions')[0];
+```
+
+**原因：**`ShadowRoot` 不支持 `getElementsByClassName` 方法
+
+因为：`shadowRoot` 是一个 `DocumentFragment` 类型的对象（具体是 `ShadowRoot`），它没有 `getElementsByClassName()` 方法
+
+**解决：**使用 `querySelector` / `querySelectorAll`来代替
+
+---
+
+**`ShadowRoot` 支持的查询方法有哪些？**
+
+| 方法                                       | 是否支持 |
+| ------------------------------------------ | -------- |
+| `shadowRoot.querySelector(selector)`       | ✅ 支持   |
+| `shadowRoot.querySelectorAll(selector)`    | ✅ 支持   |
+| `shadowRoot.getElementById(id)`            | ✅ 支持   |
+| `shadowRoot.getElementsByClassName(names)` | ❌ 不支持 |
+| `shadowRoot.getElementsByTagName(tagName)` | ❌ 不支持 |
+| `shadowRoot.getElementsByName(name)`       | ❌ 不支持 |
 
 
 
@@ -3040,106 +3115,3 @@ document.addEventListener('mouseup', () => {
 **原因：**
 
 **解决：**
-
-
-
-```js
-// eventManager.js
-class EventManager {
-  constructor() {
-    // WeakMap: element → (Map: event → Set of handlers)
-    this.listenerMap = new WeakMap();
-  }
-
-  /**
-   * 绑定事件
-   */
-  on(element, event, handler, options = {}) {
-    if (!this.listenerMap.has(element)) {
-      this.listenerMap.set(element, new Map());
-    }
-    const eventMap = this.listenerMap.get(element);
-    if (!eventMap.has(event)) {
-      eventMap.set(event, new Set());
-    }
-    eventMap.get(event).add(handler);
-
-    element.addEventListener(event, handler, options);
-  }
-
-  /**
-   * 解绑特定事件的特定回调
-   */
-  off(element, event, handler) {
-    const eventMap = this.listenerMap.get(element);
-    if (!eventMap) return;
-
-    const handlerSet = eventMap.get(event);
-    if (handlerSet && handlerSet.has(handler)) {
-      element.removeEventListener(event, handler);
-      handlerSet.delete(handler);
-
-      // 清理空集合
-      if (handlerSet.size === 0) {
-        eventMap.delete(event);
-      }
-      if (eventMap.size === 0) {
-        this.listenerMap.delete(element);
-      }
-    }
-  }
-
-  /**
-   * 解绑某个元素上的某个事件的所有回调
-   */
-  offEvent(element, event) {
-    const eventMap = this.listenerMap.get(element);
-    if (!eventMap) return;
-
-    const handlerSet = eventMap.get(event);
-    if (handlerSet) {
-      handlerSet.forEach(h => {
-        element.removeEventListener(event, h);
-      });
-      eventMap.delete(event);
-
-      if (eventMap.size === 0) {
-        this.listenerMap.delete(element);
-      }
-    }
-  }
-
-  /**
-   * 解绑某个元素的所有事件
-   */
-  offElement(element) {
-    const eventMap = this.listenerMap.get(element);
-    if (!eventMap) return;
-
-    for (const [event, handlerSet] of eventMap.entries()) {
-      handlerSet.forEach(h => {
-        element.removeEventListener(event, h);
-      });
-    }
-    this.listenerMap.delete(element);
-  }
-
-  /**
-   * 清空所有绑定的事件（慎用）
-   */
-  clear() {
-    for (const [element, eventMap] of this.listenerMap.entries()) {
-      for (const [event, handlerSet] of eventMap.entries()) {
-        handlerSet.forEach(h => {
-          element.removeEventListener(event, h);
-        });
-      }
-    }
-    this.listenerMap = new WeakMap(); // 重置
-  }
-}
-
-export default new EventManager();
-```
-
-

@@ -6,11 +6,12 @@ import { createEl } from '../utils/operateEl.js';
 
 let addDiv = null;
 let btnDiv = null;
-let cardDiv = null;
+let funcDiv = null;
 let inputDiv = null; 
 let oldPageKey=null;        
 
 function createBookmarkEle(scrollTop,text,id){
+  const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
   const docHeight   = document.documentElement.scrollHeight;
   const winHeight   = window.innerHeight;
   const progressPct = (scrollTop / (docHeight - winHeight)) * 100;
@@ -64,7 +65,7 @@ function createBookmarkEle(scrollTop,text,id){
     })
   })
 
-  const scrollDiv=document.getElementsByClassName('scroll-percent')[0];
+  const scrollDiv = shadowRoot.querySelector('.scroll-percent');
   scrollDiv.appendChild(bookmarkDiv);
   switchPanel(true);
 }
@@ -130,6 +131,7 @@ function createBookmark() {
 
 
 export function activateBookmark() {
+  const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
   addDiv = document.createElement('div');
   addDiv.className = 'function';
 
@@ -144,11 +146,12 @@ export function activateBookmark() {
   eventManager.on(btnDiv,'click', createBookmark); 
   addDiv.appendChild(btnDiv)
 
-  cardDiv = document.getElementsByClassName('functions')[0];
-  cardDiv.appendChild(addDiv);
+  funcDiv = shadowRoot.querySelector('.functions');
+  if(funcDiv){
+    funcDiv.appendChild(addDiv);
+  }
 
   loadBookmarks();
-
   MonitorSPARoutes(loadBookmarks);
 
   chrome.runtime.onMessage.addListener((message)=>{

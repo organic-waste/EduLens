@@ -4,6 +4,7 @@ import { createEl } from '../utils/operateEl.js';
 
 let highlightDiv = null;
 
+
 function Highlight(e) {
   if (!highlightDiv) {
     const shadowRoot = window.__EDULENS_SHADOW_ROOT__;

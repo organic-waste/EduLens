@@ -23,7 +23,7 @@ eventManager.on(window,'keydown', (e) => {
 
 (async function activatePlugin() {
   await injectStyles();
-  injectIcon();
+  // injectIcon();
   activateDraggablePanel();
 })()
 

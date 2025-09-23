@@ -27,11 +27,19 @@ let moveStartY = 0;
 let originalRect = null;
 let originalRectPos = null;
 
+
+
 export function activateRectangleAnnotation(){
-    drawingContainer=document.getElementById('graffiti-container');
-    const toolGroupDiv=document.querySelector('#graffiti-controls .tool-group');
-    if(toolGroupDiv && !document.getElementById('rectangle-btn')){
-        rectangleButton = createEl('button',{id: 'rectangle-btn', class:'graffiti-icon-btn', title:'添加矩形注释', innerHTML:'<i class="fas fa-vector-square graffiti-icon"></i>'})
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+    drawingContainer=shadowRoot.getElementById('graffiti-container');
+    const toolGroupDiv=shadowRoot.querySelector('#graffiti-controls .tool-group');
+    if(toolGroupDiv && !toolGroupDiv.querySelector('#rectangle-btn')){
+        rectangleButton = createEl('button',{
+            id: 'rectangle-btn',
+            class:'icon-btn', 
+            title:'添加矩形注释', 
+            innerHTML:'<svg t="1758595217758" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7344" width="200" height="200"><path d="M0 837.818182l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7345" fill="#ffffff"></path><path d="M232.727273 837.818182l558.545455 0 0 93.090909-558.545455 0 0-93.090909Z" p-id="7346" fill="#ffffff"></path><path d="M93.090909 232.727273l93.090909 0 0 558.545455-93.090909 0 0-558.545455Z" p-id="7347" fill="#ffffff"></path><path d="M0 0l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7348" fill="#ffffff"></path><path d="M232.727273 93.090909l558.545455 0 0 93.090909-558.545455 0 0-93.090909Z" p-id="7349" fill="#ffffff"></path><path d="M837.818182 837.818182l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7350" fill="#ffffff"></path><path d="M837.818182 0l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7351" fill="#ffffff"></path><path d="M837.818182 232.727273l93.090909 0 0 558.545455-93.090909 0 0-558.545455Z" p-id="7352" fill="#ffffff"></path></svg>'
+        })
         eventManager.on(rectangleButton,'click',toggleRectangleMode);
         eventManager.on(rectangleButton,'mousedown',(e)=>e.stopPropagation());
         toolGroupDiv.appendChild(rectangleButton);
@@ -257,7 +265,7 @@ function removePreviewRectangle(){
 }
 
 function renderAllRectangles(){
-    document.querySelectorAll('.annotation-rect').forEach(e => e.remove());
+    drawingContainer.querySelectorAll('.annotation-rect').forEach(e => e.remove());
     rectangles.forEach(r => renderRectangles(r))
 }
 
@@ -291,8 +299,9 @@ function renderRectangles(rect){
 }
 
 function removeRectangle(id){
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
     rectangles = rectangles.filter(r => r.id!== id);
-    const rectDiv = document.querySelector(`.annotation-rect[data-id="${id}"]`);
+    const rectDiv = shadowRoot.querySelector(`.annotation-rect[data-id="${id}"]`);
     if(rectDiv) rectDiv.remove();
     // 如果删除的是当前编辑的矩形，则退出编辑模式
     if(editingRect && currentRect && currentRect.id === id){
@@ -303,6 +312,7 @@ function removeRectangle(id){
 
 //进入创建矩阵模式
 function enterEditingMode(rect){
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
     //已经在编辑这个矩阵时
     if(isEditing && editingRect && currentRect && currentRect.id === rect.id) return;
 
@@ -311,7 +321,7 @@ function enterEditingMode(rect){
     editingRect = rect;
     currentRect = rect;
 
-    const rectDiv = document.querySelector(`.annotation-rect[data-id="${rect.id}"]`);
+    const rectDiv = shadowRoot.querySelector(`.annotation-rect[data-id="${rect.id}"]`);
     if(!rectDiv) return;
     rectDiv.classList.add('editing');
 
@@ -332,7 +342,8 @@ function exitEditingMode(){
     if(!isEditing) return;
     isEditing = false;
     if(currentRect){
-        const rectDiv = document.querySelector(`.annotation-rect[data-id="${currentRect.id}"]`);
+        const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+        const rectDiv = shadowRoot.querySelector(`.annotation-rect[data-id="${currentRect.id}"]`);
         if (rectDiv) {
             rectDiv.classList.remove('editing');
             const textContainer = rectDiv.querySelector('.annotation-text-container');
@@ -350,7 +361,7 @@ function exitEditingMode(){
                 tooltip.style.display = 'none';
             }
 
-            document.querySelectorAll('.resize-handle').forEach(h => h.remove());
+            shadowRoot.querySelectorAll('.resize-handle').forEach(h => h.remove());
         }
     }
     editingRect = null;
@@ -384,7 +395,8 @@ function createHandles(rectDiv,rect){
 }
 
 function getHandleAt(x,y,rect){
-    const rectDiv = document.querySelector(`.annotation-rect[data-id="${rect.id}"]`);
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+    const rectDiv = shadowRoot.querySelector(`.annotation-rect[data-id="${rect.id}"]`);
     if (!rectDiv) return null;
     const handles = rectDiv.getElementsByClassName('resize-handle');
     for(let handle of handles){
@@ -428,6 +440,7 @@ function startResizing(handle, x, y){
 }
 
 function doResize(currentX,currentY){
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
     if(!isResizing||!resizeHandle||!originalRect) return;
     const dx = currentX - moveStartX;
     const dy = currentY - moveStartY;
@@ -467,7 +480,7 @@ function doResize(currentX,currentY){
     currentRect.width = newW;
     currentRect.height = newH;
     
-    const rectDiv = document.querySelector(`.annotation-rect[data-id="${currentRect.id}"]`);
+    const rectDiv = shadowRoot.querySelector(`.annotation-rect[data-id="${currentRect.id}"]`);
     if (rectDiv) {
         rectDiv.style.left = `${newX}px`;
         rectDiv.style.top = `${newY}px`;
@@ -511,7 +524,7 @@ function doMove(currentX, currentY) {
     currentRect.x = newX;
     currentRect.y = newY;
 
-    const rectDiv = document.querySelector(`.annotation-rect[data-id="${currentRect.id}"]`);
+    const rectDiv = shadowRoot.querySelector(`.annotation-rect[data-id="${currentRect.id}"]`);
     if (rectDiv) {
         rectDiv.style.left = `${newX}px`;
         rectDiv.style.top = `${newY}px`;
@@ -537,7 +550,8 @@ function findTopmostRectangleAt(x,y){
 }
 
 function showTooltip(rectId){
-    const rectDiv = document.querySelector(`.annotation-rect[data-id="${rectId}"]`);
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+    const rectDiv = shadowRoot.querySelector(`.annotation-rect[data-id="${rectId}"]`);
     const rect =rectangles.find(r => r.id === rectId);
     if(rect && rect.text.trim() !== '' && rectDiv){
         const tooltip = rectDiv.querySelector('.annotation-tooltip');
@@ -549,7 +563,8 @@ function showTooltip(rectId){
 }
 
 function hideTooltip(rectId){
-    const rectDiv = document.querySelector(`.annotation-rect[data-id="${rectId}"]`);
+    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+    const rectDiv = shadowRoot.querySelector(`.annotation-rect[data-id="${rectId}"]`);
     if (rectDiv) {
         const tooltip = rectDiv.querySelector('.annotation-tooltip');
         if (tooltip) {

@@ -23,11 +23,12 @@ function ScrollProgress() {
 
 export function activateScrollProgress() {
   if (!scrollDiv) {
+  const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
   scrollDiv=createEl('div',{class:'scroll-percent'});
   fillDiv=createEl('div',{class:'scroll-fill'});
   scrollDiv.appendChild(fillDiv);
 
-  cardDiv=document.querySelector('.card-content');
+  cardDiv = shadowRoot.querySelector('.card-content');
 
     // const counterDiv = document.createElement('div');
     // counterDiv.className = 'scroll-counter';
@@ -37,7 +38,7 @@ export function activateScrollProgress() {
     // scrollDiv.appendChild(counterDiv);
 
     if(cardDiv){
-      const funcDiv=createEl('div',{class:'functions'});
+      const funcDiv = createEl('div',{class:'functions'});
       funcDiv.appendChild(scrollDiv);
       cardDiv.appendChild(funcDiv);
     }
