@@ -2197,6 +2197,32 @@ const cardDiv = shadowRoot.getElementsByClassName('functions')[0];
 
 
 
+#### 可以打印出的DOM元素获取不到
+
+---
+
+**问题：**
+
+`drawingContainer` 打印出来有值，且内部确实包含了 `<canvas id="graffiti-canvas">`，  
+但是用：
+
+- `drawingContainer.querySelector('#graffiti-canvas')`
+- 或者 `shadowRoot.getElementById('graffiti-canvas')`
+
+查询`graffiti-canvas`元素都返回 `null`
+
+**原因：**
+
+因为你可能在后续调试时查看了控制台输出的 **对象快照（live object）**。
+
+JavaScript 控制台对 DOM 对象的打印是“动态引用”，不是“冻结快照”。也就是说如果在 `console.log`后给这个元素添加了子元素，在调试查看时仍然能看见子元素。（不能代码 `console.log` 时子元素存在）
+
+
+
+
+
+
+
 ## Html和Css相关
 
 ### `.classList`和`.className`对比

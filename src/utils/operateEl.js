@@ -19,7 +19,8 @@ export function createEl(tag, attrs = {}, ...children){
 export function getOffsetPos(event,div){
     const el = div;
     if(typeof(div) === "string"){
-        el = document.querySelector(div);
+        const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+        el = shadowRoot.querySelector(div);
     }
     const rect = el.getBoundingClientRect();
     const x = event.clientX - rect.left;

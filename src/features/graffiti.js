@@ -25,7 +25,7 @@ function createDrawingCanvas(){
     drawingContainer=createEl('div',{id:'graffiti-container'});
     shadowRoot.appendChild(drawingContainer);
   }
-  drawingCanvas = drawingContainer.querySelector('#graffiti-canvas');
+  drawingCanvas = shadowRoot.getElementById('graffiti-canvas');
   if(!drawingCanvas){
     drawingCanvas=createEl('canvas',{id:'graffiti-canvas',width:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight});
     drawingContainer.appendChild(drawingCanvas);
@@ -58,8 +58,8 @@ function resizeCanvas(){
       }
       drawingCanvas.width = newWidth;
       drawingCanvas.height = newHeight;      
-      // drawingContainer.width = newWidth;
-      // drawingContainer.height = newHeight;
+      drawingContainer.style.width = newWidth;
+      
       setupCanvasContext();     
       if(imageData) {
         drawingCtx.putImageData(imageData, 0, 0);
@@ -263,15 +263,15 @@ function draw(e){
 function stopDrawing(){
   if(store.isDragging)return;
   if(!store.isEraser && !store.isPen) return;
-  if(store.isDrawing&&!store.isDragging){
+  if(store.isDrawing && !store.isDragging){
     store.isDrawing = false;
-    drawingCtx&&drawingCtx.beginPath();
+    drawingCtx && drawingCtx.beginPath();
     drawingContainer.style.pointerEvents = 'none';
   }
 }
 
 function clearCanvas(){
-  if(drawingCtx&&drawingCanvas){
+  if(drawingCtx && drawingCanvas){
     drawingCtx.clearRect(0,0,drawingCanvas.width,drawingCanvas.height);
     //在清除画布后更新存储的画布也为空
     saveDrawing();

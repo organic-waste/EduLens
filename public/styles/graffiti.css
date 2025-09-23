@@ -7,7 +7,7 @@
     height: 100%;
     pointer-events: none; 
     z-index: 9997; 
-    overflow: hidden; 
+    overflow: visible; 
 }
 
 #graffiti-canvas {

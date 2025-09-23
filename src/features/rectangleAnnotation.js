@@ -385,9 +385,7 @@ function createHandles(rectDiv,rect){
             e.stopPropagation();
             e.preventDefault();
             //获取container位置转为获取canvas的位置
-            const rect = drawingContainer.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const {x, y} = getOffsetPos(e, drawingContainer);
             startResizing({ element: handle, type: handle.dataset.type }, x, y);
         });
         rectDiv.appendChild(handle);
