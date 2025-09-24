@@ -1,12 +1,13 @@
 // 可拖动卡片面板
 import eventManager from '../utils/eventManager.js';
-import {activateScrollProgress} from './scrollProgress.js'
-import {activateBookmark} from './bookmark.js'
-import { activateGraffiti } from './graffiti.js';
-import { activateCountdown } from './countdownTimer.js';
+import { activateScrollProgress } from './tools/scrollProgress.js'
+import { activateBookmark } from './tools/bookmark.js';
+import { activateGraffiti } from './tools/graffiti.js';
+import { activateCountdown } from './tools/countdownTimer.js';
+import { activateScreenshot } from './tools/screenshot.js';
 import { getOffsetPos , createEl } from '../utils/operateEl.js'
+import store from '../stores/filters.js';
 
-import store from '../stores/functions.js';
 
 let panelDiv=null;
 let cardDiv=null;
@@ -169,6 +170,7 @@ export function activateDraggablePanel() {
     activateBookmark();
     activateCountdown();
     activateGraffiti();
+    activateScreenshot();
 }
 
 export function deactivateDraggablePanel() {

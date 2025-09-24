@@ -1,5 +1,5 @@
-//涂鸦相关状态管理
-class MarkStore {
+//页面工具相关功能
+class ToolStore {
   constructor() {
     this.isDrawing = false;
     this.isDragging = false;
@@ -38,4 +38,4 @@ class MarkStore {
   }
 }
 
-export default new MarkStore();
+export default new ToolStore();

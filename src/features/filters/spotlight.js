@@ -1,6 +1,6 @@
 // 聚光灯
-import eventManager from '../utils/eventManager.js';
-import { createEl } from '../utils/operateEl.js';
+import eventManager from '../../utils/eventManager.js';
+import { createEl } from '../../utils/operateEl.js';
 
 let spotlightDiv = null;
 

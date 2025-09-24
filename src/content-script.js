@@ -1,5 +1,5 @@
 import { injectStyles, injectIcon}from './utils/injectAssets.js';
-import store from './stores/functions.js';
+import store from './stores/filters.js';
 import {activateDraggablePanel} from './features/draggablePanel.js'
 import eventManager from './utils/eventManager.js';
 

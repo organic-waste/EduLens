@@ -27,7 +27,7 @@
     "description": "创建新书签的按钮文字。"
   },
   "bookmarkPlaceholder": {
-    "message": "标题",
+    "message": "请输入书签标题",
     "description": "书签输入框的占位符。"
   },
   "bookmarkTooltip": {
@@ -40,7 +40,7 @@
     "description": "启动计时器的按钮。"
   },
   "countdownPlaceholder": {
-    "message": "分钟数",
+    "message": "请输入分钟数",
     "description": "倒计时输入框的占位符。"
   },
   "countdownRemain": {
@@ -92,6 +92,15 @@
   "rectangleDelete": {
     "message": "删除注释",
     "description": "矩形右上角 × 按钮的提示。"
+  },
+
+  "screenshotDOMBtn":{
+    "message":"DOM截图",
+    "description":"点击切换DOM元素截图"
+  },
+  "screenshotRegionBtn":{
+    "message":"区域截图",
+    "description":"点击切换区域截图"
   },
 
   "popupTitle": {

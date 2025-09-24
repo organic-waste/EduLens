@@ -1,105 +1,88 @@
 {
   "pluginName": {
-    "message": "EduLens",
-    "description": "Extension name shown in store and toolbar."
+    "message": "EduLens"
   },
   "pluginDesc": {
-    "message": "A helper browser extension for online teaching and learning.",
-    "description": "Short description in store and chrome://extensions."
+    "message": "A helper browser extension for online teaching and learning."
   },
   "browserActionTitle": {
-    "message": "Open EduLens panel",
-    "description": "Tooltip when hovering the toolbar icon."
+    "message": "Open EduLens panel"
   },
 
   "panelHeader": {
-    "message": "Function Card",
-    "description": "Header of the floating function panel."
+    "message": "Function Card"
   },
 
   "scrollProgressTitle": {
-    "message": "Scroll Progress",
-    "description": "Title for scroll-progress feature."
+    "message": "Scroll Progress"
   },
 
   "bookmarkAddBtn": {
-    "message": "Add Bookmark",
-    "description": "Button text to create a new bookmark."
+    "message": "Add Bookmark"
   },
   "bookmarkPlaceholder": {
-    "message": "Title",
-    "description": "Placeholder of the bookmark input."
+    "message": "Title"
   },
   "bookmarkTooltip": {
-    "message": "Click to scroll; × to delete",
-    "description": "Hint shown when hovering a bookmark marker."
+    "message": "Click to scroll; × to delete"
   },
 
   "countdownStartBtn": {
-    "message": "Start Countdown",
-    "description": "Button to start the timer."
+    "message": "Start Countdown"
   },
   "countdownPlaceholder": {
-    "message": "Minutes",
-    "description": "Input placeholder for countdown minutes."
+    "message": "Minutes"
   },
   "countdownRemain": {
-    "message": "Remaining $1 m $2 s",
-    "description": "Timer display, $1=minutes, $2=seconds."
+    "message": "Remaining $1 m $2 s"
   },
   "countdownEnd": {
-    "message": "Countdown finished",
-    "description": "Text when timer reaches 0."
+    "message": "Countdown finished"
   },
   "countdownCancel": {
-    "message": "Timer stopped",
-    "description": "Text when user cancels the timer."
+    "message": "Timer stopped"
   },
 
   "graffitiColor": {
-    "message": "Pick color",
-    "description": "Title of the color-picker."
+    "message": "Pick color"
   },
   "graffitiBrushSize": {
-    "message": "Brush size",
-    "description": "Title of the brush-size slider."
+    "message": "Brush size"
   },
   "graffitiPen": {
-    "message": "Draw",
-    "description": "Tooltip for pen tool."
+    "message": "Draw"
   },
   "graffitiEraser": {
-    "message": "Erase",
-    "description": "Tooltip for eraser tool."
+    "message": "Erase"
   },
   "graffitiLine": {
-    "message": "Straight line",
-    "description": "Tooltip for line tool."
+    "message": "Straight line"
   },
   "graffitiClear": {
-    "message": "Clear all graffiti",
-    "description": "Tooltip for clear-canvas button."
+    "message": "Clear all graffiti"
   },
   "graffitiRectangle": {
-    "message": "Rectangle annotation",
-    "description": "Tooltip for rectangle tool."
+    "message": "Rectangle annotation"
   },
 
   "rectangleInput": {
-    "message": "annotation content",
-    "description": "The placeholder of the input box for rectangle annotations."
+    "message": "annotation content"
   },
   "rectangleDelete": {
-    "message": "Delete annotation",
-    "description": "Tooltip of the × button on a rectangle."
+    "message": "Delete annotation"
+  },
+  
+  "screenshotDOMBtn":{
+    "message":"DOM Screenshot"
+  },
+  "screenshotRegionBtn":{
+    "message":"Region Screenshot"
   },
 
   "popupTitle": {
-    "message": "EduLens Settings",
-    "description": "Title of the popup page."
+    "message": "EduLens Settings"
   },
   "popupEnable": {
-    "message": "Enable EduLens",
-    "description": "Checkbox to turn the extension on/off."
+    "message": "Enable EduLens"
   }
 }

@@ -1,10 +1,10 @@
-// 各功能之间的状态管理
+//页面滤镜相关功能
 import eventManager from '../utils/eventManager.js';
-import { activateHighlight, deactivateHighlight } from '../features/mouseHighlight.js';
-import { activateSpotlight, deactivateSpotlight } from '../features/spotlight.js';
-import { activateReadingSpotlight, deactivateReadingSpotlight } from '../features/readingSpotlight.js';
+import { activateHighlight, deactivateHighlight } from '../features/filters/mouseHighlight.js';
+import { activateSpotlight, deactivateSpotlight } from '../features/filters/spotlight.js';
+import { activateReadingSpotlight, deactivateReadingSpotlight } from '../features/filters/readingSpotlight.js';
 
-class FunctionStore {
+class FilterStore {
   constructor() {
     this.active = null; // 'mouseHighlight' | 'spotlight' | 'readingSpotlight' | null
   }
@@ -36,4 +36,4 @@ class FunctionStore {
   }
 }
 
-export default new FunctionStore();
+export default new FilterStore();

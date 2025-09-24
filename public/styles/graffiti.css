@@ -34,7 +34,7 @@
     width: 4vh;
     height: 4vh;
     padding: 0;
-    margin-left: 2vh;
+    margin-left: 1vh;
     border: 1px solid var(--secondary-color);
     border-radius: 4px;
     background: #fff;
@@ -76,7 +76,7 @@
     color: var(--main-color);
     text-align: center;
     line-height: 3vh;
-    margin-left: 1vh;
+    margin-left: 0.5vh;
     height: 3vh;
     padding: 0.5vh;
     background-color: #f3f3f3;

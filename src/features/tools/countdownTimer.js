@@ -1,6 +1,6 @@
 // 倒计时组件
-import eventManager from '../utils/eventManager.js';
-import { createEl } from '../utils/operateEl.js';
+import eventManager from '../../utils/eventManager.js';
+import { createEl } from '../../utils/operateEl.js';
 
 let countdownContainer = null;
 let countdownInput = null;

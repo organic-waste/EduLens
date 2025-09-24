@@ -1,9 +1,9 @@
 // 创建涂鸦
-import eventManager from '../utils/eventManager.js';
-import store from '../stores/marks.js';
-import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
-import { getPageKey } from '../utils/getIdentity.js';
-import { getOffsetPos, createEl } from '../utils/operateEl.js'
+import eventManager from '../../utils/eventManager.js';
+import store from '../../stores/tools.js';
+import MonitorSPARoutes from '../../utils/monitorSPARoutes.js'
+import { getPageKey } from '../../utils/getIdentity.js';
+import { getOffsetPos, createEl } from '../../utils/operateEl.js'
 import { activateRectangleAnnotation } from './rectangleAnnotation.js'
 
 let drawingCanvas = null;

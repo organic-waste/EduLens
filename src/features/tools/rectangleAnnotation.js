@@ -1,8 +1,8 @@
 // 创建矩形注释
-import eventManager from '../utils/eventManager.js';
-import store from '../stores/marks.js';
-import { getOffsetPos, createEl } from '../utils/operateEl.js'
-import { getPageKey,getId } from '../utils/getIdentity.js';
+import eventManager from '../../utils/eventManager.js';
+import store from '../../stores/tools.js';
+import { getOffsetPos, createEl } from '../../utils/operateEl.js'
+import { getPageKey,getId } from '../../utils/getIdentity.js';
 
 let isCreating = false; //是否还在创建矩阵中
 let isEditing = false; //是否有矩阵处于编辑模式

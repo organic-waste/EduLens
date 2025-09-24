@@ -1,6 +1,6 @@
 // 滚动进度指示器
-import eventManager from '../utils/eventManager.js';
-import { createEl } from '../utils/operateEl.js';
+import eventManager from '../../utils/eventManager.js';
+import { createEl } from '../../utils/operateEl.js';
 
 let scrollDiv = null;
 let fillDiv = null;

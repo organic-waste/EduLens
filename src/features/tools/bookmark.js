@@ -1,8 +1,8 @@
 //创建定位书签
-import eventManager from '../utils/eventManager.js';
-import MonitorSPARoutes from '../utils/monitorSPARoutes.js'
-import { getId,getPageKey } from '../utils/getIdentity.js';
-import { createEl } from '../utils/operateEl.js';
+import eventManager from '../../utils/eventManager.js';
+import MonitorSPARoutes from '../../utils/monitorSPARoutes.js'
+import { getId,getPageKey } from '../../utils/getIdentity.js';
+import { createEl } from '../../utils/operateEl.js';
 
 let addDiv = null;
 let btnDiv = null;
@@ -132,7 +132,7 @@ export function activateBookmark() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
 
   addDiv = createEl('div',{class: 'function'});
-  inputDiv = createEl('input',{type: 'text',class: 'input'});
+  inputDiv = createEl('input',{type: 'text',class: 'input',placeholder:chrome.i18n.getMessage('bookmarkPlaceholder')});
   addDiv.appendChild(inputDiv);
 
   btnDiv = createEl('button',{class: 'button',textContent:chrome.i18n.getMessage('bookmarkAddBtn') });
