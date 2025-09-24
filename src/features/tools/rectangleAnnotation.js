@@ -54,11 +54,7 @@ export function activateRectangleAnnotation(){
 
 //转换矩阵模式（编辑模式/查看模式）
 function toggleRectangleMode(){
-    store.isRectangle = !store.isRectangle
-    store.updateState({
-        isEraser: false,
-        isPen: false,
-    })
+    store.updateState('isRectangle');
     if(store.isRectangle){
         drawingContainer.style.cursor='crosshair';
         exitEditingMode();
@@ -133,7 +129,7 @@ function handleMouseDown(e){
     else if(!store.isRectangle&&!isEditing){
         const clickedRect = findTopmostRectangleAt(x,y);
         if(clickedRect){
-            exitEditingMode(clickedRect);
+            exitEditingMode();
             e.preventDefault();
             e.stopPropagation();
         }

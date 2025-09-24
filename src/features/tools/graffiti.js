@@ -71,46 +71,26 @@ function resizeCanvas(){
 function setToolMode(mode){
   switch(mode){
     case 'pen':
-      store.updateState({
-        isEraser: false,
-        isPen: !store.isPen,
-        isLine: false,
-        isRectangle: false,
-      });
+      store.updateState('isPen');
       drawingCtx.globalCompositeOperation='source-over';
       drawingCtx.strokeStyle = store.currentColor;
       brushSizeValueDisplay.value = store.penBrushSize;
       brushSizeSlider.value = store.penBrushSize;
       break;
     case 'eraser':
-      store.updateState({
-        isEraser:!store.isEraser,
-        isPen: false,
-        isLine: false,
-        isRectangle: false,
-      });
+      store.updateState('isEraser');
       drawingCtx.globalCompositeOperation='destination-out';
       drawingCtx.strokeStyle='rgba(0,0,0,1)';
       brushSizeValueDisplay.value = store.eraserBrushSize;
       brushSizeSlider.value = store.eraserBrushSize;
       break;
     case 'line':
-      store.updateState({
-        isEraser:false,
-        isPen: false,
-        isLine: !store.isLine,
-        isRectangle: false
-      });
+      store.updateState('isLine');
       drawingCtx.globalCompositeOperation='source-over';
       drawingCtx.strokeStyle=store.currentColor;
       brushSizeValueDisplay.value = store.penBrushSize;
       brushSizeSlider.value = store.penBrushSize;
       break;
-    default:
-      store.updateState({
-        isEraser: false,
-        isPen: false
-      });
   }
 }
 

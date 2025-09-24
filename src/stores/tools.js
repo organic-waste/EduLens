@@ -8,6 +8,8 @@ class ToolStore {
     this.isPen = false;
     this.isLine = false;  
     this.isRectangle = false;
+    this.isDOM = false;
+    this.isRegion = false;
 
     this.currentColor = '#FF0000';
     this.penBrushSize = 5;
@@ -17,10 +19,24 @@ class ToolStore {
     this.hoverTimeout = null;
   }
 
-  updateState(newState) {
+  updateState(state) {
+    const oldVal = this[state];
+    let newState ={
+      isEraser : false,
+      isPen : false,
+      isLine : false,  
+      isRectangle : false,
+      isDOM : false,
+      isRegion : false
+    }
+    if(state) {
+      newState[state] = !oldVal;
+    }
+
     Object.assign(this, newState);
     this.updateUI();
   }
+
   //保证各功能之间互斥
   updateUI() {
     const shadowRoot = window.__EDULENS_SHADOW_ROOT__;

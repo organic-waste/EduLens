@@ -1,6 +1,7 @@
 //DOM截图或者区域截图
 import eventManager from '../../utils/eventManager.js';
 import { createEl } from '../../utils/operateEl.js'
+import store from '../../stores/tools.js';
 
 let funcDiv = null;
 let screenshotDiv = null;
@@ -24,9 +25,11 @@ export function activateScreenshot(){
 
 function handleScreenshot(type,event){
     if(type === 'dom'){
+        store.updateState('isDOM');
         DOMScreenshot();
     }
     else if(type === 'region'){
+        store.updateState('isRegion')
         regionScreenshot();
     }
 }
