@@ -37,7 +37,7 @@ export function activateRectangleAnnotation(){
         rectangleButton = createEl('button',{
             id: 'rectangle-btn',
             class:'icon-btn', 
-            title:'添加矩形注释', 
+            title:chrome.i18n.getMessage('graffitiRectangle'), 
             innerHTML:'<svg t="1758595217758" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7344" width="200" height="200"><path d="M0 837.818182l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7345" fill="#ffffff"></path><path d="M232.727273 837.818182l558.545455 0 0 93.090909-558.545455 0 0-93.090909Z" p-id="7346" fill="#ffffff"></path><path d="M93.090909 232.727273l93.090909 0 0 558.545455-93.090909 0 0-558.545455Z" p-id="7347" fill="#ffffff"></path><path d="M0 0l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7348" fill="#ffffff"></path><path d="M232.727273 93.090909l558.545455 0 0 93.090909-558.545455 0 0-93.090909Z" p-id="7349" fill="#ffffff"></path><path d="M837.818182 837.818182l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7350" fill="#ffffff"></path><path d="M837.818182 0l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7351" fill="#ffffff"></path><path d="M837.818182 232.727273l93.090909 0 0 558.545455-93.090909 0 0-558.545455Z" p-id="7352" fill="#ffffff"></path></svg>'
         })
         eventManager.on(rectangleButton,'click',toggleRectangleMode);
@@ -275,8 +275,8 @@ function renderRectangles(rect){
     rectDiv.dataset.id = rect.id;
 
     const textContainer=createEl('div',{class:'annotation-text-container'});
-    const textInput=createEl('input',{type:'text',class:'annotation-text-input',id:`annotation-input-${rect.id}`,name:`annotation-text-${rect.id}`,value:rect.text,style:'display:none;'});
-    const deleteBtn=createEl('button',{class:'annotation-delete-btn delete-button',textContent:'×',title:'删除注释'});
+    const textInput=createEl('input',{type:'text',class:'annotation-text-input',id:`annotation-input-${rect.id}`,name:`annotation-text-${rect.id}`,value:rect.text,style:'display:none;',placeholder:chrome.i18n.getMessage('rectangleInput')});
+    const deleteBtn=createEl('button',{class:'annotation-delete-btn delete-button',textContent:'×',title:chrome.i18n.getMessage('rectangleDelete')});
 
     textContainer.append(textInput,deleteBtn);
 

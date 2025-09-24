@@ -8,6 +8,8 @@
 
 #### 上传和截取图像放在页面上
 
+#### 添加文本
+
 #### 解决过多事件监听的问题
 
 #### 封装重复代码
@@ -96,7 +98,7 @@ extension page是插件内部的一些页面。有一些页面是插件规定的
 
 ------
 
-#### 内容脚本调试
+**内容脚本调试**
 
 1. 打开目标网页
 
@@ -110,7 +112,7 @@ chrome.runtime.sendMessage({action: 'toggleFeature', feature: 'highlight'})
 
 ------
 
-#### Popup 调试
+**Popup 调试**
 
 1. 点击插件图标打开 popup
 
@@ -118,7 +120,7 @@ chrome.runtime.sendMessage({action: 'toggleFeature', feature: 'highlight'})
 
 ------
 
-#### Background 调试
+**Background 调试**
 
 1. 打开 chrome://extensions/
 
@@ -126,7 +128,7 @@ chrome.runtime.sendMessage({action: 'toggleFeature', feature: 'highlight'})
 
 ------
 
-#### `chrome.storage`调试
+**`chrome.storage`调试**
 
 1. **Chrome 内置面板 → “应用”→“存储”→“扩展存储”**
 
@@ -165,7 +167,7 @@ chrome.storage.sync.get(null, console.log);
 
 ------
 
-#### 架构概述
+**架构概述**
 
 浏览器插件采用分层架构：
 - **Background Script**：后端，常驻内存，管理全局状态
@@ -175,7 +177,7 @@ chrome.storage.sync.get(null, console.log);
 
 ------
 
-#### 通信方式分类
+**通信方式分类**
 
 1. **单向通信（发送消息）**
 
@@ -233,7 +235,7 @@ port.disconnect();
 
 ------
 
-#### 通信规则和最佳实践
+**通信规则和最佳实践**
 
 1. **消息结构规范**
 
@@ -320,7 +322,7 @@ function throttleMessage(type, data, delay = 100) {
 
 
 
-#### `chrome.tabs`和`chrome.runtime`对比
+### `chrome.tabs`和`chrome.runtime`对比
 
 ------
 
@@ -438,16 +440,16 @@ chrome.commands.onCommand.addListener((commandId) => {
 > `commands` 是浏览器官方给的“**扩展级全局快捷键通道**”，稳、后台可用、用户可配置；  
 > `keydown` 只是普通 DOM 事件，**离开页面就失效**，适合页面临时交互，不适合“功能级”热键。
 
-| 维度                       | manifest.commands                                            | content-script keydown                                       |
-| -------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| 1. 监听位置                | 浏览器内核 → 只派发给 **background/service-worker**          | 注入到每个页面的 **window** 对象                             |
-| 2. 是否依赖页面            | ❌ 不依赖，空标签页、chrome://、PDF、DevTools 都能响应        | ✅ 依赖，页面必须实际加载且脚本注入成功                       |
-| 3. 能否在后台/最小化时触发 | ✅ 可以（只要浏览器本身还在）                                 | ❌ 页面被卸载、后台挂起、或 Chrome 最小化就收不到             |
-| 4. 冲突解决                | 浏览器统一做冲突检测，用户可在 `chrome://extensions/shortcuts` 重新映射 | 无机制，多个扩展或网页自己监听同一按键就**互相覆盖**         |
-| 5. 可用键位限制            | 只能用 **Ctrl/Alt/⌘ + 字母/数字/功能键**；部分系统组合被屏蔽 | 理论上**任意键**都能听，包括单字母、F1-F24、多媒体键         |
-| 6. 权限/审核               | 仅需 `"commands"` 权限，无额外警告；设 `"global":true` 才人工审核 | 需要 `"content_scripts"` 权限，**每个网页都会提示“读取和更改网站数据”** |
-| 7. 代码写法                | 后台一句 `chrome.commands.onCommand.addListener(...)` 即可   | 要在 `content-script` 里 `addEventListener('keydown', ...)`，还要自己过滤组合键、防抖、区分输入框 |
-| 8. 生命周期                | 跟随扩展，**一直有效**                                       | 跟随页面，**刷新、跳转、SPA 路由切换**都要重新注入           |
+| 维度              | manifest.commands                                            | content-script keydown                                       |
+| ----------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 1. 监听位置       | 浏览器内核 → 只派发给 **background/service-worker**          | 注入到每个页面的 **window** 对象                             |
+| 2. 是否依赖页面   | ❌ 不依赖，空标签页、chrome://、PDF、DevTools 都能响应        | ✅ 依赖，页面必须实际加载且脚本注入成功                       |
+| 3. 能否在后台触发 | ✅ 可以（只要浏览器本身还在）                                 | ❌ 页面被卸载、后台挂起、或 Chrome 最小化就收不到             |
+| 4. 冲突解决       | 浏览器统一做冲突检测，用户可在 `chrome://extensions/shortcuts` 重新映射 | 无机制，多个扩展或网页自己监听同一按键就**互相覆盖**         |
+| 5. 可用键位限制   | 只能用 **Ctrl/Alt/⌘ + 字母/数字/功能键**；部分系统组合被屏蔽 | 理论上**任意键**都能听，包括单字母、F1-F24、多媒体键         |
+| 6. 权限/审核      | 仅需 `"commands"` 权限，无额外警告；设 `"global":true` 才人工审核 | 需要 `"content_scripts"` 权限，**每个网页都会提示“读取和更改网站数据”** |
+| 7. 代码写法       | 后台添加`chrome.commands.onCommand.addListener(...)`         | `addEventListener('keydown', ...)`，还要过滤组合键、防抖、区分输入框 |
+| 8. 生命周期       | 跟随扩展，**一直有效**                                       | 跟随页面，**刷新、跳转、SPA 路由切换**都要重新注入           |
 
 **场景对照：**
 
@@ -532,7 +534,153 @@ if (ok) console.log('用户点了确定');
 
 
 
+### Chrome 扩展国际化（i18n）
 
+------
+
+Chrome 扩展的国际化（i18n）机制让你只用“一份代码”就能**根据不同语言环境自动切换界面文字**。核心思路是：
+
+1. 把用户能看见的所有文字抽出来，放进语言包；
+2. 在代码里不再写死中文或英文，而是用“占位符”或 API 去语言包里取；
+3. 浏览器会根据用户系统语言自动加载对应语言包，找不到时就回退到默认语言。
+
+下面按“目录结构 → 语言包格式 → 三种使用场景 → 调试与回退”四步完整介绍。
+
+------------------------------------------------
+**一、目录结构（必须这样命名）**
+
+```powershell
+_locales/               ← 下划线开头，固定名字
+├─ en/                  ← 语言代码，可用 zh_CN、zh_TW、es、ko 等
+│  └─ messages.json     ← 固定文件名
+├─ zh_CN/
+│  └─ messages.json
+└─ zh_TW/
+   └─ messages.json
+```
+
+**“注意”**：一旦扩展里出现 _locales 目录，manifest.json **必须** 声明 default_locale，否则 Chrome 直接报无效扩展 
+
+------------------------------------------------
+**二、语言包格式（messages.json）**
+每个文件都是一个扁平的 JSON，键名随意，但建议用 snakeCase（小写带下划线）：
+
+```json
+/* _locales/en/messages.json */
+{
+  "ext_name": {
+    "message": "Web Screenshot",
+    "description": "扩展名称，显示在商店与工具栏提示"
+  },
+  ......
+}
+```
+
+- message 必填：真正要被显示的字符串。
+- description 可选：给翻译人员看，Chrome 本身不用。
+
+```json
+{ 
+    "test": {
+        "message": "你好$name$",
+        "description": "占位符测试",
+        "placeholders": {
+            "name": {
+                    "content": "$1",
+                    "example": "刘华强" //example 只是一个案例示范，同description仅提示
+            }
+        }
+    }
+}
+```
+
+```js
+const text = chrome.i18n.getMessage("test", "小明");
+console.log('text', text)  
+//打印 “text 你好小明”
+```
+
+- 支持 \$1~\$9 占位符与 @@bidi_dir 等预定义变量，可做复数与方向适配 。
+
+------------------------------------------------
+**三、三种使用场景**
+
+1. **manifest.json / CSS 中——写占位符  \__MSG\_\<key\>\_\_ **  
+   用 \__MSG\_\<key\>\_\_ 语法，浏览器在加载扩展时自动替换，**零代码** ：
+
+   ```json
+   {
+     "name": "__MSG_ext_name__",
+     "description": "__MSG_ext_desc__",
+     "default_locale": "en",
+     "action": {
+       "default_title": "__MSG_capture_btn__"
+     }
+   }
+   ```
+   
+2. **HTML 中——用 inline 脚本取值**  
+   HTML 本身不被 Chrome 预解析，只能在页面里用 js 写入：
+
+   ```html
+   <!DOCTYPE html>
+   <html>
+   <head>
+     <meta charset="utf-8">
+     <title data-i18n="ext_name"></title>
+   </head>
+   <body>
+     <button id="capture"></button>
+     <script>
+       // 一次性把带 data-i18n 属性的元素填掉
+       document.querySelectorAll('[data-i18n]').forEach(el => {
+         const key = el.dataset.i18n;
+         el.textContent = chrome.i18n.getMessage(key);
+       });
+       // 按钮额外再设一次
+       document.getElementById('capture').textContent =
+         chrome.i18n.getMessage('capture_btn');
+     </script>
+   </body>
+   </html>
+   ```
+   
+3. **JavaScript/Content Script/Service Worker——运行时动态取**  
+   任意时刻都可调用 chrome.i18n.getMessage：
+
+   ```js
+   const title = chrome.i18n.getMessage('ext_name');   // Web Screenshot
+   const tip   = chrome.i18n.getMessage('capture_btn'); // Capture
+   ```
+
+   也支持带参数的模板：
+   
+   ```json
+   /* messages.json */
+   "stats": { "message": "Captured $1 pages in $2 seconds" }
+   ```
+   
+   ```js
+   /* popup.js */
+   const msg = chrome.i18n.getMessage('stats', [7, 3]); // Captured 7 pages in 3 seconds
+   ```
+
+------------------------------------------------
+**四、语言匹配与调试技巧**
+
+1. 匹配顺序  
+   Chrome 会拿用户浏览器“Accept-Language”列表依次去 _locales 里找，找到即停止；都没有就回落到 default_locale 。
+
+2. 快速验证  
+   - 打开 chrome://extensions，右上角“开发者模式”→“加载已解压的扩展”，选中根目录即可。  
+   - 改浏览器界面语言：chrome://settings/languages → 把目标语言移到最顶部，重启浏览器即可看到效果。  
+   - 控制台直接执行 chrome.i18n.getMessage('xxx') 可即时测试。
+
+3. 常见坑  
+   - 忘记写 default_locale → 扩展直接被拒/报错。  
+   - 语言代码大小写错（zh-cn vs zh_CN）→ Chrome 忽略该目录。  
+   - JSON 里多了逗号 → 加载失败，控制台有明确的 JSON parse 报错。  
+   - 在 content_script 里用 getMessage 没问题，但在普通网页里不能调用（API 只对扩展上下文暴露）。
 
 
 

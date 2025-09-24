@@ -1,0 +1,105 @@
+{
+  "pluginName": {
+    "message": "EduLens",
+    "description": "扩展名称，显示在商店与工具栏。"
+  },
+  "pluginDesc": {
+    "message": "网课辅助教学浏览器插件。",
+    "description": "在商店与扩展管理页的简短描述。"
+  },
+  "browserActionTitle": {
+    "message": "打开 EduLens 面板",
+    "description": "鼠标悬停工具栏图标时的提示。"
+  },
+
+  "panelHeader": {
+    "message": "功能卡片",
+    "description": "浮动功能面板的标题。"
+  },
+
+  "scrollProgressTitle": {
+    "message": "滚动进度",
+    "description": "滚动进度功能的标题。"
+  },
+
+  "bookmarkAddBtn": {
+    "message": "添加书签",
+    "description": "创建新书签的按钮文字。"
+  },
+  "bookmarkPlaceholder": {
+    "message": "标题",
+    "description": "书签输入框的占位符。"
+  },
+  "bookmarkTooltip": {
+    "message": "点击跳转；× 删除",
+    "description": "悬停在书签标记上的提示。"
+  },
+
+  "countdownStartBtn": {
+    "message": "开始倒计时",
+    "description": "启动计时器的按钮。"
+  },
+  "countdownPlaceholder": {
+    "message": "分钟数",
+    "description": "倒计时输入框的占位符。"
+  },
+  "countdownRemain": {
+    "message": "还剩 $1 分 $2 秒",
+    "description": "计时器显示，$1=分钟，$2=秒钟。"
+  },
+  "countdownEnd": {
+    "message": "倒计时结束",
+    "description": "计时器归零时的文字。"
+  },
+  "countdownCancel": {
+    "message": "倒计时已终止",
+    "description": "用户手动停止计时器时的文字。"
+  },
+
+  "graffitiColor": {
+    "message": "选择颜色",
+    "description": "颜色选择器标题。"
+  },
+  "graffitiBrushSize": {
+    "message": "笔刷大小",
+    "description": "笔刷大小滑块标题。"
+  },
+  "graffitiPen": {
+    "message": "绘制",
+    "description": "画笔工具提示。"
+  },
+  "graffitiEraser": {
+    "message": "擦除",
+    "description": "橡皮工具提示。"
+  },
+  "graffitiLine": {
+    "message": "直线",
+    "description": "直线工具提示。"
+  },
+  "graffitiClear": {
+    "message": "清除所有涂鸦",
+    "description": "清空画布按钮提示。"
+  },
+  "graffitiRectangle": {
+    "message": "矩形批注",
+    "description": "矩形工具提示。"
+  },
+
+  "rectangleInput": {
+    "message": "批注内容",
+    "description": "矩形注释的输入框的占位符。"
+  },
+  "rectangleDelete": {
+    "message": "删除注释",
+    "description": "矩形右上角 × 按钮的提示。"
+  },
+
+  "popupTitle": {
+    "message": "EduLens 设置",
+    "description": "弹出页面的标题。"
+  },
+  "popupEnable": {
+    "message": "启用 EduLens",
+    "description": "是否开启扩展的复选框。"
+  }
+}

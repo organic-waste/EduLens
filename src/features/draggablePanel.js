@@ -33,17 +33,15 @@ function DraggablePanel(){
 
     shadowRoot.appendChild(panelDiv);
     let btnDiv = panelDiv.getElementsByClassName('toggle-btn')[0];
+    
+    cardDiv = createEl('div',{class: 'draggable-card'});
+    const headerDiv = createEl('div',{class: 'card-header'});
+    const titleSpan = createEl('span',{textContent: chrome.i18n.getMessage('panelHeader')});
+    const contentDiv = createEl('div',{class: 'card-content'});
+    headerDiv.appendChild(titleSpan);
+    cardDiv.appendChild(headerDiv);
+    cardDiv.appendChild(contentDiv);
 
-    cardDiv = document.createElement('div');
-    cardDiv.className = 'draggable-card';
-    cardDiv.innerHTML = `
-    <div class="card-header">
-        <span>功能卡片</span>
-    </div>
-    <div class="card-content">
-        <!-- 后续功能 -->
-    </div>
-    `;
     
     cardDiv.style.display='none'
     // 初始弹窗位置跟随按钮且隐藏

@@ -45,17 +45,17 @@ function startCountdown() {
 function updateDisplay() {
   const minutes = Math.floor(remainingTime / 60000);
   const seconds = Math.floor((remainingTime % 60000) / 1000);
-  countdownDisplay.textContent = `还剩 ${minutes}分${seconds.toString().padStart(2, '0')}秒`;
+  countdownDisplay.textContent = chrome.i18n.getMessage('countdownRemain',[minutes,seconds.toString().padStart(2, '0')]);
 }
 
 function countdownComplete() {
-  countdownDisplay.textContent = '倒计时结束';
+  countdownDisplay.textContent = chrome.i18n.getMessage('countdownEnd');
   setTimeout(resetCountdown,2000);
 }
 
 function cancelCountdown() {
   clearInterval(countdownInterval);
-  countdownDisplay.textContent = '终止倒计时';
+  countdownDisplay.textContent = chrome.i18n.getMessage('countdownCancel');
   setTimeout(resetCountdown,1000);
 }
 
@@ -78,8 +78,8 @@ export function activateCountdown() {
   countdownContainer = createEl('div',{class:'countdown-container'});
 
   const inputArea = createEl('div',{class:'function countdown-input-area'});
-  countdownInput = createEl('input',{type:'text',class:'input',placeholder:'输入分钟数'});
-  countdownButton = createEl('button',{class:'button',textContent:'开始倒计时'});
+  countdownInput = createEl('input',{type:'text',class:'input',placeholder:chrome.i18n.getMessage('countdownPlaceholder')});
+  countdownButton = createEl('button',{class:'button',textContent:chrome.i18n.getMessage('countdownStartBtn')});
   eventManager.on(countdownButton,'click', createCountdown);
   inputArea.append(countdownInput,countdownButton);
 

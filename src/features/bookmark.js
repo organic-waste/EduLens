@@ -18,9 +18,7 @@ function createBookmarkEle(scrollTop,text,id){
   const percent = Math.round(progressPct);  
 
   const bookmarkDiv=createEl('div',{class:'bookmark-marker',style:`top:${percent-2}%;`,'data-id':id});
-
   const tooltip=createEl('div',{class:'bookmark-tooltip',style:`top:${percent-2}%;`,textContent:text});
-
   const deleteBtn=createEl('button',{class:'delete-button',textContent:'×'});
   eventManager.on(deleteBtn,'click',(e)=>{
     e.stopPropagation();
@@ -132,19 +130,14 @@ function createBookmark() {
 
 export function activateBookmark() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
-  addDiv = document.createElement('div');
-  addDiv.className = 'function';
 
-  inputDiv = document.createElement('input'); 
-  inputDiv.type = 'text';
-  inputDiv.className = 'input';
+  addDiv = createEl('div',{class: 'function'});
+  inputDiv = createEl('input',{type: 'text',class: 'input'});
   addDiv.appendChild(inputDiv);
 
-  btnDiv = document.createElement('button');
-  btnDiv.className = 'button';
-  btnDiv.textContent = '添加书签';
+  btnDiv = createEl('button',{class: 'button',textContent:chrome.i18n.getMessage('bookmarkAddBtn') });
   eventManager.on(btnDiv,'click', createBookmark); 
-  addDiv.appendChild(btnDiv)
+  addDiv.appendChild(btnDiv);
 
   funcDiv = shadowRoot.querySelector('.functions');
   if(funcDiv){

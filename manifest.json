@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "EduLens 鼠标增强",
+  "name": "__MSG_pluginName__",
+  "description": "__MSG_pluginDesc__", 
   "version": "1.0.0",
-  "description": "网课辅助教学浏览器插件",
+  "default_locale": "en",
   "permissions": ["storage", "activeTab","tabs"],
   "background": {
     "service_worker": "src/background.js",
