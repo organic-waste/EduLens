@@ -2,9 +2,11 @@
 :root{
     --main-color:#76859a;
     --secondary-color:#c1cbce;
-    --emphasis-color:#5484c9;
+    --hover-color:#5484c9;
     --lighter-color:#e3eef3;
     --background-color:#f3f7f9;
+    --emphasis-color:#0f3b8b;
+    --mask-color:rgba(15, 59, 139, 0.2);
     --error-color:#b26464;
     --emphasis-error-color:#d44343;
 }
@@ -41,7 +43,7 @@
     transition: border-color 0.2s ease;
 }
 .input:focus{
-    border-color: var(--emphasis-color);
+    border-color: var(--hover-color);
     box-shadow: 0 0 0 2px rgba(84, 132, 201, 0.2);
 }
 
@@ -58,7 +60,7 @@
 }
 
 .button:hover {
-    background: var(--emphasis-color);
+    background: var(--hover-color);
 }
 
 .function{
@@ -89,10 +91,10 @@
 }
 
 .icon-btn:hover {
-    background: var(--emphasis-color);
+    background: var(--hover-color);
 }
 
 .icon-btn.active {
-    background: var(--emphasis-color); 
+    background: var(--hover-color); 
     box-shadow: 0 0 0 2px rgba(124, 161, 212, 0.5); 
 }

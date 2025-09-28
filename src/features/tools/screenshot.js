@@ -8,13 +8,15 @@ let screenshotDiv = null;
 let DOMBtn = null;
 let maskDiv = null;
 let regionBtn = null;
+let panelDiv = null;
 let shadowRoot = null;
 let imageData = null;
 
 export function activateScreenshot(){
     //创建截图按钮
     shadowRoot = window.__EDULENS_SHADOW_ROOT__;
-    funcDiv = shadowRoot.querySelector('.functions');
+    panelDiv = shadowRoot.querySelector('.draggable-panel');
+    funcDiv = panelDiv.querySelector('.functions');
     screenshotDiv = createEl('div',{class: 'function'});
     DOMBtn = createEl('button',{class: 'button',textContent: chrome.i18n.getMessage('screenshotDOMBtn')});
     regionBtn = createEl('button',{class: 'button',textContent: chrome.i18n.getMessage('screenshotRegionBtn')});
@@ -26,7 +28,9 @@ export function activateScreenshot(){
     eventManager.on(regionBtn,'click',e => handleScreenshot('region',e));    
 }
 
-async function handleScreenshot(type,event){
+async function handleScreenshot(type){
+    //隐藏面板，防止影响截取原网站页面
+    panelDiv.style.visibility = 'hidden';
     if(type === 'dom'){
         store.updateState('isDOM');
         DOMScreenshot();
@@ -39,7 +43,7 @@ async function handleScreenshot(type,event){
 
 //DOM截屏相关
 function DOMScreenshot(){
-    maskDiv = createEl('div',{style: 'background: rgba(15, 59, 139, 0.2); position: fixed; pointer-events: none; z-index: 9999999; display: none;border: 1px solid #0f3b8b;border-radius: 4px'});
+    maskDiv = createEl('div',{class:'screenshot-mask'});
     shadowRoot.appendChild(maskDiv);
 
     let isMousedown = false;
@@ -114,6 +118,7 @@ function DOMScreenshot(){
                 downloadImg(croppedImage);
             }
         }
+        panelDiv.style.visibility = 'visible';
     }
 
 }

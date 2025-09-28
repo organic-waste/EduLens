@@ -1,0 +1,9 @@
+.screenshot-mask{
+    background: var(--mask-color); 
+    position: fixed; 
+    pointer-events: none;
+    z-index: 9999999;
+    display: none;
+    border: 1px solid var(--emphasis-color);
+    border-radius: 4px
+}

@@ -9,6 +9,7 @@
     z-index: 9998;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     user-select: none;
+    visibility: visible;
     transition: width 0.3s ease, height 0.3s ease, border-radius 0.3s ease;
 }
 .draggable-panel.open-panel{
