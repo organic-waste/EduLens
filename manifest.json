@@ -5,6 +5,9 @@
   "version": "1.0.0",
   "default_locale": "en",
   "permissions": ["storage", "activeTab","tabs"],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "src/background.js",
     "type": "module"

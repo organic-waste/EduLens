@@ -17,12 +17,12 @@ export function createEl(tag, attrs = {}, ...children){
 }
 
 export function getOffsetPos(event,div){
-    const el = div;
+    const element = div;
     if(typeof(div) === "string"){
         const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
-        el = shadowRoot.querySelector(div);
+        element = shadowRoot.querySelector(div);
     }
-    const rect = el.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     return { x , y };

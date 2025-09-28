@@ -14,9 +14,15 @@
 
 参考：[一支华子时间，来开发一个 Chrom 截图任意区域或DOM的插件，Chrome 扩展程序开发快速上手(超详细)_chrome截图插件-CSDN博客](https://blog.csdn.net/weixin_44787578/article/details/139107217)
 
+#### 自定义面板
+
+- 截图保存格式，分辨率
+- 截图粘贴时是base64还是图片
+- 截图后文件保存路径
 
 
 
+- 面板主题颜色
 
 
 
@@ -998,6 +1004,27 @@ link.href = chrome.runtime.getURL('assets/fontawesome/css/all.min.css');
 ```
 
 
+
+#### 后台截图返回数据为`null`
+
+------
+
+**问题：**`Unchecked runtime.lastError: Either the '<all_urls>' or 'activeTab' permission is required.`
+
+**解决：**确保`manifest.js`权限足够
+
+```json
+{
+  "permissions": [
+    "activeTab",
+    "tabs"
+  ],
+  // 如果需要访问所有网站，也需要添加：
+  "host_permissions": [
+    "<all_urls>"
+  ]
+}
+```
 
 
 
