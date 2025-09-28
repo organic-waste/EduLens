@@ -3145,6 +3145,18 @@ const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
 
 
+### CSS像素 `Vs` 设备像素 `Vs` 位图像素
+
+---
+
+| 概念     | 别名     | 单位    | 谁来决定             | 在代码中的典型值                                             |
+| -------- | -------- | ------- | -------------------- | ------------------------------------------------------------ |
+| CSS像素  | 逻辑像素 | px      | 开发者写 CSS 时用    | `getBoundingClientRect()` 返回的 200×300                     |
+| 设备像素 | 物理像素 | 真·像素 | 屏幕硬件             | 200×300 × 2 = 400×600（DPR=2）`chrome.tabs.captureVisibleTab()` 返回的dataURL位图 |
+| 位图像素 | 图片像素 | px      | `canvas`/`ImageData` | `img.width`、`img.height`                                    |
+
+
+
 
 
 

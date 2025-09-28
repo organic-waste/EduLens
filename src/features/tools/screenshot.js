@@ -27,10 +27,6 @@ export function activateScreenshot(){
 }
 
 async function handleScreenshot(type,event){
-    //通知service-worker截取屏幕
-    const response = await chrome.runtime.sendMessage({type:'SCREENSHOT'})
-    imageData = response.image;
-
     if(type === 'dom'){
         store.updateState('isDOM');
         DOMScreenshot();
@@ -92,6 +88,8 @@ function DOMScreenshot(){
         if(!store.isDOM) return;
         isMousedown = false;
         target.style.pointerEvents = 'auto';
+        maskDiv.style.display = 'none';
+        store.updateState();
 
         //点击DOM元素时
         if(window.globalClickMouseDowned && event.which === 1){
@@ -99,6 +97,10 @@ function DOMScreenshot(){
             const now = new Date().getTime();
             //在300ms内视为点击
             if(now - window.globalClickDownTime < 300){
+                //通知service-worker截取屏幕
+                const response = await chrome.runtime.sendMessage({type:'SCREENSHOT'})
+                imageData = response.image;
+
                 //记得将浮点数转换为INT
                 const infos = {
                     x: parseInt(maskDiv.style.left),
@@ -110,9 +112,6 @@ function DOMScreenshot(){
                 const croppedImage = await cropImg(imageData,infos);
                 copyImg(croppedImage);
                 downloadImg(croppedImage);
-
-                store.updateState();
-                maskDiv.style.display = 'none';
             }
         }
     }
@@ -129,28 +128,38 @@ function regionScreenshot(){
 //裁剪截图
 function cropImg(image,infos){
     return new Promise((resolve,reject)=>{
-        //现代浏览器支持离线 canvas,可以不用插入到页面DOM中
-        const dpr = window.devicePixelRatio || 1;
-        
         // 将CSS坐标转换为设备像素坐标
+        const dpr = window.devicePixelRatio || 1;
         const deviceInfos = {
             x: Math.round(infos.x * dpr),
             y: Math.round(infos.y * dpr),
             w: Math.round(infos.w * dpr),
             h: Math.round(infos.h * dpr)
         };
-
+        //现代浏览器支持离线 canvas,可以不用插入到页面DOM中
         const canvas = document.createElement('canvas');
-        canvas.width = deviceInfos.w;
-        canvas.height = deviceInfos.h;
 
         const img = new Image();
         img.onload = ()=>{
             const context = canvas.getContext('2d');
-            context.imageSmoothingEnabled = false;
-            context.drawImage( img,
-                deviceInfos.x, deviceInfos.y, deviceInfos.w, deviceInfos.h, // 源图像区域
-                0, 0, deviceInfos.w, deviceInfos.h // 目标canvas区域
+            context.imageSmoothingEnabled = false;         
+
+            //限制截取区域在视口内
+            const safeX = Math.max(0, Math.min(deviceInfos.x, img.width));
+            const safeY = Math.max(0, Math.min(deviceInfos.y, img.height));
+            const safeW = Math.max(1, Math.min(deviceInfos.w, img.width - safeX));
+            const safeH = Math.max(1, Math.min(deviceInfos.h, img.height - safeY));
+
+            canvas.width = safeW;
+            canvas.height = safeH;   
+
+            //清除之前的画布内容
+            context.clearRect(0,0,canvas.width,canvas.height);
+
+            context.drawImage(
+                img,
+                safeX, safeY, safeW, safeH, // 源图像区域
+                0, 0, safeW, safeH // 目标canvas区域
             );
             const croppedImg = canvas.toDataURL(`image/png`);
             resolve(croppedImg);
