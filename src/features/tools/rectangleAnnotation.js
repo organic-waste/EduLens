@@ -87,19 +87,19 @@ function restorePageInteraction() {
 
 function EditingRectangleEventListeners(){
     const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
-    eventManager.on(shadowRoot,'mousedown', handleMouseDown);
-    eventManager.on(shadowRoot,'mousemove', handleMouseMove);
-    eventManager.on(shadowRoot,'mouseup', handleMouseUp);
-    eventManager.on(shadowRoot,'mouseleave', handleMouseUp);
+    eventManager.on(shadowRoot,'mousedown', listenerMouseDown);
+    eventManager.on(shadowRoot,'mousemove', listenerMouseMove);
+    eventManager.on(shadowRoot,'mouseup', listenerMouseUp);
+    eventManager.on(shadowRoot,'mouseleave', listenerMouseUp);
     eventManager.on(shadowRoot,'dblclick', handleDblClick);
 }
 
-function handleMouseDown(e){
+function listenerMouseDown(e){
     if(e.button!==0)return;
     const { x , y } = getOffsetPos(e,drawingContainer);
     
     //创建新矩阵时
-    if(store.isRectangle&&!isEditing){
+    if(store.isRectangle && !isEditing){
         isCreating=true;
         startX = endX = x;
         startY = endY = y;
@@ -108,7 +108,7 @@ function handleMouseDown(e){
         e.stopPropagation();
     }
     //矩阵处于编辑态时
-    else if(isEditing&&currentRect){
+    else if(isEditing && currentRect){
 
         //点击到矩阵内部
         if(isPointInRect(x,y,currentRect.x,currentRect.y,currentRect.width,currentRect.height)){
@@ -142,7 +142,7 @@ function handleMouseDown(e){
     }
 }
 
-function handleMouseMove(e){
+function listenerMouseMove(e){
     const { x , y } = getOffsetPos(e,drawingContainer);
     //创建矩阵元素时
     if(isCreating){
@@ -199,7 +199,7 @@ function handleMouseMove(e){
     }
 }
 
-function handleMouseUp(e){
+function listenerMouseUp(){
     if(isCreating){
         isCreating = false;
         const newRect = {
@@ -273,16 +273,16 @@ function renderAllRectangles(){
 }
 
 function renderRectangles(rect){
-    const rectDiv=createEl('div',{class:'annotation-rect','data-id':rect.id,style:`left:${rect.x}px;top:${rect.y}px;width:${rect.width}px;height:${rect.height}px;border-color:${rect.color};`});
+    const rectDiv = createEl('div',{class:'annotation-rect','data-id':rect.id,style:`left:${rect.x}px;top:${rect.y}px;width:${rect.width}px;height:${rect.height}px;border-color:${rect.color};`});
     rectDiv.dataset.id = rect.id;
 
-    const textContainer=createEl('div',{class:'annotation-text-container'});
-    const textInput=createEl('input',{type:'text',class:'annotation-text-input',id:`annotation-input-${rect.id}`,name:`annotation-text-${rect.id}`,value:rect.text,style:'display:none;',placeholder:chrome.i18n.getMessage('rectangleInput')});
-    const deleteBtn=createEl('button',{class:'annotation-delete-btn delete-button',textContent:'×',title:chrome.i18n.getMessage('rectangleDelete')});
+    const textContainer = createEl('div',{class:'annotation-text-container'});
+    const textInput = createEl('input',{type:'text',class:'annotation-text-input',id:`annotation-input-${rect.id}`,name:`annotation-text-${rect.id}`,value:rect.text,style:'display:none;',placeholder:chrome.i18n.getMessage('rectangleInput')});
+    const deleteBtn = createEl('button',{class:'annotation-delete-btn delete-button',textContent:'×',title:chrome.i18n.getMessage('rectangleDelete')});
 
     textContainer.append(textInput,deleteBtn);
 
-    const tooltip=createEl('div',{class:'annotation-tooltip',textContent:rect.text,style:`color:${store.currentColor};`});
+    const tooltip = createEl('div',{class:'annotation-tooltip',textContent:rect.text,style:`color:${store.currentColor};`});
     rectDiv.append(textContainer,tooltip);
 
     eventManager.on(textInput,'input',(e) => {
@@ -539,17 +539,13 @@ function isPointInRect(px,py,rx,ry,rw,rh){
     return px >= rx && px <= rx +rw && py >= ry && py <= ry +rh;
 }
 
-function findTopmostRectangleAt(x,y){
-    
-    const elements = shadowRoot.elementsFromPoint(x + window.scrollX , y + window.scrollY);
-    for(const el of elements){
-        if(el.classList && el.classList.contains('annotation-rect')){
-            const rectId = el.dataset.id;
-            return rectangles.find(r => r.id === rectId);
-        }
+function findTopmostRectangleAt(x, y) {
+    const el = shadowRoot.elementFromPoint(x + window.scrollX, y + window.scrollY);
+    if (el && el.classList.contains('annotation-rect')) {
+        const rectId = el.dataset.id;
+        return rectangles.find(r => r.id === rectId);
     }
     return null;
-
 }
 
 function showTooltip(rectId){

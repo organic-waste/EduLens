@@ -2135,6 +2135,43 @@ document.body.removeChild(div);
 
 
 
+### `setTimeout(() => {});` 空定时器 
+
+------
+
+利用了 **事件循环机制**，把一条**宏任务**插到当前调用栈末尾，**让出线程**，**推迟后续代码的执行时机**。
+
+| 场景                      | 空定时器带来的效果                                           |
+| ------------------------- | ------------------------------------------------------------ |
+| **强制异步**              | 把同步代码“变成”异步，确保后续代码在下一个事件循环周期执行   |
+| **让浏览器先渲染**        | 先让出线程，让浏览器完成一次样式计算、重绘，再执行后续逻辑   |
+| **规避“调用栈深度”警告**  | 递归太深时，拆成多个宏任务，防止栈溢出                       |
+| **hack 第三方库生命周期** | 某些库（如旧版 Vue、Swiper）在同步阶段未就绪，推迟一帧再访问 DOM |
+
+---
+
+**对比其他“异步 0 延迟”写法**
+
+| 写法                            | 任务类型   | 执行顺序                 | 用途         |
+| ------------------------------- | ---------- | ------------------------ | ------------ |
+| `setTimeout(()=>{});`           | 宏任务     | 晚于当前同步代码、微任务 | 通用“让一帧” |
+| `Promise.resolve().then()`      | 微任务     | 比空定时器更早           | 高优先级异步 |
+| `queueMicrotask(()=>{})`        | 微任务     | 同上                     | 明确微任务   |
+| `requestAnimationFrame(()=>{})` | 渲染前任务 | 下一帧渲染前             | 与动画对齐   |
+
+---
+
+**示例：让浏览器先渲染**
+
+```js
+box.textContent = '开始计算...';
+// 如果不加空定时器，下面耗时任务会卡住渲染，
+// 用户看不到“开始计算...”
+setTimeout(() => {
+  heavyTask();          // 耗时 500 ms
+}, 0);
+```
+
 
 
 
@@ -2389,6 +2426,87 @@ const cardDiv = shadowRoot.getElementsByClassName('functions')[0];
 JavaScript 控制台对 DOM 对象的打印是“动态引用”，不是“冻结快照”。也就是说如果在 `console.log`后给这个元素添加了子元素，在调试查看时仍然能看见子元素。（不能代码 `console.log` 时子元素存在）
 
 
+
+#### `shadowRoot` 内部无法找到存在的顶层元素
+
+------
+
+**原因：**
+
+```js
+const elements = shadowRoot.elementsFromPoint(x + window.scrollX, y + window.scrollY);
+```
+
+ `shadowRoot.elementsFromPoint` 并 **不会穿透 Shadow DOM** 的边界，它只能获取 Shadow DOM 外部的元素，而 `.annotation-rect` 是放在 Shadow DOM 内部 的。
+
+**解决：**换成 `elementFromPoint `直接找到顶层的第一个元素。
+
+| 特性                | `elementFromPoint(x, y)`            | `elementsFromPoint(x, y)`                  |
+| ------------------- | ----------------------------------- | ------------------------------------------ |
+| **返回值**          | **单个元素**（最上层命中元素）      | **数组**（从顶到底所有命中元素）           |
+| **Shadow DOM 支持** | ✅ 可以命中 **Shadow DOM 内部元素**  | ❌ **不会穿透 Shadow DOM 边界**，返回空数组 |
+| **典型用途**        | 获取最上层元素                      | 获取多层叠加元素列表                       |
+| **兼容性**          | 所有现代浏览器                      | 现代浏览器（IE 不支持）                    |
+| **示例**            | `shadowRoot.elementFromPoint(x, y)` | `document.elementsFromPoint(x, y)`         |
+
+
+
+#### 滚动后立即截图会截入`regionDiv`
+
+------
+
+**原因 ：**
+`requestAnimationFrame` 和 `setTimeout(()=>{})` 都只能把“隐藏代码”推迟到**下一帧任务队列**，但浏览器**真正完成重绘（paint）的时机**比这两件事都晚：  
+
+1. 宏任务（`setTimeout`/`rAF`）→ 2. 浏览器计算样式 → 3. 布局（layout）→ 4. 绘制（paint）→ 5. 合成（composite）  
+截图指令（`chrome.runtime.sendMessage({type:'SCREENSHOT'})`）在第 1 步就发出，而绘制线程还没把 `regionDiv` 抹掉，于是它被拍进去了。  
+页面滚动时浏览器会触发**额外的合成层光栅化**，paint 被延后得更明显，所以问题只在滚动后必现。
+
+------
+
+**解决：**
+
+**方案 1：使用双 rAF 再推迟一帧（最简可靠）**
+
+把截图再往后挪一整帧，让浏览器先完成 paint/composite：
+
+```js
+async function handleMouseUp(e) {
+  if (!store.isRegion) return;
+
+  regionDiv.style.display = 'none';          // 1. 立即标记隐藏
+  restorePageInteraction();
+  store.updateState();
+
+  // 2. 等浏览器完成下一帧 paint 再截图
+  requestAnimationFrame(() => {
+    requestAnimationFrame(async () => {      // 双 rAF ≈ 下一帧 paint 后
+      const response = await chrome.runtime.sendMessage({type: 'SCREENSHOT'});
+      imageData = response.image;
+      panelDiv.style.visibility = 'visible';
+
+      const infos = { /* … */ };
+      const croppedImage = await cropImg(imageData, infos);
+      copyImg(croppedImage);
+      downloadImg(croppedImage);
+    });
+  });
+}
+```
+
+> 两次 `requestAnimationFrame` 是社区公认“等一帧 paint 完成”的简便写法，**无需额外 API**。
+
+---
+
+**方案 2：使用 `IntersectionObserver` 监听“真正消失”**
+
+若对时机要求极致，可用 `IntersectionObserver` 确认 `regionDiv` 已完全退出视口/不再被绘制后再截图，但多数场景双 rAF 已足够。
+
+---
+
+**方案 3：改为给元素加 `visibility: hidden`**
+
+`display: none` 会触发重排，`visibility: hidden` 只触发重绘且不会被拍进位图。
 
 
 
@@ -2830,6 +2948,10 @@ element.addEventListener('click', handleClick());
 - 通过 JavaScript 动态插入 `<style>` 标签，导致你的插件样式“后加载”，但优先级不够。
 
 **解决：**使用 **Shadow DOM** 让插件 UI 与宿主页面样式隔离
+
+
+
+
 
 
 

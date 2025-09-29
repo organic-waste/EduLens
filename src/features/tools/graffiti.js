@@ -336,7 +336,6 @@ async function loadDrawing() {
 }
 
 async function handlePageChange() {
-  // 
   await saveDrawing();
   resizeCanvas();
   await loadDrawing();

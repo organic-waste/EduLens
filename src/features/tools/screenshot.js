@@ -7,6 +7,7 @@ let funcDiv = null;
 let screenshotDiv = null;
 let DOMBtn = null;
 let maskDiv = null;
+let regionDiv = null;
 let regionBtn = null;
 let panelDiv = null;
 let shadowRoot = null;
@@ -43,11 +44,11 @@ async function handleScreenshot(type){
 
 //DOM截屏相关
 function DOMScreenshot(){
-    maskDiv = createEl('div',{class:'screenshot-mask'});
-    shadowRoot.appendChild(maskDiv);
-
     let isMousedown = false;
     let target = null;
+
+    maskDiv = createEl('div',{class:'screenshot-mask mask'});
+    shadowRoot.appendChild(maskDiv);
 
     //使用mouse模拟click事件，防止页面上的元素禁止冒泡导致无法检测到click事件
     window.globalClickMouseDowned = null;
@@ -57,23 +58,24 @@ function DOMScreenshot(){
     eventManager.on( document ,'mousemove',listenerMousemove);    
     eventManager.on( document ,'mouseup',listenerMouseup);
 
-    function listenerMousedown(event){
+    function listenerMousedown(e){
         if(!store.isDOM) return;
         target.style.pointerEvents = 'none';
+        preventPageInteraction();
         isMousedown = true;
 
         //只响应按下左键
-        if(event.which === 1){
+        if(e.which === 1){
             window.globalClickMouseDowned = true;
             window.globalClickDownTime = new Date().getTime();
         }
     }
 
-    function listenerMousemove(event){
+    function listenerMousemove(e){
         if(!store.isDOM) return;
 
         if(!isMousedown){
-            const paths = document.elementsFromPoint(event.clientX, event.clientY);
+            const paths = document.elementsFromPoint(e.clientX, e.clientY);
             target = paths[0]; //获取表面的第一个DOM元素
             if(target){
                 const targetDomInfo = target.getBoundingClientRect();
@@ -81,22 +83,23 @@ function DOMScreenshot(){
                 maskDiv.style.height = targetDomInfo.height + 'px';
                 maskDiv.style.left = targetDomInfo.left + 'px';
                 maskDiv.style.top = targetDomInfo.top + 'px';
-                maskDiv.style.display = 'block';
+                maskDiv.style.visibility = 'visible';
             }else{
-                maskDiv.style.display = 'none';
+                maskDiv.style.visibility = 'hidden';
             }
         }
     }
 
-    async function listenerMouseup(event){
+    async function listenerMouseup(e){
         if(!store.isDOM) return;
         isMousedown = false;
         target.style.pointerEvents = 'auto';
-        maskDiv.style.display = 'none';
+        restorePageInteraction();
+        maskDiv.style.visibility = 'hidden';
         store.updateState();
 
         //点击DOM元素时
-        if(window.globalClickMouseDowned && event.which === 1){
+        if(window.globalClickMouseDowned && e.which === 1){
             window.globalClickMouseDowned = false;
             const now = new Date().getTime();
             //在300ms内视为点击
@@ -112,7 +115,6 @@ function DOMScreenshot(){
                     w: parseInt(maskDiv.style.width),
                     h: parseInt(maskDiv.style.height)
                 };
-                console.log(infos);
                 const croppedImage = await cropImg(imageData,infos);
                 copyImg(croppedImage);
                 downloadImg(croppedImage);
@@ -120,14 +122,83 @@ function DOMScreenshot(){
         }
         panelDiv.style.visibility = 'visible';
     }
-
 }
 
 
-
-
 function regionScreenshot(){
-    
+    let startX, startY, endX, endY;
+
+    regionDiv = createEl('div',{class: 'screenshot-region mask'});
+    shadowRoot.appendChild(regionDiv);
+
+    eventManager.on(document,'mousedown',e => listenerMouseDown(e));
+    eventManager.on(document,'mousemove',e => listenerMouseMove(e));
+    eventManager.on(document,'mouseup',e => listenerMouseUp(e));
+
+    function listenerMouseDown(e){
+        if(!store.isRegion) return;
+        preventPageInteraction();
+        regionDiv.style.visibility = 'visible';
+        startX = endX = e.clientX;
+        startY = endY = e.clientY;
+
+        regionDiv.style.left = `${startX}px`;
+        regionDiv.style.top = `${startY}px`;
+        
+    }
+
+    function listenerMouseMove(e){
+        if(!store.isRegion) return;
+        endX = e.clientX;
+        endY = e.clientY;
+
+        const left = Math.min(startX, endX);
+        const top = Math.min(startY, endY);
+        const width = Math.abs(endX - startX);
+        const height = Math.abs(endY - startY);
+        regionDiv.style.left = `${left}px`;
+        regionDiv.style.top = `${top}px`;
+        regionDiv.style.width = `${width}px`;
+        regionDiv.style.height = `${height}px`;
+
+    }
+
+    async function listenerMouseUp(e){
+        if(!store.isRegion) return;
+        regionDiv.style.visibility = 'hidden'
+        restorePageInteraction();
+        store.updateState();
+        
+        endX = e.clientX;
+        endY = e.clientY;
+        // console.log(startX, startY, endX, endY);
+
+        requestAnimationFrame(()=>{
+            requestAnimationFrame(async ()=>{
+                const response = await chrome.runtime.sendMessage({type:'SCREENSHOT'})
+                imageData = response.image;
+
+                panelDiv.style.visibility = 'visible';
+
+                //记得将浮点数转换为INT
+                const infos = {
+                    x: parseInt(Math.min(startX, endX)),
+                    y: parseInt(Math.min(startY, endY)),
+                    w: parseInt(Math.abs(endX - startX)),
+                    h: parseInt(Math.abs(endY - startY))
+                };
+                const croppedImage = await cropImg(imageData,infos);
+                copyImg(croppedImage);
+                downloadImg(croppedImage);
+
+                startX = null; 
+                startY = null;
+                endX = null;
+                endY = null;
+            })
+        })
+
+    }
 }
 
 //裁剪截图
@@ -210,4 +281,14 @@ function downloadImg(image, filename = `screenshot-${Date.now()}.png`){
             reject(false);
         }
     })
+}
+
+function preventPageInteraction(){
+    document.body.style.userSelect='none';
+    document.body.style.pointerEvents='none';
+}
+
+function restorePageInteraction() {
+    document.body.style.userSelect = '';
+    document.body.style.pointerEvents = '';
 }
