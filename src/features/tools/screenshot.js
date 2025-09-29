@@ -104,20 +104,24 @@ function DOMScreenshot(){
             const now = new Date().getTime();
             //在300ms内视为点击
             if(now - window.globalClickDownTime < 300){
-                //通知service-worker截取屏幕
-                const response = await chrome.runtime.sendMessage({type:'SCREENSHOT'})
-                imageData = response.image;
+                requestAnimationFrame(()=>{
+                    requestAnimationFrame(async ()=>{
+                        //通知service-worker截取屏幕
+                        const response = await chrome.runtime.sendMessage({type:'SCREENSHOT'})
+                        imageData = response.image;
 
-                //记得将浮点数转换为INT
-                const infos = {
-                    x: parseInt(maskDiv.style.left),
-                    y: parseInt(maskDiv.style.top),
-                    w: parseInt(maskDiv.style.width),
-                    h: parseInt(maskDiv.style.height)
-                };
-                const croppedImage = await cropImg(imageData,infos);
-                copyImg(croppedImage);
-                downloadImg(croppedImage);
+                        //记得将浮点数转换为INT
+                        const infos = {
+                            x: parseInt(maskDiv.style.left),
+                            y: parseInt(maskDiv.style.top),
+                            w: parseInt(maskDiv.style.width),
+                            h: parseInt(maskDiv.style.height)
+                        };
+                        const croppedImage = await cropImg(imageData,infos);
+                        copyImg(croppedImage);
+                        downloadImg(croppedImage);
+                    })
+                })
             }
         }
         panelDiv.style.visibility = 'visible';

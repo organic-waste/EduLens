@@ -2451,7 +2451,7 @@ const elements = shadowRoot.elementsFromPoint(x + window.scrollX, y + window.scr
 
 
 
-#### 滚动后立即截图会截入`regionDiv`
+#### 滚动后立即截图会截入 `mask`遮罩元素
 
 ------
 
