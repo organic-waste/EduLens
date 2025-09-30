@@ -78,6 +78,12 @@
   "screenshotRegionBtn":{
     "message":"Region Screenshot"
   },
+    "screenshotScrollBtn": {
+    "message": "Scrolling Screenshot"
+  },
+  "screenshotTooltip":{
+    "message": "Click anywhere to end the screenshot"
+  },
 
   "popupTitle": {
     "message": "EduLens Settings"

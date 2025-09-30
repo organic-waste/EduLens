@@ -11,6 +11,10 @@
     --emphasis-error-color:#d44343;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* 清除外界的样式，防止被影响 */
 :host, ::before, ::after { all: unset; }
 *, *::before, *::after   { box-sizing: border-box; }

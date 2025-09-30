@@ -10,6 +10,8 @@
 
 #### 添加文本text
 
+#### 滚动截取长屏
+
 #### 解决过多事件监听的问题
 
 参考：[一支华子时间，来开发一个 Chrom 截图任意区域或DOM的插件，Chrome 扩展程序开发快速上手(超详细)_chrome截图插件-CSDN博客](https://blog.csdn.net/weixin_44787578/article/details/139107217)
@@ -23,6 +25,10 @@
 
 
 - 面板主题颜色
+
+
+
+- 删除对应网站的localstorage中的数据
 
 
 
@@ -2174,6 +2180,86 @@ setTimeout(() => {
 
 
 
+### 控制页面滚动方法总结
+
+---
+
+1. **滚动对象**
+
+| 目标     | 代码实体                               |
+| -------- | -------------------------------------- |
+| 整个视口 | `window` / `document.documentElement`  |
+| 某个容器 | `element`（任何出现滚动条的 DOM 节点） |
+
+---
+
+2. **滚动位置**
+
+| 需求         | 关键属性 / 方法                                              | 备注                               |
+| ------------ | ------------------------------------------------------------ | ---------------------------------- |
+| 绝对坐标     | `scroll(x,y)` 或 `scrollTo(x,y)`                             | 等价；`window` 与 `element` 皆可用 |
+| 相对偏移     | `scrollBy(dx,dy)`                                            | 正数向下/右                        |
+| 滚到元素可见 | `elem.scrollIntoView(options)`                               | 可选 `block`、`inline`、`behavior` |
+| 读取当前位置 | `scrollY` / `scrollX`（window）<br>`elem.scrollTop` / `scrollLeft`（element） | 只读；兼容写法 `pageYOffset`（IE） |
+
+---
+
+3. **平滑 or 瞬时**
+
+| 行为 | 写法                                                         | 兼容性          |
+| ---- | ------------------------------------------------------------ | --------------- |
+| 瞬时 | 直接传数字：`window.scrollTo(0, 800)`                        | 全支持          |
+| 平滑 | 1. CSS 全局：`html{scroll-behavior:smooth}`<br>2. 行内：`scrollTo({top:800, behavior:'smooth'})`<br>3. 平滑 Polyfill（旧浏览器） | IE/旧 Edge 需 3 |
+
+---
+
+4. **滚动“动画”全控制（自动/匀速/缓动）**
+
+| 场景           | 技术                             | 样板代码            |
+| -------------- | -------------------------------- | ------------------- |
+| 自动滚动       | `setInterval` + `scrollBy(0, 1)` | 简单但掉帧          |
+| 平滑到指定位置 | `requestAnimationFrame` + 缓动   | 见下方通用函数      |
+| 无限循环轮播   | `RAF` + 重置 `scrollTop`         | 模拟 marquee        |
+| 横向拖拽滚动   | `pointermove` 改 `scrollLeft`    | 监听 `clientX` 差值 |
+
+------
+
+**通用缓动封装示例（垂直/横向、任意元素）**
+
+```js
+function smoothScrollTo(target, endValue, duration = 600, direction = 'top') {
+  const startValue = (target === window ? window[`scroll${direction}`] : target[`scroll${direction}`]);
+  const startTime = performance.now();
+
+  (function frame(now) {
+    const t = Math.min((now - startTime) / duration, 1);
+    const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // easeInOutQuad
+    const pos = startValue + (endValue - startValue) * eased;
+    target === window
+      ? window.scrollTo({ [`${direction.toLowerCase()}`]: pos })
+      : (target[`scroll${direction}`] = pos);
+    if (t < 1) requestAnimationFrame(frame);
+  })();
+}
+// 用法
+smoothScrollTo(window, 1200, 800, 'Top');        // 页面垂直滚动
+smoothScrollTo(document.querySelector('.box'), 500, 400, 'Left'); // 容器横向
+```
+
+---
+
+5. **滚动监听 & 性能**
+
+| 需求       | API                                         | 性能提示                                  |
+| ---------- | ------------------------------------------- | ----------------------------------------- |
+| 位置监听   | `window.onscroll` / `elem.onscroll`         | 防抖 16 ms 或 `IntersectionObserver` 替代 |
+| 进入可视区 | `IntersectionObserver`                      | 长列表懒加载首选                          |
+| 滚动边界   | `scrollHeight - scrollTop === clientHeight` | 触底加载更多                              |
+
+
+
+
+
 
 
 ### 错误解决：
@@ -3591,3 +3677,8 @@ document.addEventListener('mouseup', () => {
 **原因：**
 
 **解决：**
+
+
+
+
+

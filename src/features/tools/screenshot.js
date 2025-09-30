@@ -1,15 +1,18 @@
-//DOM截图或者区域截图
+//三种截图
 import eventManager from '../../utils/eventManager.js';
 import { createEl } from '../../utils/operateEl.js'
 import store from '../../stores/tools.js';
 
 let funcDiv = null;
 let screenshotDiv = null;
-let DOMBtn = null;
 let maskDiv = null;
 let regionDiv = null;
+let DOMBtn = null;
 let regionBtn = null;
+let scrollBtn = null;
 let panelDiv = null;
+let stopIndicator = null;
+let stopText = null;
 let shadowRoot = null;
 let imageData = null;
 
@@ -19,19 +22,24 @@ export function activateScreenshot(){
     panelDiv = shadowRoot.querySelector('.draggable-panel');
     funcDiv = panelDiv.querySelector('.functions');
     screenshotDiv = createEl('div',{class: 'function'});
+
     DOMBtn = createEl('button',{class: 'button',textContent: chrome.i18n.getMessage('screenshotDOMBtn')});
     regionBtn = createEl('button',{class: 'button',textContent: chrome.i18n.getMessage('screenshotRegionBtn')});
-    screenshotDiv.append(DOMBtn,regionBtn);
+    scrollBtn = createEl('button',{class: 'button',textContent: chrome.i18n.getMessage('screenshotScrollBtn')});
+
+    screenshotDiv.append(DOMBtn,regionBtn,scrollBtn);
     funcDiv.appendChild(screenshotDiv);
 
     //绑定按钮点击事件
     eventManager.on(DOMBtn,'click',e => handleScreenshot('dom',e));
-    eventManager.on(regionBtn,'click',e => handleScreenshot('region',e));    
+    eventManager.on(regionBtn,'click',e => handleScreenshot('region',e));
+    eventManager.on(scrollBtn,'click',e =>{handleScreenshot('scroll',e)});    
 }
 
 async function handleScreenshot(type){
     //隐藏面板，防止影响截取原网站页面
     panelDiv.style.visibility = 'hidden';
+    preventPageInteraction();
     if(type === 'dom'){
         store.updateState('isDOM');
         DOMScreenshot();
@@ -40,6 +48,10 @@ async function handleScreenshot(type){
         store.updateState('isRegion')
         regionScreenshot();
     }
+    else if(type === 'scroll'){
+        store.updateState('isScroll');
+        scrollScreenshot();
+    }
 }
 
 //DOM截屏相关
@@ -47,8 +59,11 @@ function DOMScreenshot(){
     let isMousedown = false;
     let target = null;
 
-    maskDiv = createEl('div',{class:'screenshot-mask mask'});
-    shadowRoot.appendChild(maskDiv);
+    if(!maskDiv){
+        maskDiv = createEl('div',{class:'screenshot-mask mask'});
+        shadowRoot.appendChild(maskDiv);
+    }
+
 
     //使用mouse模拟click事件，防止页面上的元素禁止冒泡导致无法检测到click事件
     window.globalClickMouseDowned = null;
@@ -61,7 +76,6 @@ function DOMScreenshot(){
     function listenerMousedown(e){
         if(!store.isDOM) return;
         target.style.pointerEvents = 'none';
-        preventPageInteraction();
         isMousedown = true;
 
         //只响应按下左键
@@ -128,12 +142,14 @@ function DOMScreenshot(){
     }
 }
 
-
+//区域截图相关
 function regionScreenshot(){
     let startX, startY, endX, endY;
 
-    regionDiv = createEl('div',{class: 'screenshot-region mask'});
-    shadowRoot.appendChild(regionDiv);
+    if(!regionDiv){
+        regionDiv = createEl('div',{class: 'screenshot-region mask'});
+        shadowRoot.appendChild(regionDiv);
+    }
 
     eventManager.on(document,'mousedown',e => listenerMouseDown(e));
     eventManager.on(document,'mousemove',e => listenerMouseMove(e));
@@ -141,7 +157,6 @@ function regionScreenshot(){
 
     function listenerMouseDown(e){
         if(!store.isRegion) return;
-        preventPageInteraction();
         regionDiv.style.visibility = 'visible';
         startX = endX = e.clientX;
         startY = endY = e.clientY;
@@ -205,6 +220,41 @@ function regionScreenshot(){
     }
 }
 
+//滚动截屏相关
+async function scrollScreenshot() {
+    let startY = window.scrollY;
+    let endY = window.scrollY;
+
+    const totalHeight = document.documentElement.scrollHeight;
+    const viewportHeight = window.innerHeight;
+    //需要截取的屏幕最多页数
+    const totalScreens = Math.ceil(totalHeight / viewportHeight);
+    const screenshots = [];
+
+    if(!stopIndicator){
+        stopIndicator = createEl('div',{class: 'stop-indicator'});
+        stopText = createEl('div',{class: 'stop-text', textContent: chrome.i18n.getMessage('screenshotTooltip')});
+        shadowRoot.append(stopIndicator,stopText);
+    }
+    stopIndicator.style.display = 'block';
+    stopText.style.display = 'block';
+    preventPageInteraction();
+
+
+
+
+    eventManager.on(document, 'click', (e) => {
+        userStopped = true;
+        store.updateState();
+        stopIndicator.style.display = 'none';
+        stopText.style.display = 'none';
+    })
+
+ 
+}
+
+
+
 //裁剪截图
 function cropImg(image,infos){
     return new Promise((resolve,reject)=>{
@@ -247,6 +297,11 @@ function cropImg(image,infos){
         img.onerror = () => reject(new Error('image load failed'));
         img.src = image;
     })
+}
+
+//合并多个截屏
+function combineImages(images){
+
 }
 
 //将截图以图片文件形式写入剪贴板

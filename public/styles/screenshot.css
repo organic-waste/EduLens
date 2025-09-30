@@ -7,3 +7,19 @@
     border: 1px solid var(--emphasis-color);
     border-radius: 4px;
 }
+
+.stop-indicator{
+    position: fixed;
+    bottom: 30vh;
+    left: 0;
+    width: 100%;
+    height: 8vh;
+    pointer-events: none;
+    z-index: 9999999;
+    background:linear-gradient(to bottom,rgba(0,0,0,0),var(--mask-color));
+    color: white;
+    text-align: end;
+    font-size: 2.4vh;
+    border: 2px solid var(--emphasis-color);
+
+}

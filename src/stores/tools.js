@@ -10,6 +10,7 @@ class ToolStore {
     this.isRectangle = false;
     this.isDOM = false;
     this.isRegion = false;
+    this.isScroll = false;
 
     this.currentColor = '#FF0000';
     this.penBrushSize = 5;
@@ -27,7 +28,8 @@ class ToolStore {
       isLine : false,  
       isRectangle : false,
       isDOM : false,
-      isRegion : false
+      isRegion : false,
+      isScroll : false,
     }
     if(state) {
       newState[state] = !oldVal;

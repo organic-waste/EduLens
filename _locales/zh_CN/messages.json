@@ -102,6 +102,14 @@
     "message":"区域截图",
     "description":"点击切换区域截图"
   },
+  "screenshotScrollBtn": {
+    "message": "滚动截屏",
+    "description":"点击切换滚动截取长屏截图"
+  },
+  "screenshotTooltip":{
+    "message": "点击任意位置结束截屏",
+    "description": "截取长屏时的提示文字"
+  },
 
   "popupTitle": {
     "message": "EduLens 设置",
