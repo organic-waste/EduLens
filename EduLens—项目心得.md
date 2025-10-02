@@ -12,11 +12,15 @@
 
 #### 滚动截取长屏
 
+#### 为涂鸦和矩形注释添加 rAF
+
 #### 解决过多事件监听的问题
 
 参考：[一支华子时间，来开发一个 Chrom 截图任意区域或DOM的插件，Chrome 扩展程序开发快速上手(超详细)_chrome截图插件-CSDN博客](https://blog.csdn.net/weixin_44787578/article/details/139107217)
 
-#### 自定义面板
+#### 样式响应性
+
+#### 自定义个性化面板
 
 - 截图保存格式，分辨率
 - 截图粘贴时是base64还是图片
@@ -1737,7 +1741,7 @@ resizeObserver.observe(box);
 
 
 
-### `addEventListener`的` options`参数
+### `addEventListener` 的 `options`参数
 
 ------
 
@@ -2258,7 +2262,64 @@ smoothScrollTo(document.querySelector('.box'), 500, 400, 'Left'); // 容器横�
 
 
 
+### `requestAnimationFrame`（rAF）和 `cancelAnimationFrame`（cAF）
 
+`requestAnimationFrame`（rAF）和 `cancelAnimationFrame`（cAF）是浏览器专门为动画设计的 API，不是延时器，也不是 `setTimeout` 的替代品。它们的核心价值是：**把代码执行节奏跟浏览器的“刷新节拍”对齐**，从而省功耗、免掉帧、保证流畅。
+
+---
+
+1. **屏幕刷新机制**
+
+- 主流显示器以 60 Hz 为主，即每 16.67 ms 产生一帧。  
+- 浏览器在每一帧里需要完成：  
+  1. 执行 JS  
+  2. 计算样式（Recalc Style）  
+  3. 布局（Layout）  
+  4. 绘制（Paint）  
+  5. 合成（Composite）  
+- 如果 JS 执行时间过长 > 16.67 ms，就会掉帧（卡顿）。
+
+---
+
+2. **`requestAnimationFrame`**
+
+```js
+const id = requestAnimationFrame(callback);
+```
+- 把 `callback` 注册到浏览器“下一帧”任务队列。  
+- 浏览器会在下一次重绘之前自动调用它，并传入一个高精度时间戳 `DOMHighResTimeStamp`（单位 ms，精确到 5 µs 级）。  
+- 返回值 `id`是一个整数句柄，用于后续`cancelAnimationFrame`取消。
+
+**特点**
+
+1. **与刷新率同步**：60 Hz 屏幕约每 16.67 ms 调一次；120 Hz 屏约 8.33 ms。  
+2. **节能**：标签页切到后台或最小化时，浏览器自动暂停 rAF，前台恢复后继续，不会白白消耗电池。  
+3. **最安全的动画场所**：在 rAF 回调里修改样式/位置，浏览器会集中合并到同一帧，避免多次重排。  
+4. **可链式**：常见写法是在回调末尾再 `requestAnimationFrame(tick)`，实现“无限循环”。
+
+---
+
+3. **`cancelAnimationFrame`**
+
+```js
+cancelAnimationFrame(id);
+```
+- 把尚未执行的那一次 rAF 取消，相当于“把刚刚排队的动画帧票撕掉”。  
+- 如果回调已经执行完毕，cAF 无影响；因此不会回滚任何已渲染结果。  
+- 常用于用户主动中断动画（点击停止、组件卸载、页面隐藏等）。
+
+---
+
+4. **与 `setTimeout/setInterval` 的区别速览**
+
+| 特性     | requestAnimationFrame  | setTimeout/setInterval   |
+| -------- | ---------------------- | ------------------------ |
+| 节拍     | 跟随屏幕刷新率         | 固定毫秒数               |
+| 后台标签 | 自动暂停，节能         | 仍继续触发               |
+| 最小延迟 | 0 ms（下一帧）         | 4 ms（HTML 标准下限）    |
+| 帧合并   | 浏览器自动合并样式变更 | 每次到期立即执行，易多排 |
+| 精度     | 亚毫秒级时间戳         | 4 ms 粒度                |
+| 用途     | 动画、滚动、连续绘制   | 一次性/轮询任务、非动画  |
 
 
 
@@ -3682,3 +3743,267 @@ document.addEventListener('mouseup', () => {
 
 
 
+### 实现思路（简要）
+- 启用“滚动长截图”后，在视口下方固定位置插入一条“水平终止线”与其上方的提示文字“点击任意位置结束截屏”。页面以 requestAnimationFrame 进行平滑缓慢下滚。
+- 用户点击任意位置即刻停止；停止瞬间用“终止线”的当前位置作为长图的“终止坐标”，而“起始坐标”为功能启用时页面的顶端。
+- 在滚动过程中周期性获取多张视口截图，每张记录其对应的 `scrollY`。结束后将所有截图按与目标区间的交集进行裁剪，再顺序拼接生成最终长图。
+- 为保证最终截图中不包含“终止线”和“提示文字”，在每次截屏前临时隐藏这两个提示元素，截完再显示（用户不会感觉明显闪烁）。
+- 不禁用页面点击（允许用户点击结束）；只临时禁止文字选中防止误选中。
+- 设备像素比（DPR）差异：裁剪与合并均使用当前 DPR 做 CSS 坐标→设备像素坐标转换，避免拼接产生缝隙或锯齿。
+- 完成后将结果复制到剪贴板并触发下载，恢复 UI 与交互。
+
+### 相关代码（对 `src/features/tools/screenshot.js` 的补充/修改）
+
+以下是替换并补全的 `scrollScreenshot` 与 `combineImages`，以及滚动流程用到的少量辅助逻辑。请将对应函数整体替换为下列版本。
+
+```js
+//滚动截屏相关
+async function scrollScreenshot() {
+	let startScrollTop = window.scrollY; // 启用时的页面顶端（CSS像素）
+	let userStopped = false;
+	let rafId = null;
+	let lastCaptureY = -Infinity;
+	const dpr = window.devicePixelRatio || 1;
+	const viewportWidth = window.innerWidth;
+	const viewportHeight = window.innerHeight;
+
+	// 每次抓图的最小滚动增量，避免抓太多帧（越小越细腻，越大越省资源）
+	const minDeltaForCapture = Math.floor(viewportHeight * 0.9);
+
+	// 收集的视口截图
+	const shots = []; // { img: dataURL, y: scrollYAtShot }
+
+	// 构造或复用提示与终止线
+	if(!stopIndicator){
+		stopIndicator = createEl('div',{class: 'stop-indicator'});
+		// 基础内联样式，确保即使样式文件未加载也能正常显示
+		stopIndicator.style.position = 'fixed';
+		stopIndicator.style.left = '0';
+		stopIndicator.style.right = '0';
+		stopIndicator.style.height = '2px';
+		stopIndicator.style.background = 'rgba(255,0,0,0.9)';
+		stopIndicator.style.zIndex = '2147483647';
+		stopIndicator.style.pointerEvents = 'none';
+	}
+	if(!stopText){
+		stopText = createEl('div',{class: 'stop-text', textContent: chrome.i18n.getMessage('screenshotTooltip') || '点击任意位置结束截屏'});
+		stopText.style.position = 'fixed';
+		stopText.style.left = '50%';
+		stopText.style.transform = 'translateX(-50%)';
+		stopText.style.color = '#fff';
+		stopText.style.fontSize = '14px';
+		stopText.style.padding = '6px 10px';
+		stopText.style.background = 'rgba(0,0,0,0.6)';
+		stopText.style.borderRadius = '4px';
+		stopText.style.zIndex = '2147483647';
+		stopText.style.pointerEvents = 'none';
+	}
+	// 终止线位于视口靠下（例如 85% 高度）
+	const lineY = Math.round(viewportHeight * 0.85);
+	stopIndicator.style.top = `${lineY}px`;
+	// 提示文字在终止线上方
+	stopText.style.top = `${Math.max(8, lineY - 28)}px`;
+
+	// 挂载到 shadowRoot
+	shadowRoot.append(stopIndicator, stopText);
+	stopIndicator.style.display = 'block';
+	stopText.style.display = 'block';
+
+	// 不屏蔽点击，允许用户点击结束；仅禁用选中文本
+	const prevUserSelect = document.body.style.userSelect;
+	document.body.style.userSelect = 'none';
+
+	// 点击即结束
+	const onStopClick = () => {
+		userStopped = true;
+	};
+	// 使用一次性原生监听，避免重复绑定
+	document.addEventListener('click', onStopClick, { once: true, capture: true });
+
+	// 截取一帧（隐藏提示元素，截完再恢复显示）
+	const grabViewport = async () => {
+		const prevLineDisplay = stopIndicator.style.display;
+		const prevTextDisplay = stopText.style.display;
+		stopIndicator.style.display = 'none';
+		stopText.style.display = 'none';
+		// 双 rAF 确保样式生效后再截图
+		await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+		const response = await chrome.runtime.sendMessage({type:'SCREENSHOT'});
+		const img = response?.image;
+		// 恢复显示
+		stopIndicator.style.display = prevLineDisplay;
+		stopText.style.display = prevTextDisplay;
+		return img;
+	};
+
+	// 初始立即截第一帧
+	shots.push({
+		img: await grabViewport(),
+		y: window.scrollY
+	});
+	lastCaptureY = window.scrollY;
+
+	// 平滑慢速滚动
+	const scrollStep = Math.max(1, Math.floor(viewportHeight / 180)); // 约 ~180 帧滚完一屏，较慢
+	const tick = async () => {
+		if(userStopped){
+			cancelAnimationFrame(rafId);
+			return finish();
+		}
+		// 若已至底部，则也结束
+		const atBottom = Math.ceil(window.scrollY + viewportHeight) >= document.documentElement.scrollHeight;
+		if(atBottom){
+			userStopped = true;
+			cancelAnimationFrame(rafId);
+			return finish();
+		}
+
+		// 向下滚动一点
+		window.scrollTo({ top: window.scrollY + scrollStep, behavior: 'auto' });
+
+		// 满足最小增量时抓图
+		if(window.scrollY - lastCaptureY >= minDeltaForCapture){
+			const img = await grabViewport();
+			shots.push({ img, y: window.scrollY });
+			lastCaptureY = window.scrollY;
+		}
+
+		rafId = requestAnimationFrame(tick);
+	};
+
+	rafId = requestAnimationFrame(tick);
+
+	// 结束与导出
+	async function finish(){
+		// 结束瞬间以当前滚动位置 + 终止线的视口内位置作为终点
+		const stopY = window.scrollY + lineY;
+		const startY = startScrollTop;
+
+		// 确保包含最后一张（可能停在两次抓图之间）
+		const lastImg = await grabViewport();
+		shots.push({ img: lastImg, y: window.scrollY });
+
+		// 清理 UI
+		stopIndicator.style.display = 'none';
+		stopText.style.display = 'none';
+		document.body.style.userSelect = prevUserSelect || '';
+		document.removeEventListener('click', onStopClick, { capture: true });
+
+		// 过滤并裁剪各段和区间交集
+		const chunks = []; // { img: dataURL, h: cssHeight }
+		for(const s of shots){
+			const top = s.y;
+			const bottom = s.y + viewportHeight;
+			// 与 [startY, stopY] 的交集
+			const interTop = Math.max(startY, top);
+			const interBottom = Math.min(stopY, bottom);
+			const interH = Math.max(0, interBottom - interTop);
+			if(interH <= 0) continue;
+
+			const cropYInViewport = interTop - top; // 在该截图中的起点（CSS 像素）
+			const cropInfos = {
+				x: 0,
+				y: Math.round(cropYInViewport),
+				w: viewportWidth,
+				h: Math.round(interH)
+			};
+			// 裁剪
+			// 使用已有的 cropImg（内部已做 DPR 转换与边界修正）
+			// 注意：这里 x/y/w/h 都是 CSS 像素
+			// eslint-disable-next-line no-await-in-loop
+			const cropped = await cropImg(s.img, cropInfos);
+			chunks.push({ img: cropped, h: cropInfos.h });
+		}
+
+		// 合并
+		const result = await combineImages(chunks, dpr, viewportWidth);
+		// 完成：复制并下载
+		copyImg(result);
+		downloadImg(result);
+
+		// 恢复面板与状态
+		restorePageInteraction();
+		store.updateState();
+		panelDiv.style.visibility = 'visible';
+	}
+}
+```
+
+```js
+// 新的合并：按顺序纵向拼接
+async function combineImages(chunks, dpr, viewportWidth){
+	return new Promise((resolve, reject) => {
+		try{
+			// chunks: [{ img: dataURL, h: cssHeight }]
+			// 先把所有图片对象加载出来，避免异步 draw 时序问题
+			const imgs = [];
+			let loaded = 0;
+			for(let i=0;i<chunks.length;i++){
+				const im = new Image();
+				im.onload = () => {
+					imgs[i] = im;
+					loaded++;
+					if(loaded === chunks.length){
+						// 计算目标画布大小（设备像素）
+						const widthCSS = viewportWidth;
+						const heightCSS = chunks.reduce((acc, c) => acc + c.h, 0);
+						const widthDev = Math.max(1, Math.round(widthCSS * dpr));
+						const heightDev = Math.max(1, Math.round(heightCSS * dpr));
+
+						const canvas = document.createElement('canvas');
+						canvas.width = widthDev;
+						canvas.height = heightDev;
+						const ctx = canvas.getContext('2d');
+						ctx.imageSmoothingEnabled = false;
+
+						// 逐段绘制
+						let offsetCSS = 0;
+						for(let j=0;j<chunks.length;j++){
+							const drawHDev = Math.round(chunks[j].h * dpr);
+							ctx.drawImage(
+								imgs[j],
+								0, 0, imgs[j].naturalWidth, imgs[j].naturalHeight,
+								0, Math.round(offsetCSS * dpr), widthDev, drawHDev
+							);
+							offsetCSS += chunks[j].h;
+						}
+						resolve(canvas.toDataURL('image/png'));
+					}
+				};
+				im.onerror = () => reject(new Error('image load failed'));
+				im.src = chunks[i].img;
+			}
+			if(chunks.length === 0){
+				// 空结果保护
+				const canvas = document.createElement('canvas');
+				canvas.width = Math.round(viewportWidth * dpr);
+				canvas.height = 1;
+				resolve(canvas.toDataURL('image/png'));
+			}
+		}catch(e){
+			reject(e);
+		}
+	});
+}
+```
+
+说明：
+- `scrollScreenshot` 实现了提示/终止线显示、rAF 平滑滚动、分段抓图、点击结束、裁剪拼接、复制下载、UI 恢复的完整流程。
+- 每次截屏前临时隐藏 `stopIndicator` 与 `stopText`，因此最终图片不会包含它们。
+- `combineImages` 新增重载函数，按 DPR 拼接，避免拉伸失真。
+- 未调用 `preventPageInteraction()`，只禁用文本选中，确保用户可以点击结束。
+
+- 你已有的样式文件（`public/styles/base.css`, `public/styles/screenshot.css`）里如已定义了 `.stop-indicator`/`.stop-text`，上述内联样式不会冲突；如未定义，也能依靠内联样式正常工作。
+
+- 若你希望调整滚动速度，可调 `scrollStep` 或 `minDeltaForCapture` 两个常量。
+
+- 该实现依赖现有的消息 `SCREENSHOT` 能返回当前视口截图，与现有 `cropImg`、`copyImg`、`downloadImg` 保持兼容。
+
+- 终止线位置为视口高度 85% 处，符合“页面中下方”；如需精确到某固定 px，可替换 `lineY` 的计算。
+
+- 若你希望进一步减少内存占用，可在裁剪出段后释放 `shots` 的原始大图，但通常在页面内一次操作足够安全。
+
+- 由于我们使用原生 `addEventListener('click', { once: true, capture: true })`，不会造成多次启用时的重复绑定问题。
+
+
+- 我已补充并替换了 `scrollScreenshot` 与 `combineImages` 的实现，新增了滚动抓图、点击终止、按区间裁剪并拼接输出的完整流程。

@@ -15,6 +15,7 @@ let stopIndicator = null;
 let stopText = null;
 let shadowRoot = null;
 let imageData = null;
+const dpr = window.devicePixelRatio || 1 ;  //设备像素比
 
 export function activateScreenshot(){
     //创建截图按钮
@@ -33,13 +34,12 @@ export function activateScreenshot(){
     //绑定按钮点击事件
     eventManager.on(DOMBtn,'click',e => handleScreenshot('dom',e));
     eventManager.on(regionBtn,'click',e => handleScreenshot('region',e));
-    eventManager.on(scrollBtn,'click',e =>{handleScreenshot('scroll',e)});    
+    eventManager.on(scrollBtn,'click',e => handleScreenshot('scroll',e));    
 }
 
 async function handleScreenshot(type){
     //隐藏面板，防止影响截取原网站页面
     panelDiv.style.visibility = 'hidden';
-    preventPageInteraction();
     if(type === 'dom'){
         store.updateState('isDOM');
         DOMScreenshot();
@@ -77,6 +77,7 @@ function DOMScreenshot(){
         if(!store.isDOM) return;
         target.style.pointerEvents = 'none';
         isMousedown = true;
+        preventPageInteraction();
 
         //只响应按下左键
         if(e.which === 1){
@@ -157,6 +158,7 @@ function regionScreenshot(){
 
     function listenerMouseDown(e){
         if(!store.isRegion) return;
+        preventPageInteraction();
         regionDiv.style.visibility = 'visible';
         startX = endX = e.clientX;
         startY = endY = e.clientY;
@@ -222,35 +224,98 @@ function regionScreenshot(){
 
 //滚动截屏相关
 async function scrollScreenshot() {
-    let startY = window.scrollY;
-    let endY = window.scrollY;
-
-    const totalHeight = document.documentElement.scrollHeight;
+    let startScrollTop = window.scrollY;
+    let userStopped = false;
+    let rafId = null;  // 用于 cancelAnimationFrame
+    let lastCaptureY = -Infinity;  // 距离上一次成功抓图时的 scrollY，用来控制“最少滚多少才再拍一帧”
+    const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    //需要截取的屏幕最多页数
-    const totalScreens = Math.ceil(totalHeight / viewportHeight);
-    const screenshots = [];
+
+    const minDeltaForCapture = Math.floor(viewportHeight * 0.9)   // 至少滚了 90% 视口高度才允许再截一张，避免 1 像素 1 帧导致内存爆炸
+    const shots = [];
 
     if(!stopIndicator){
-        stopIndicator = createEl('div',{class: 'stop-indicator'});
-        stopText = createEl('div',{class: 'stop-text', textContent: chrome.i18n.getMessage('screenshotTooltip')});
-        shadowRoot.append(stopIndicator,stopText);
+        stopIndicator = createEl('div', { class: 'stop-indicator' });
+        stopText = createEl('div', { class: 'stop-text', textContent: chrome.i18n.getMessage('screenshotTooltip')});
     }
+    const lineY = Math.round(viewportHeight * 0.8);
+    stopIndicator.style.top = `${lineY}px`;
+    stopText.style.top = `${Math.max(8, lineY - 28)}px`;
+    shadowRoot.append(stopIndicator, stopText);
     stopIndicator.style.display = 'block';
     stopText.style.display = 'block';
+
+    const prevUserSelect = document.body.style.userSelect;
+    document.body.style.userSelect = 'none';
     preventPageInteraction();
+    eventManager.on(document, 'click',()=>{ userStopped = true },{ once: true });
 
-
-
-
-    eventManager.on(document, 'click', (e) => {
-        userStopped = true;
-        store.updateState();
+    //截取单帧截图
+    async function grabViewport() {
+        //先隐藏提示元素再截图
+        const prevLineDisplay = stopIndicator.style.display;
+        const prevTextDisplay = stopText.style.display;
         stopIndicator.style.display = 'none';
         stopText.style.display = 'none';
-    })
+        //使用双rAF确保样式已经重绘了
+        requestAnimationFrame(()=>{
+            requestAnimationFrame(async ()=>{
+                const response = await chrome.runtime.sendMessage({type: 'SCREENSHOT'});
+                const img = response.image;
 
- 
+                stopIndicator.style.display = prevLineDisplay;
+                stopText.style.display = prevTextDisplay;
+                return img;
+            })
+        })
+        
+    }
+    //功能启用的时候立即截取第一帧
+    shots.push({
+        img: await grabViewport(),
+        y: window.scrollY
+    });
+    lastCaptureY = window.scrollY;
+
+    const scrollStep = Math.max(1,Math.floor(viewportHeight / 50));  // 滚完一屏需要的帧数
+    async function tick(){
+        if(userStopped){
+            cancelAnimationFrame(rafId);
+            return finish();
+        }
+        //到达底部时
+        const atBottom = Math.ceil(window.scrollY + viewportHeight) >= document.documentElement.scrollHeight;
+        if(atBottom){
+            userStopped = true;
+            cancelAnimationFrame(rafId);
+            return finish();
+        }
+        //向下滚动一点
+        window.scrollTo({ top: window.scrollY + scrollStep, behavior:'auto'});
+
+        //每当满足最小滚动距离就截图
+        if(window.scrollY - lastCaptureY >= minDeltaForCapture){
+            const img = await grabViewport();
+            shots.push({ img, y:window.scrollY});
+            lastCaptureY = window.scrollY;
+        }
+        rafId = requestAnimationFrame(tick);
+    }
+    rafId = requestAnimationFrame(tick);
+
+    async function finish() {
+        const stopY = window.scrollY + lineY; //确保在终止线处终止截屏
+        const startY = startScrollTop;
+
+        const lastImg = await grabViewport();
+        shots.push({ img: lastImg, y: window.scrollY });
+
+        stopIndicator.style.display = 'none';
+        stopText.style.display = 'none';
+        document.body.style.userSelect = prevUserSelect || '';
+        
+
+    }
 }
 
 
@@ -259,7 +324,6 @@ async function scrollScreenshot() {
 function cropImg(image,infos){
     return new Promise((resolve,reject)=>{
         // 将CSS坐标转换为设备像素坐标
-        const dpr = window.devicePixelRatio || 1;
         const deviceInfos = {
             x: Math.round(infos.x * dpr),
             y: Math.round(infos.y * dpr),
@@ -300,7 +364,7 @@ function cropImg(image,infos){
 }
 
 //合并多个截屏
-function combineImages(images){
+function combineImages(){
 
 }
 

@@ -10,16 +10,22 @@
 
 .stop-indicator{
     position: fixed;
-    bottom: 30vh;
     left: 0;
-    width: 100%;
-    height: 8vh;
-    pointer-events: none;
+    right: 0;
+    height: 2px;
+    background-color: var(--emphasis-color) ;
     z-index: 9999999;
-    background:linear-gradient(to bottom,rgba(0,0,0,0),var(--mask-color));
-    color: white;
-    text-align: end;
-    font-size: 2.4vh;
-    border: 2px solid var(--emphasis-color);
+    pointer-events: none;
 
+}
+.stop-text{
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 2vh;
+    padding: 6px 10px;
+    background-color: var(--mask-color);
+    z-index: 9999999;
+    pointer-events: none;
 }
