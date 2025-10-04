@@ -1,7 +1,7 @@
 //三种截图
 import eventManager from '../../utils/eventManager.js';
 import { createEl } from '../../utils/operateEl.js'
-import store from '../../stores/tools.js';
+import store from '../../stores/tools.js';;
 
 let funcDiv = null;
 let screenshotDiv = null;
@@ -257,19 +257,18 @@ async function scrollScreenshot() {
         const prevTextDisplay = stopText.style.display;
         stopIndicator.style.display = 'none';
         stopText.style.display = 'none';
+        
         //使用双rAF确保样式已经重绘了
-        requestAnimationFrame(()=>{
-            requestAnimationFrame(async ()=>{
-                const response = await chrome.runtime.sendMessage({type: 'SCREENSHOT'});
-                const img = response.image;
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        const response = await chrome.runtime.sendMessage({type: 'SCREENSHOT'});
+        const img = response.image;
 
-                stopIndicator.style.display = prevLineDisplay;
-                stopText.style.display = prevTextDisplay;
-                return img;
-            })
-        })
+        stopIndicator.style.display = prevLineDisplay;
+        stopText.style.display = prevTextDisplay;
+        return img;
         
     }
+
     //功能启用的时候立即截取第一帧
     shots.push({
         img: await grabViewport(),
@@ -314,6 +313,33 @@ async function scrollScreenshot() {
         stopText.style.display = 'none';
         document.body.style.userSelect = prevUserSelect || '';
         
+        //过滤并裁剪各段截图和区间交集
+        const chunks = [];
+        for(const s of shots){
+            const top = s.y;
+            const bottom = s.y +viewportHeight;
+            //取startY和stopY的交集来裁剪图片
+            const interTop = Math.max(startY,top);
+            const interBottom = Math.min(stopY, bottom);
+            const interH = Math.max(0, interBottom - interTop);
+
+            if(interH <= 0) continue; //如果没有交集就丢弃此截图
+
+            const cropped = await cropImg(s.img, {
+                x:0,
+                y:Math.round(interTop - top),
+                w:viewportWidth,
+                h: Math.round(interH)
+            })
+            chunks.push({ img: cropped, h:interH});
+        }
+
+        const result = await combineImages(chunks);
+        copyImg(result);
+        downloadImg(result);
+        restorePageInteraction();
+        store.updateState();
+        panelDiv.style.visibility = 'visible';
 
     }
 }
@@ -364,8 +390,39 @@ function cropImg(image,infos){
 }
 
 //合并多个截屏
-function combineImages(){
+function combineImages(chunks){
+    return new Promise((resolve, reject)=>{
+        const imgs = [];
+        let loaded = 0;
+        chunks.forEach((chk, i)=>{
+            const img = new Image();
+            img.onload= () =>{
+                imgs[i] = img;
+                loaded++;
+                if(loaded === chunks.length){
+                    const totalCssHeight = chunks.reduce((acc,i)=> acc + i.h , 0);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1,Math.round(window.innerWidth * dpr));
+                    canvas.height = Math.max(1, Math.round(totalCssHeight * dpr));
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = false;
 
+                    //依次绘制裁剪好的截图
+                    let offsetCSS = 0;
+                    chunks.forEach((chunk,i)=>{
+                        ctx.drawImage(imgs[i],
+                            0, 0, imgs[i].naturalWidth, imgs[i].naturalHeight,
+                            0, Math.round(offsetCSS * dpr), canvas.width, Math.round(chunk.h * dpr)
+                        );
+                        offsetCSS += chunk.h;
+                    })
+                    resolve(canvas.toDataURL('image/png'));
+                }
+            }
+            img.onerror = () => reject(new Error('image load failed'));
+            img.src = chk.img;
+        })
+    })
 }
 
 //将截图以图片文件形式写入剪贴板
