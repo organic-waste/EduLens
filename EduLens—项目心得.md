@@ -2643,13 +2643,9 @@ async function handleMouseUp(e) {
 
 > 两次 `requestAnimationFrame` 是社区公认“等一帧 paint 完成”的简便写法，**无需额外 API**。
 
----
-
 **方案 2：使用 `IntersectionObserver` 监听“真正消失”**
 
 若对时机要求极致，可用 `IntersectionObserver` 确认 `regionDiv` 已完全退出视口/不再被绘制后再截图，但多数场景双 rAF 已足够。
-
----
 
 **方案 3：改为给元素加 `visibility: hidden`**
 
@@ -2678,11 +2674,15 @@ async function grabViewport() {
 }
 ```
 
+------
+
 **原因：**
 
 存在异步结构错误：在 `requestAnimationFrame` 的嵌套回调里才给 `img` 赋值，但外层函数已经提前执行 `return img;`，此时 `img` 还是 `undefined`；
 
 **await 只阻塞当前函数体内后续代码**，但 **不阻塞其他代码**
+
+------
 
 **解决：**
 
@@ -2702,6 +2702,55 @@ async function grabViewport() {
 ```
 
 
+
+#### 创建的事件监听器被立即触发
+
+------
+
+**问题：**
+
+当点击 `scrollBtn` 按钮，立即设置 `eventManager.on(document, 'click', ...)`，**按钮点击事件冒泡**到 document，立即触发 click 监听器，`userStopped = true` 被设置，因此在第一次 `tick()` 调用时就退出了
+
+------
+
+**解决：**
+
+**方案1：使用事件委托和事件目标检查**
+
+```javascript
+eventManager.on(document, 'click', (e) => {
+    // 排除截图功能相关的元素点击
+    if (e.target.closest('.draggable-panel') || 
+        e.target === stopIndicator || 
+        e.target === stopText) {
+        return;
+    }
+    userStopped = true;
+}, { once: true });
+```
+
+**方案2：延迟绑定点击监听器**
+
+```javascript
+// 延迟绑定，避免立即触发
+setTimeout(() => {
+    eventManager.on(document, 'click', () => { 
+        userStopped = true; 
+    }, { once: true });
+}, 100);
+```
+
+**方案3：使用 mousedown 替代 click**
+
+```javascript
+// 使用 mousedown 避免与按钮点击冲突
+eventManager.on(document, 'mousedown', (e) => {
+    // 检查不是从功能面板触发的
+    if (!e.target.closest('.draggable-panel')) {
+        userStopped = true;
+    }
+}, { once: true });
+```
 
 
 
@@ -3784,5 +3833,4 @@ document.addEventListener('mouseup', () => {
 **原因：**
 
 **解决：**
-
 

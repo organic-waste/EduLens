@@ -224,31 +224,25 @@ function regionScreenshot(){
 
 //滚动截屏相关
 async function scrollScreenshot() {
-    let startScrollTop = window.scrollY;
+    let startY = window.scrollY; 
     let userStopped = false;
     let rafId = null;  // 用于 cancelAnimationFrame
-    let lastCaptureY = -Infinity;  // 距离上一次成功抓图时的 scrollY，用来控制“最少滚多少才再拍一帧”
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    const minDeltaForCapture = Math.floor(viewportHeight * 0.9)   // 至少滚了 90% 视口高度才允许再截一张，避免 1 像素 1 帧导致内存爆炸
+    let offsetY = 0; //距离上次截图移动的距离
+    const winHeight = window.innerHeight;
+    const lineY = Math.round(winHeight * 0.8)
     const shots = [];
 
     if(!stopIndicator){
         stopIndicator = createEl('div', { class: 'stop-indicator' });
         stopText = createEl('div', { class: 'stop-text', textContent: chrome.i18n.getMessage('screenshotTooltip')});
     }
-    const lineY = Math.round(viewportHeight * 0.8);
     stopIndicator.style.top = `${lineY}px`;
     stopText.style.top = `${Math.max(8, lineY - 28)}px`;
     shadowRoot.append(stopIndicator, stopText);
     stopIndicator.style.display = 'block';
     stopText.style.display = 'block';
-
-    const prevUserSelect = document.body.style.userSelect;
-    document.body.style.userSelect = 'none';
     preventPageInteraction();
-    eventManager.on(document, 'click',()=>{ userStopped = true },{ once: true });
+    eventManager.on(document, 'mousedown',()=>{ userStopped = true },{ once: true });
 
     //截取单帧截图
     async function grabViewport() {
@@ -274,52 +268,54 @@ async function scrollScreenshot() {
         img: await grabViewport(),
         y: window.scrollY
     });
-    lastCaptureY = window.scrollY;
 
-    const scrollStep = Math.max(1,Math.floor(viewportHeight / 50));  // 滚完一屏需要的帧数
+    const scrollStep = Math.max(1,Math.floor(winHeight / 150));  // 滚完一屏需要的帧数
+
+    //每一帧都调用tick来实现自动滚动
     async function tick(){
         if(userStopped){
             cancelAnimationFrame(rafId);
             return finish();
         }
         //到达底部时
-        const atBottom = Math.ceil(window.scrollY + viewportHeight) >= document.documentElement.scrollHeight;
+        const atBottom = Math.ceil(window.scrollY + winHeight) >= document.documentElement.scrollHeight;
         if(atBottom){
             userStopped = true;
             cancelAnimationFrame(rafId);
             return finish();
         }
-        //向下滚动一点
-        window.scrollTo({ top: window.scrollY + scrollStep, behavior:'auto'});
 
-        //每当满足最小滚动距离就截图
-        if(window.scrollY - lastCaptureY >= minDeltaForCapture){
+        window.scrollTo({ top: window.scrollY + scrollStep, behavior:'auto'});
+        offsetY += scrollStep;
+
+        //每当满足最小滚动距离就截图 (至少滚了 90% 视口高度才再截一张)
+        if(offsetY >= Math.floor(winHeight * 0.9)){
             const img = await grabViewport();
             shots.push({ img, y:window.scrollY});
-            lastCaptureY = window.scrollY;
+            offsetY = 0;
         }
         rafId = requestAnimationFrame(tick);
     }
     rafId = requestAnimationFrame(tick);
 
+
     async function finish() {
-        const stopY = window.scrollY + lineY; //确保在终止线处终止截屏
-        const startY = startScrollTop;
+        const stopY = window.scrollY + lineY; 
 
         const lastImg = await grabViewport();
         shots.push({ img: lastImg, y: window.scrollY });
 
         stopIndicator.style.display = 'none';
         stopText.style.display = 'none';
-        document.body.style.userSelect = prevUserSelect || '';
         
         //过滤并裁剪各段截图和区间交集
         const chunks = [];
+        let lastY = startY;
         for(const s of shots){
             const top = s.y;
-            const bottom = s.y +viewportHeight;
+            const bottom = s.y +winHeight;
             //取startY和stopY的交集来裁剪图片
-            const interTop = Math.max(startY,top);
+            const interTop = Math.max(lastY,top);
             const interBottom = Math.min(stopY, bottom);
             const interH = Math.max(0, interBottom - interTop);
 
@@ -327,11 +323,12 @@ async function scrollScreenshot() {
 
             const cropped = await cropImg(s.img, {
                 x:0,
-                y:Math.round(interTop - top),
-                w:viewportWidth,
+                y: Math.round(interTop - top),
+                w: window.innerWidth,
                 h: Math.round(interH)
             })
             chunks.push({ img: cropped, h:interH});
+            lastY = interBottom;
         }
 
         const result = await combineImages(chunks);
@@ -391,14 +388,16 @@ function cropImg(image,infos){
 
 //合并多个截屏
 function combineImages(chunks){
+    console.log('chunks: ', chunks);
     return new Promise((resolve, reject)=>{
         const imgs = [];
         let loaded = 0;
-        chunks.forEach((chk, i)=>{
+        chunks.forEach((_, i)=>{
             const img = new Image();
             img.onload= () =>{
                 imgs[i] = img;
                 loaded++;
+                //加载完chunks对应数量的Image后
                 if(loaded === chunks.length){
                     const totalCssHeight = chunks.reduce((acc,i)=> acc + i.h , 0);
                     const canvas = document.createElement('canvas');
@@ -420,7 +419,7 @@ function combineImages(chunks){
                 }
             }
             img.onerror = () => reject(new Error('image load failed'));
-            img.src = chk.img;
+            img.src = chunks[i].img;
         })
     })
 }
