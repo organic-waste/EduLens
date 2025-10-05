@@ -240,7 +240,8 @@ async function scrollScreenshot() {
         stopText = createEl('div', { class: 'stop-text', textContent: chrome.i18n.getMessage('screenshotTooltip')});
     }
     stopIndicator.style.top = `${lineY}px`;
-    stopText.style.top = `${Math.max(8, lineY - 28)}px`;
+    stopText.style.top = `${lineY}px`;
+    stopText.style.height = `${winHeight-lineY}px`;
     shadowRoot.append(stopIndicator, stopText);
     stopIndicator.style.display = 'block';
     stopText.style.display = 'block';
@@ -248,21 +249,11 @@ async function scrollScreenshot() {
 
     //截取单帧截图
     async function grabViewport() {
-        //先隐藏提示元素再截图
-        const prevLineDisplay = stopIndicator.style.display;
-        const prevTextDisplay = stopText.style.display;
-        stopIndicator.style.display = 'none';
-        stopText.style.display = 'none';
-        
         //使用双rAF确保样式已经重绘了
         await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
         const response = await chrome.runtime.sendMessage({type: 'SCREENSHOT'});
         const img = response.image;
-
-        stopIndicator.style.display = prevLineDisplay;
-        stopText.style.display = prevTextDisplay;
         return img;
-        
     }
 
     //功能启用的时候立即截取第一帧
@@ -271,8 +262,8 @@ async function scrollScreenshot() {
         y: window.scrollY
     });
 
-    const scrollStep = Math.max(1,Math.floor(winHeight / 150));  // 滚完一屏需要的帧数
-
+    const scrollStep = Math.max(1,Math.floor(winHeight / 100));  // 滚完一屏需要的帧数
+    let atBottom = false;
     //每一帧都调用tick来实现自动滚动
     async function tick(){
         if(userStopped){
@@ -280,7 +271,7 @@ async function scrollScreenshot() {
             return finish();
         }
         //到达底部时
-        const atBottom = Math.ceil(window.scrollY + winHeight) >= document.documentElement.scrollHeight;
+        atBottom = Math.ceil(window.scrollY + winHeight) >= document.documentElement.scrollHeight;
         if(atBottom){
             userStopped = true;
             cancelAnimationFrame(rafId);
@@ -290,8 +281,8 @@ async function scrollScreenshot() {
         window.scrollTo({ top: window.scrollY + scrollStep, behavior:'auto'});
         offsetY += scrollStep;
 
-        //每当满足最小滚动距离就截图 (至少滚了 90% 视口高度才再截一张)
-        if(offsetY >= Math.floor(winHeight * 0.9)){
+        //每当满足最小滚动距离就截图
+        if(offsetY >= lineY){
             const img = await grabViewport();
             shots.push({ img, y:window.scrollY});
             offsetY = 0;
@@ -302,21 +293,20 @@ async function scrollScreenshot() {
 
 
     async function finish() {
-        const stopY = window.scrollY + lineY; 
-
-        const lastImg = await grabViewport();
-        shots.push({ img: lastImg, y: window.scrollY });
-
         stopIndicator.style.display = 'none';
         stopText.style.display = 'none';
+
+        const stopY = window.scrollY + winHeight; 
+        const lastImg = await grabViewport();
+        shots.push({ img: lastImg, y: window.scrollY });
         
         //过滤并裁剪各段截图和区间交集
         const chunks = [];
         let lastY = startY;
-        for(const s of shots){
+        for (let i = 0; i < shots.length; i++) {
+            const s = shots[i];
             const top = s.y;
-            const bottom = s.y +winHeight;
-            //取startY和stopY的交集来裁剪图片
+            const bottom = (atBottom && i === shots.length-1) ? s.y+ winHeight:s.y + lineY;
             const interTop = Math.max(lastY,top);
             const interBottom = Math.min(stopY, bottom);
             const interH = Math.max(0, interBottom - interTop);
