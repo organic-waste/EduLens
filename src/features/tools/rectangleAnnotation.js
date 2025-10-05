@@ -3,6 +3,7 @@ import eventManager from '../../utils/eventManager.js';
 import store from '../../stores/tools.js';
 import { getOffsetPos, createEl } from '../../utils/operateEl.js'
 import { getPageKey,getId } from '../../utils/getIdentity.js';
+import { preventPageInteraction,restorePageInteraction} from '../../utils/controlInteraction.js'
 
 let isCreating = false; //是否还在创建矩阵中
 let isEditing = false; //是否有矩阵处于编辑模式
@@ -69,20 +70,6 @@ function toggleRectangleMode(){
         drawingContainer.style.cursor='';
         restorePageInteraction();
     }
-}
-
-//监听画布的鼠标事件
-function preventPageInteraction(){
-    document.body.style.userSelect='none';
-    document.body.style.pointerEvents='none';
-    drawingContainer.style.pointerEvents='auto';
-}
-
-//监听背景的鼠标事件
-function restorePageInteraction() {
-    document.body.style.userSelect = '';
-    document.body.style.pointerEvents = '';
-    // drawingContainer.style.pointerEvents = 'none'; 
 }
 
 function EditingRectangleEventListeners(){

@@ -2,6 +2,7 @@
 import eventManager from '../../utils/eventManager.js';
 import { createEl } from '../../utils/operateEl.js'
 import store from '../../stores/tools.js';;
+import { preventPageInteraction,restorePageInteraction, enableUserScroll,disableUserScroll} from '../../utils/controlInteraction.js'
 
 let funcDiv = null;
 let screenshotDiv = null;
@@ -224,6 +225,8 @@ function regionScreenshot(){
 
 //滚动截屏相关
 async function scrollScreenshot() {
+    preventPageInteraction();
+    disableUserScroll();
     let startY = window.scrollY; 
     let userStopped = false;
     let rafId = null;  // 用于 cancelAnimationFrame
@@ -241,7 +244,6 @@ async function scrollScreenshot() {
     shadowRoot.append(stopIndicator, stopText);
     stopIndicator.style.display = 'block';
     stopText.style.display = 'block';
-    preventPageInteraction();
     eventManager.on(document, 'mousedown',()=>{ userStopped = true },{ once: true });
 
     //截取单帧截图
@@ -334,10 +336,10 @@ async function scrollScreenshot() {
         const result = await combineImages(chunks);
         copyImg(result);
         downloadImg(result);
-        restorePageInteraction();
         store.updateState();
         panelDiv.style.visibility = 'visible';
-
+        restorePageInteraction();
+        enableUserScroll();
     }
 }
 
@@ -388,7 +390,6 @@ function cropImg(image,infos){
 
 //合并多个截屏
 function combineImages(chunks){
-    console.log('chunks: ', chunks);
     return new Promise((resolve, reject)=>{
         const imgs = [];
         let loaded = 0;
@@ -460,14 +461,4 @@ function downloadImg(image, filename = `screenshot-${Date.now()}.png`){
             reject(false);
         }
     })
-}
-
-function preventPageInteraction(){
-    document.body.style.userSelect='none';
-    document.body.style.pointerEvents='none';
-}
-
-function restorePageInteraction() {
-    document.body.style.userSelect = '';
-    document.body.style.pointerEvents = '';
 }

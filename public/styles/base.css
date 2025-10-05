@@ -15,6 +15,10 @@ html {
   scroll-behavior: smooth;
 }
 
+.no-scroll {
+  overflow: hidden !important; 
+}
+
 /* 清除外界的样式，防止被影响 */
 :host, ::before, ::after { all: unset; }
 *, *::before, *::after   { box-sizing: border-box; }
