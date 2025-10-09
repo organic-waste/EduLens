@@ -48,13 +48,15 @@ class ToolStore {
     const eraserBtn = shadowRoot.getElementById('eraser-btn');
     const rectangleBtn = shadowRoot.getElementById('rectangle-btn');
     const lineBtn = shadowRoot.getElementById('line-btn');
+    const ImageBtn = shadowRoot.getElementById('image-btn');
 
-    if (!penBtn || !eraserBtn || !rectangleBtn || !lineBtn) return;
+    if (!penBtn || !eraserBtn || !rectangleBtn || !lineBtn ||!ImageBtn) return;
 
     penBtn.classList.toggle('active', this.isPen);
     eraserBtn.classList.toggle('active', this.isEraser);
     rectangleBtn.classList.toggle('active', this.isRectangle);
     lineBtn.classList.toggle('active', this.isLine);
+    ImageBtn.classList.toggle('active',this.isImage);
   }
 }
 
