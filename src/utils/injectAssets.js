@@ -20,8 +20,9 @@ const CSS_FILES = [
   'styles/countdown.css',
   'styles/mouse-enhance.css',
   'styles/graffiti.css',
-  'styles/rectangleAnnotation.css',
-  'styles/screenshot.css'
+  'styles/rectangle-annotation.css',
+  'styles/screenshot.css',
+  'styles/upload-image.css'
 ];
 
 let shadowRoot = null;

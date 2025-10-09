@@ -314,7 +314,7 @@ async function scrollScreenshot() {
             if(interH <= 0) continue; //如果没有交集就丢弃此截图
 
             const cropped = await cropImg(s.img, {
-                x:0,
+                x: 0,
                 y: Math.round(interTop - top),
                 w: window.innerWidth,
                 h: Math.round(interH)

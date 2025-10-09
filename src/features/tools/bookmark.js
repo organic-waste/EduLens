@@ -148,7 +148,7 @@ export function activateBookmark() {
   MonitorSPARoutes(loadBookmarks);
 
   chrome.runtime.onMessage.addListener((message)=>{
-    if(message.type==='LOAD_BOOKMARK'){
+    if(message.type==='RELOAD'){
       loadBookmarks();
       // console.log('load bookmarks from service_worker');
     }

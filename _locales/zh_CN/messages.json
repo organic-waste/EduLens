@@ -111,6 +111,19 @@
     "description": "截取长屏时的提示文字"
   },
 
+  "imageBtn":{
+    "message":"挂起图片",
+    "description":"点击上传一张图片到页面"
+  },
+  "imageDelete":{
+    "message":"删除图片",
+    "description":"删除挂起的图片"
+  },
+  "imagePinToggle":{
+    "message":"是否跟随页面滚动",
+    "description":"切换图片是否跟随页面滚动"
+  },
+
   "popupTitle": {
     "message": "EduLens 设置",
     "description": "弹出页面的标题。"

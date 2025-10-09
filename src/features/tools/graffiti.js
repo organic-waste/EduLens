@@ -5,6 +5,7 @@ import MonitorSPARoutes from '../../utils/monitorSPARoutes.js'
 import { getPageKey } from '../../utils/getIdentity.js';
 import { getOffsetPos, createEl } from '../../utils/operateEl.js'
 import { activateRectangleAnnotation } from './rectangleAnnotation.js'
+import { activateImageAnnotation } from './uploadImage.js';
 
 let drawingCanvas = null;
 let drawingCtx = null;
@@ -347,5 +348,6 @@ export function activateGraffiti(){
   createControls();
   setupEventListeners();
   activateRectangleAnnotation();
+  activateImageAnnotation();
   MonitorSPARoutes(handlePageChange);
 }

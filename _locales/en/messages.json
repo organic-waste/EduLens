@@ -85,6 +85,16 @@
     "message": "Click anywhere to end the screenshot"
   },
 
+  "imageBtn":{
+    "message":"Suspend Images"
+  },
+  "imageDelete":{
+    "message":"Delete Images"
+  },
+  "imagePinToggle":{
+    "message":"Toggle Fixed/Scroll"
+  },
+
   "popupTitle": {
     "message": "EduLens Settings"
   },

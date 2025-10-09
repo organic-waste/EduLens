@@ -51,7 +51,7 @@ export function activateRectangleAnnotation(){
     });
     EditingRectangleEventListeners();
     chrome.runtime.onMessage.addListener((message)=>{
-        if(message.type==='LOAD_BOOKMARK'){
+        if(message.type==='RELOAD'){
             loadRectangles();
         }
     })
@@ -231,7 +231,7 @@ function handleDblClick(e){
 
 function createPreviewRectangle(){
     if(previewDiv) removePreviewRectangle();
-    previewDiv = createEl('div',{class: 'annotation-preview', style:`border-color:${store.currentColor},border-width: ${store.brushSize}px`})
+    previewDiv = createEl('div',{class: 'annotation-preview',style:`border-color:${store.currentColor};border-width: ${store.brushSize}px`})
     drawingContainer.appendChild(previewDiv);
 }
 

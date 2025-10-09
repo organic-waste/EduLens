@@ -31,7 +31,7 @@ html {
     color: white;
     border: none;
     border-radius: 3px;
-    font-size: 2.4vh;
+    font-size: 2.8vh;
     cursor: pointer;
     transition: background 0.2s ease;
 }
@@ -105,4 +105,22 @@ html {
 .icon-btn.active {
     background: var(--hover-color); 
     box-shadow: 0 0 0 2px rgba(124, 161, 212, 0.5); 
+}
+
+
+.resize-handle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border: 1px solid var(--main-color);
+    border-radius: 50%;
+    pointer-events: auto;
+    z-index: 11;
+    user-select: none;
+    touch-action: none;
+}
+
+.resize-handle :hover{
+    background-color:  var(--hover-color);
 }

@@ -11,6 +11,7 @@ class ToolStore {
     this.isDOM = false;
     this.isRegion = false;
     this.isScroll = false;
+    this.isImage = false;
 
     this.currentColor = '#FF0000';
     this.penBrushSize = 5;
@@ -30,6 +31,7 @@ class ToolStore {
       isDOM : false,
       isRegion : false,
       isScroll : false,
+      isImage : false
     }
     if(state) {
       newState[state] = !oldVal;

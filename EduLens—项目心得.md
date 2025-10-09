@@ -20,6 +20,8 @@
 
 #### 样式响应性
 
+#### 检查英文翻译
+
 #### 自定义个性化面板
 
 - 截图保存格式，分辨率
@@ -2323,6 +2325,67 @@ cancelAnimationFrame(id);
 
 
 
+### `FileReader` 文件处理对象
+
+------
+
+`FileReader` 是浏览器提供给 JavaScript 的一个原生对象，用来**异步单线程**读取本地文件内容。它只能读取，不能修改或写入文件。
+
+**一、如何得到文件**
+
+通常来自 `<input type="file">` 或拖放（Drag-and-Drop）：
+
+```html
+<input type="file" id="uploader" multiple accept="image/*">
+```
+
+```js
+const files = document.getElementById('uploader').files; // FileList
+```
+
+每个 `File` 对象继承自 `Blob`，但多了文件名、修改时间等元数据。
+
+**二、创建 FileReader**
+
+```js
+const reader = new FileReader(); // 无参数
+```
+
+------
+
+**三、核心属性与方法**
+
+| 属性 / 事件         | 说明                                                    |
+| ------------------- | ------------------------------------------------------- |
+| `reader.result`     | 读取成功后，数据放在这里（`String` 或 `ArrayBuffer`）。 |
+| `reader.readyState` | 0（EMPTY）、1（LOADING）、2（DONE）。                   |
+| `onload`            | 读取成功时触发，最常用。                                |
+| `onerror`           | 发生错误时触发。                                        |
+| `onprogress`        | 周期性汇报进度，可做上传进度条。                        |
+
+| 方法                          | 返回值    | 说明                                               |
+| ----------------------------- | --------- | -------------------------------------------------- |
+| `readAsText(blob, encoding?)` | undefined | 按文本读取，默认 UTF-8。                           |
+| `readAsDataURL(blob)`         | undefined | 读取为 Base64 DataURL，适合图片预览。              |
+| `readAsArrayBuffer(blob)`     | undefined | 读取为二进制，适合后续给 WebAssembly、音频解码等。 |
+| `abort()`                     | undefined | 中断读取。                                         |
+
+---
+
+**四、常见错误码**
+
+`reader.error` 是一个 `DOMException`，常见：
+
+| 名称            | 说明                             |
+| --------------- | -------------------------------- |
+| `NotFoundError` | 文件被删除或不可读。             |
+| `SecurityError` | 文件被浏览器锁（如用户主目录）。 |
+| `EncodingError` | 文本编码错误。                   |
+
+
+
+
+
 ### 错误解决：
 
 #### `.offsetWidth` `.offsetHeight`无法获取到正确宽高
@@ -3106,6 +3169,73 @@ Shadow DOM（影子 DOM）是浏览器提供的一种封装机制，它允许你
 ```
 
 
+
+### `<svg>` 配置属性
+
+---
+
+**1. 画布与坐标系**
+
+| 属性 / 元素           | 说明                                                         | 示例                                                         |
+| --------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `viewBox="x y w h"`   | **最核心配置**！定义用户坐标系，实现响应式缩放。             | `<svg viewBox="0 0 24 24">`                                  |
+| `preserveAspectRatio` | 控制缩放对齐方式，常用 `xMidYMid meet`（居中contain）或 `slice`（cover）。 | `<svg viewBox="0 0 24 24" preserveAspectRatio="xMinYMin meet">` |
+| `width` / `height`    | 外层尺寸，支持任意 CSS 单位；留空则自动 100%。               | `<svg width="2em" height="2em">`                             |
+
+**2. 视觉样式（静态）**
+
+| 方式                | 示例                                                         | 备注                             |
+| ------------------- | ------------------------------------------------------------ | -------------------------------- |
+| 属性写法            | `<path fill="#1890ff" stroke="#000" stroke-width="2" stroke-linecap="round"/>` | 优先级最高，易读。               |
+| 内联 `<style>`      | `<style>.icon{fill:var(--c,currentColor)}</style>`           | 可复用、换主题。                 |
+| 全局 `currentColor` | `<path fill="currentColor"/>`                                | 继承父级 `color`，单色图标神器。 |
+| 渐变 / 图案         | `<linearGradient id="g"><stop offset="0%" stop-color="#ff4d4f"/><stop offset="100%" stop-color="#faad14"/></linearGradient>` | 通过 `fill="url(#g)"` 引用。     |
+
+**3. 复用与模板**
+
+| 元素                                           | 用途                                               | 示例                                          |
+| ---------------------------------------------- | -------------------------------------------------- | --------------------------------------------- |
+| `<symbol id="icon-close" viewBox="0 0 24 24">` | 定义“图标组件”，不渲染，只注册。                   | `<svg><use href="#icon-close"/></svg>`        |
+| `<defs>`                                       | 放渐变、滤镜、剪贴路径等“资源”。                   | `<defs><filter id="shadow">…</filter></defs>` |
+| `<use href="#id" x="5" y="5"/>`                | 实例化 symbol / path / group，可平移、旋转、缩放。 | 一次绘制，多处引用。                          |
+
+**4. 交互 & 事件**
+
+SVG 节点就是 DOM，事件与 HTML 完全一致：
+
+| 属性                     | 示例                                      |
+| ------------------------ | ----------------------------------------- |
+| `cursor="pointer"`       | 手型光标                                  |
+| `:hover / :active`       | `<style>.btn:hover{fill:#ff4d4f}</style>` |
+| `onclick / onmouseenter` | `<path onclick="toggle(this)"/>`          |
+
+**5. 动画 & 过渡**
+
+| 技术             | 示例                                                         | 特点                                                       |
+| ---------------- | ------------------------------------------------------------ | ---------------------------------------------------------- |
+| CSS 过渡         | `svg {transition: fill .3s}`                                 | 简单颜色/位移/旋转。                                       |
+| CSS keyframes    | `@keyframes pulse{50%{transform:scale(1.2)}}`                | 无需 JS，性能高。                                          |
+| SMIL `<animate>` | `<animate attributeName="r" values="10;20;10" dur="2s" repeatCount="indefinite"/>` | 原生声明式，Chrome/Edge/Firefox 全支持，Safari 14+ 也 OK。 |
+| SVG.js / GSAP    | `gsap.to('#circle',{attr:{r:20},duration:.5})`               | 复杂序列、路径跟随。                                       |
+
+**6. 响应式技巧组合**
+
+```html
+<svg
+  viewBox="0 0 24 24"
+  preserveAspectRatio="xMidYMid meet"
+  width="1em"
+  height="1em"
+  fill="currentColor"
+  aria-hidden="true"
+  focusable="false">
+  <use href="#icon-close"/>
+</svg>
+```
+- 随字体大小缩放（`1em`）  
+- 颜色随父级 `color` 变化  
+- 读屏器自动忽略 (`aria-hidden`)  
+- 键盘不可聚焦 (`focusable="false"`)，避免 IE 意外 tab 停留
 
 
 
