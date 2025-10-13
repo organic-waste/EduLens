@@ -84,6 +84,8 @@ function EditingRectangleEventListeners(){
 function listenerMouseDown(e){
     if(e.button!==0)return;
     const { x , y } = getOffsetPos(e,drawingContainer);
+            console.log('currentRect: ', currentRect);
+        console.log('isEditing: ', isEditing);
     
     //创建新矩阵时
     if(store.isRectangle && !isEditing){
@@ -114,6 +116,7 @@ function listenerMouseDown(e){
         }
         //点击矩阵外部
         else{
+            console.log('点击到矩阵外部')
             exitEditingMode();
             e.stopPropagation();
         }
@@ -527,12 +530,12 @@ function isPointInRect(px,py,rx,ry,rw,rh){
 }
 
 function findTopmostRectangleAt(x, y) {
-    const el = shadowRoot.elementFromPoint(x + window.scrollX, y + window.scrollY);
-    if (el && el.classList.contains('annotation-rect')) {
-        const rectId = el.dataset.id;
-        return rectangles.find(r => r.id === rectId);
+    for (let i = rectangles.length - 1; i >= 0; i--) {
+        const rect = rectangles[i];
+        if (isPointInRect(x, y, rect.x, rect.y, rect.width, rect.height)) {
+            return rect;
+        }
     }
-    return null;
 }
 
 function showTooltip(rectId){

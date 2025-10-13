@@ -28,15 +28,15 @@
 - 截图粘贴时是base64还是图片
 - 截图后文件保存路径
 
-
-
 - 面板主题颜色
-
-
 
 - 删除对应网站的localstorage中的数据
 
+#### 云端存储数据和团队协作
 
+- 用户账号系统
+- 标注数据跨设备同步
+- 团队协作标注（分享标注链接）
 
 
 
@@ -1075,22 +1075,6 @@ link.href = chrome.runtime.getURL('assets/fontawesome/css/all.min.css');
 
 
 
-###  鼠标追踪元素定位错乱
-
-------
-
-**原因：**使用transform来追踪鼠标位置，只设置了`position:fixed;`，没有设置`top/left`值，导致元素跟随文档流生成在网站最底部
-
-**解决：**
-
-```js
-//记得写明初始top和left值，否则fixed定位错乱
-  highlightDiv.style.left = 0+ 'px';
-  highlightDiv.style.top = 0 + 'px';
-```
-
-
-
 ### 获取元素的位置方法
 
 ------
@@ -1356,12 +1340,6 @@ Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
    ```
 
 5. 注意：结果都是小写字母 + 数字，不会有大写。 且返回字符串，别当成数字用 `+` 运算，否则会先被转回 10 进制
-
-
-
-
-
-
 
 
 
@@ -2387,6 +2365,22 @@ const reader = new FileReader(); // 无参数
 
 
 ### 错误解决：
+
+####  鼠标追踪元素定位错乱
+
+------
+
+**原因：**使用transform来追踪鼠标位置，只设置了`position:fixed;`，没有设置`top/left`值，导致元素跟随文档流生成在网站最底部
+
+**解决：**
+
+```js
+//记得写明初始top和left值，否则fixed定位错乱
+  highlightDiv.style.left = 0+ 'px';
+  highlightDiv.style.top = 0 + 'px';
+```
+
+
 
 #### `.offsetWidth` `.offsetHeight`无法获取到正确宽高
 
@@ -3747,7 +3741,40 @@ document.addEventListener('mouseup', () => {
 
 **解决：**使用 `beginPath()`开始一个新的路径并清除之前所有的子路径（moveTo, lineTo, arc等）
 
-### 
+
+
+## Nodejs 相关
+
+### 常见中间件
+
+**中间件（Middleware）就是“夹在请求进来 和 响应出去之间、能被 Express 挨个调用的函数”**；  
+对请求（req）或响应（res）进行 加工、检查、拦截、改写，然后决定继续往下传还是提前结束。
+
+---
+
+**Express 中的三种常见写法**
+
+| 用法       | 示例                                 | 触发时机         |
+| ---------- | ------------------------------------ | ---------------- |
+| **全局**   | `app.use(myMiddleware)`              | 任何请求都会经过 |
+| **路径级** | `app.use('/api', myMiddleware)`      | 仅 `/api` 开头   |
+| **路由级** | `router.get('/user', auth, getUser)` | 仅这一条路由     |
+
+---
+
+**官方/社区常用中间件速览**
+
+| 中间件                  | 作用                                | 一句话记忆            |
+| ----------------------- | ----------------------------------- | --------------------- |
+| `cors()`                | 在响应头加 `Access-Control-Allow-*` | 解决跨域              |
+| `express.json()`        | 把 `req.body` 从字符串变成对象      | 不用自己 `JSON.parse` |
+| `express.static()`      | 返回静态文件（HTML/CSS/图片）       | 让浏览器能下载        |
+| `morgan`                | 打印访问日志                        | 看接口被谁调了        |
+| `helmet`                | 加各种安全响应头                    | 防 XSS/点击劫持       |
+| `passport.initialize()` | 初始化登录认证                      | 识别“你是谁”          |
+| 自定义错误处理          | `(err, req, res, next) => {}`       | 统一捕获异常          |
+
+
 
 
 
@@ -3814,7 +3841,7 @@ document.addEventListener('mouseup', () => {
 
  **关键问题：强制同步布局**
 
-- **正常流程**：JS → 浏览器异步等一会 → 统一做一次 Layout。  
+- **正常流程**：JS → 浏览器异步等一会 → 统一做一次 Layout（回流）。  
 - **触发强制同步布局**：你在 **同一帧里** 先 **读** 一个布局属性，再 **写** 一个样式，再 **读** 同一个（或相关）布局属性。  
   浏览器为了给你 最新值，必须 立即停下 JS，先计算 Layout，再继续执行 JS。  
   如果这发生在循环里 → 每轮都强制布局 → 爆炸。
@@ -3855,6 +3882,27 @@ document.addEventListener('mouseup', () => {
 | `scrollTop/Left/Width/Height` | 改变 `content` 文本                                   |
 | `getComputedStyle()`          | 添加/删除样式类                                       |
 | `getBoundingClientRect()`     | 改变 `display`、`position`、`top/left`                |
+
+
+
+### `DocumentFragment` 批量插入元素
+
+------
+
+DocumentFragment 是 DOM 世界里一个“看不见、不刷漆、零副作用”的临时画布：可以像操作普通 DOM 一样往它里面随意 append、insert、remove，只要最终没把它插进真实文档，浏览器就绝不会重排、重绘，也不会触发 MutationObserver。  等组装完毕，再一次性“整体粘贴”到页面——**只有一次重排、一次重绘**。
+
+**示例：**
+
+```js
+const frag = document.createDocumentFragment(); // ① 创建
+for (let i = 0; i < 10000; i++) {
+  frag.appendChild(document.createElement('li')); // ② 批量组装
+}
+list.appendChild(frag);                         // ③ 一次提交
+```
+对比直接 `list.appendChild(li)` 10000 次，重排次数从 n → 1，大列表、长表格瞬间不卡。
+
+
 
 
 
@@ -3984,7 +4032,5 @@ document.addEventListener('mouseup', () => {
 
 
 
-```html
 
-```
 
