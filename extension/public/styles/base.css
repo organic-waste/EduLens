@@ -1,14 +1,14 @@
 /* 颜色变量 */
-:root{
-    --main-color:#76859a;
-    --secondary-color:#c1cbce;
-    --hover-color:#5484c9;
-    --lighter-color:#e3eef3;
-    --background-color:#f3f7f9;
-    --emphasis-color:#0f3b8b;
-    --mask-color:rgba(12, 44, 104, 0.2);
-    --error-color:#b26464;
-    --emphasis-error-color:#d44343;
+:root {
+  --main-color: #76859a;
+  --secondary-color: #c1cbce;
+  --hover-color: #5484c9;
+  --lighter-color: #e3eef3;
+  --background-color: #f3f7f9;
+  --emphasis-color: #0f3b8b;
+  --mask-color: rgba(12, 44, 104, 0.2);
+  --error-color: #b26464;
+  --emphasis-error-color: #d44343;
 }
 
 html {
@@ -16,111 +16,117 @@ html {
 }
 
 .no-scroll {
-  overflow: hidden !important; 
+  overflow: hidden !important;
 }
 
 /* 清除外界的样式，防止被影响 */
-:host, ::before, ::after { all: unset; }
-*, *::before, *::after   { box-sizing: border-box; }
+:host,
+::before,
+::after {
+  all: unset;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 /* 通用样式 */
 .delete-button {
-    margin-left: 6px;
-    padding: 2px 6px;
-    background: var(--error-color);
-    color: white;
-    border: none;
-    border-radius: 3px;
-    font-size: 2.8vh;
-    cursor: pointer;
-    transition: background 0.2s ease;
+  margin-left: 6px;
+  padding: 2px 6px;
+  background: var(--error-color);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  font-size: 2.8vh;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
 .delete-button:hover {
-    background: var(--emphasis-error-color);
+  background: var(--emphasis-error-color);
 }
 
-.input{
-    flex: 1;
-    min-width: 0; 
-    padding:1vh;
-    border: 1px solid var(--secondary-color);
-    border-radius: 4px;
-    font-size: 1.6vh;
-    outline: none;
-    transition: border-color 0.2s ease;
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 1vh;
+  border: 1px solid var(--secondary-color);
+  border-radius: 4px;
+  font-size: 1.6vh;
+  outline: none;
+  transition: border-color 0.2s ease;
 }
-.input:focus{
-    border-color: var(--hover-color);
-    box-shadow: 0 0 0 2px rgba(84, 132, 201, 0.2);
+.input:focus {
+  border-color: var(--hover-color);
+  box-shadow: 0 0 0 2px rgba(84, 132, 201, 0.2);
 }
 
 .button {
-    padding: 0.6vh 1.1vh;
-    background: var(--main-color);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 2vh;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    white-space: nowrap;
+  padding: 0.6vh 1.1vh;
+  background: var(--main-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 2vh;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  white-space: nowrap;
 }
 
 .button:hover {
-    background: var(--hover-color);
+  background: var(--hover-color);
 }
 
-.function{
-    display: flex;
-    align-items: center;
-    gap: 1vh;
-    padding: 0 0.5vh;
-    width: 29vh;
-    justify-content: space-around;
-    height: 5vh;
+.function {
+  display: flex;
+  align-items: center;
+  gap: 1vh;
+  padding: 0 0.5vh;
+  width: 29vh;
+  justify-content: space-around;
+  height: 5vh;
 }
-
 
 .icon-btn {
-    width: 4vh;
-    height: 4vh;
-    background: var(--main-color);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-shrink: 0;
-    padding: 0.3vh;
+  width: 4vh;
+  height: 4vh;
+  background: var(--main-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0.3vh;
 }
 
 .icon-btn:hover {
-    background: var(--hover-color);
+  background: var(--hover-color);
 }
 
 .icon-btn.active {
-    background: var(--hover-color); 
-    box-shadow: 0 0 0 2px rgba(124, 161, 212, 0.5); 
+  background: var(--hover-color);
+  box-shadow: 0 0 0 2px rgba(124, 161, 212, 0.5);
 }
-
 
 .resize-handle {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: white;
-    border: 1px solid var(--main-color);
-    border-radius: 50%;
-    pointer-events: auto;
-    z-index: 11;
-    user-select: none;
-    touch-action: none;
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border: 1px solid var(--main-color);
+  border-radius: 50%;
+  pointer-events: auto;
+  z-index: 11;
+  user-select: none;
+  touch-action: none;
 }
 
-.resize-handle :hover{
-    background-color:  var(--hover-color);
+.resize-handle :hover {
+  background-color: var(--hover-color);
 }

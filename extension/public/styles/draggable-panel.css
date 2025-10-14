@@ -1,86 +1,86 @@
 /* 可拉动面板 */
-.draggable-panel{
-    position: fixed;
-    width: 5vh;
-    height: 5vh;
-    border-radius: 50%;
-    background:var(--main-color);
-    color: #fff;;
-    z-index: 9998;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    user-select: none;
-    visibility: visible;
-    transition: width 0.3s ease, height 0.3s ease, border-radius 0.3s ease;
+.draggable-panel {
+  position: fixed;
+  width: 5vh;
+  height: 5vh;
+  border-radius: 50%;
+  background: var(--main-color);
+  color: #fff;
+  z-index: 9998;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  user-select: none;
+  visibility: visible;
+  transition: width 0.3s ease, height 0.3s ease, border-radius 0.3s ease;
 }
-.draggable-panel.open-panel{
-    width: 30vh;
-    height: 40vh;
-    border-radius: 10px;
-}
-
-.toggle-btn{
-    z-index: 10001;
-    cursor: grab;
-    position: absolute;
-    top:0;
-    right: 0;
-    width: 5vh; 
-    height: 5vh;
-    border: none; 
-    background: var(--main-color);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.draggable-panel.open-panel {
+  width: 30vh;
+  height: 40vh;
+  border-radius: 10px;
 }
 
-.icon{
-    width: 90%;
-    height: 90%;
-    stroke: #fff;
-    stroke-width: 2.2;
-    stroke-linecap: round;
-    transition: transform 0.3s ease-in-out;
+.toggle-btn {
+  z-index: 10001;
+  cursor: grab;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5vh;
+  height: 5vh;
+  border: none;
+  background: var(--main-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.toggle-btn.open-panel .icon { 
-    transform: rotate(45deg); 
-    cursor: pointer;
+.icon {
+  width: 90%;
+  height: 90%;
+  stroke: #fff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  transition: transform 0.3s ease-in-out;
+}
+
+.toggle-btn.open-panel .icon {
+  transform: rotate(45deg);
+  cursor: pointer;
 }
 
 .draggable-card {
-    border-radius: 10px;
-    position: relative;
-    width: 30vh;
-    height: 40vh;
-    background: #fff;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
-    transition: width 0.3s ease-in-out, height 0.3s ease-in-out;
-    z-index: 10000;
-    padding: 0;
+  border-radius: 10px;
+  position: relative;
+  width: 30vh;
+  height: 40vh;
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+  transition: width 0.3s ease-in-out, height 0.3s ease-in-out;
+  z-index: 10000;
+  padding: 0;
 }
 
 .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background:var(--main-color);
-    color: #fff;
-    height: 5vh;
-    padding-left: 3vh;
-    font-size:2.5vh;
-    border-radius: 10px 10px 0 0;
-    white-space: nowrap;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--main-color);
+  color: #fff;
+  height: 5vh;
+  padding-left: 3vh;
+  font-size: 2.5vh;
+  border-radius: 10px 10px 0 0;
+  white-space: nowrap;
 }
 
 .card-content {
-    position: relative;
-    height: 35vh;
-    border-radius:0 0 10px 10px;
+  position: relative;
+  height: 35vh;
+  border-radius: 0 0 10px 10px;
 }
 
-.functions{
-    padding-left: 1vh;
-    height: 100%;
-    overflow: hidden;
+.functions {
+  padding-left: 1vh;
+  height: 100%;
+  overflow: hidden;
 }
