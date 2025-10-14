@@ -1,12 +1,11 @@
-import eventManager from './eventManager.js';
+import eventManager from "./eventManager.js";
 
 export default function MonitorSPARoutes(fn) {
-
   let lastURL = window.location.href;
 
   const observer = new MutationObserver(() => {
     const currentURL = window.location.href;
-    
+
     if (currentURL !== lastURL) {
       lastURL = currentURL;
       // console.log('URL变化:', currentURL);
@@ -20,12 +19,12 @@ export default function MonitorSPARoutes(fn) {
     childList: true,
   });
 
-  eventManager.on(window,'popstate', () => {
+  eventManager.on(window, "popstate", () => {
     // console.log('popstate');
     setTimeout(fn, 0);
   });
 
-  eventManager.on(window,'hashchange', () => {
+  eventManager.on(window, "hashchange", () => {
     // console.log('hashchange');
     setTimeout(fn, 0);
   });

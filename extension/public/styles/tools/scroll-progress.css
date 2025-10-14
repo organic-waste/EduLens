@@ -1,21 +1,21 @@
 /* 滚动进度指示器 */
 .scroll-percent {
-    position: absolute;
-    top:0;
-    left:0;
-    background: rgba(82, 102, 109, 0.2);
-    height: 100%;
-    width: 1vh;
-    z-index: 9999;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: rgba(82, 102, 109, 0.2);
+  height: 100%;
+  width: 1vh;
+  z-index: 9999;
 }
 
 .scroll-fill {
-    position: absolute;
-    top: 0;
-    width: 100%;
-    background:var(--secondary-color);
-    border-radius: 0 0 3px 3px;
-    transition: height 0.15s ease;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  background: var(--secondary-color);
+  border-radius: 0 0 3px 3px;
+  transition: height 0.15s ease;
 }
 
 /* .scroll-counter {

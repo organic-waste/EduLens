@@ -1,25 +1,25 @@
-export function preventPageInteraction(){
-    document.body.style.userSelect='none';
-    document.body.style.pointerEvents='none';
+export function preventPageInteraction() {
+  document.body.style.userSelect = "none";
+  document.body.style.pointerEvents = "none";
 }
 
 export function restorePageInteraction() {
-    document.body.style.userSelect = '';
-    document.body.style.pointerEvents = '';
+  document.body.style.userSelect = "";
+  document.body.style.pointerEvents = "";
 }
 
 export function disableUserScroll() {
-  document.documentElement.classList.add('no-scroll'); 
-  window.addEventListener('wheel',   blockScroll, { passive: false });
-  window.addEventListener('touchmove', blockScroll, { passive: false });
-  window.addEventListener('keydown', blockKeys, false);
+  document.documentElement.classList.add("no-scroll");
+  window.addEventListener("wheel", blockScroll, { passive: false });
+  window.addEventListener("touchmove", blockScroll, { passive: false });
+  window.addEventListener("keydown", blockKeys, false);
 }
 
 export function enableUserScroll() {
-  document.documentElement.classList.remove('no-scroll');
-  window.removeEventListener('wheel',   blockScroll);
-  window.removeEventListener('touchmove', blockScroll);
-  window.removeEventListener('keydown', blockKeys);
+  document.documentElement.classList.remove("no-scroll");
+  window.removeEventListener("wheel", blockScroll);
+  window.removeEventListener("touchmove", blockScroll);
+  window.removeEventListener("keydown", blockKeys);
 }
 
 function blockScroll(e) {

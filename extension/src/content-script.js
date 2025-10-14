@@ -1,45 +1,38 @@
-import { injectStyles, injectIcon }from './utils/injectAssets.js';
-import store from './stores/filters.js';
-import { activateDraggablePanel } from './features/draggablePanel.js'
-import eventManager from './utils/eventManager.js';
-import cloudSync from './utils/cloudSync.js';
+import { injectStyles, injectIcon } from "./utils/injectAssets.js";
+import store from "./stores/filters.js";
+import { activateDraggablePanel } from "./features/draggablePanel.js";
+import eventManager from "./utils/eventManager.js";
+import { cloudSync } from "./utils/cloudSync.js";
+import { createLoginForm } from "./features/accounts/login.js";
 
 //统一的键盘管理
-function keydown(e,key,name){
+function keydown(e, key, name) {
   if (e.altKey && e.key === key) {
-	if (store.active === name) {
-		store.setActive(null);
-	} else {
-		store.setActive(name);
-	}
+    if (store.active === name) {
+      store.setActive(null);
+    } else {
+      store.setActive(name);
+    }
   }
 }
 
-eventManager.on(window,'keydown', (e) => {
-  keydown(e,'h','mouseHighlight');
-  keydown(e,'s','spotlight');
-  keydown(e, 'r', 'readingSpotlight');
+eventManager.on(window, "keydown", (e) => {
+  keydown(e, "h", "mouseHighlight");
+  keydown(e, "s", "spotlight");
+  keydown(e, "r", "readingSpotlight");
 });
 
 (async function activatePlugin() {
   await injectStyles();
   // injectIcon();
   activateDraggablePanel();
+  createLoginForm();
 
-  
   //测试是否能连接到后端云服务
   const connected = await cloudSync.testConnection();
   if (connected) {
-    console.log('EduLens: 云服务已连接');
+    console.log("EduLens: 云服务已连接");
   } else {
-    console.log('EduLens: 使用本地模式');
-  } 
-
-})()
-
-
-
-
-
-
-
+    console.log("EduLens: 使用本地模式");
+  }
+})();
