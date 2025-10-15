@@ -29,6 +29,33 @@ class CloudSync {
       return false;
     }
   }
+
+  /* 账号操作相关 */
+  async register(userData) {
+    try {
+      const response = await fetch(`${this.baseURL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      });
+      return await response.json();
+    } catch (error) {
+      return { status: "error", message: "网络错误，请稍后重试" };
+    }
+  }
+
+  async login(userData) {
+    try {
+      const response = await fetch(`${this.baseURL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      });
+      return await response.json();
+    } catch (error) {
+      return { status: "error", message: "网络错误，请稍后重试" };
+    }
+  }
 }
 
 export const cloudSync = new CloudSync();

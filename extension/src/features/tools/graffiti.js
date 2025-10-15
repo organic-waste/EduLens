@@ -398,7 +398,9 @@ export function activateGraffiti() {
   loadDrawing();
   createControls();
   setupEventListeners();
+
   activateRectangleAnnotation();
   activateImageAnnotation();
+
   MonitorSPARoutes(handlePageChange);
 }

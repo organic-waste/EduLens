@@ -3743,7 +3743,7 @@ document.addEventListener('mouseup', () => {
 
 
 
-## Nodejs 相关
+## 后端相关
 
 ### 常见中间件
 
@@ -3775,6 +3775,152 @@ document.addEventListener('mouseup', () => {
 | 自定义错误处理          | `(err, req, res, next) => {}`       | 统一捕获异常          |
 
 
+
+
+
+### 连接 MongoDB 数据库
+
+------
+
+连接MongoDB主要有两种方式：连接到本地安装的MongoDB服务，或者使用云端的MongoDB Atlas服务。
+
+| 对比维度           | 本地 MongoDB                        | MongoDB Atlas (云服务)                                   |
+| :----------------- | :---------------------------------- | :------------------------------------------------------- |
+| **适用场景**       | 开发、测试、学习                    | 生产环境、团队协作                                       |
+| **连接字符串示例** | `mongodb://localhost:27017/edulens` | `mongodb+srv://用户名:密码@集群地址.mongodb.net/edulens` |
+| **优势**           | 速度快，无需网络，离线可用          | 免安装，易于部署，支持跨设备访问                         |
+| **劣势**           | 需自行安装、配置和维护              | 受网络影响，免费集群有资源限制                           |
+
+------
+
+**连接到本地 MongoDB 服务**
+
+确保你的MongoDB服务已经启动。在Windows系统中，你可以通过以下步骤操作：
+
+1.  搜索并打开 **“服务”** 应用。
+2.  在服务列表中找到 **MongoDB** 或类似名称的服务。
+3.  检查其状态，如果未运行，请**右键单击并选择“启动”**。
+
+之后，在你的后端项目，通常是 `app.js` 或 `server.js` 文件中，使用 **Mongoose** 库来建立连接。请确保连接字符串和参数与下面的示例一致：
+
+```javascript
+const mongoose = require('mongoose');
+
+// 使用 async/await 进行连接，这是一种更现代的异步处理方式
+async function connectToMongoDB() {
+  try {
+    // 连接字符串。'edulens'是你的数据库名称，如果不存在，MongoDB会自动创建
+    const connectionString = 'mongodb://localhost:27017/edulens';
+    
+    await mongoose.connect(connectionString, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      // 对于生产环境或测试，你可能还需要配置写入关注，例如：
+      // writeConcern: { w: 'majority' } 
+    });
+    
+    console.log('✅ 成功连接到本地MongoDB数据库！');
+  } catch (error) {
+    console.error('❌ 连接MongoDB失败：', error.message);
+  }
+}
+
+// 调用函数
+connectToMongoDB();
+```
+
+------
+
+**连接到 MongoDB Atlas 云服务**
+
+对于项目上线或跨设备协作，使用MongoDB Atlas更佳。首先，你需要创建一个免费集群并获取连接字符串：
+
+1.  访问 [MongoDB Atlas官网](https://www.mongodb.com/atlas) 注册并登录。
+2.  创建一个免费集群（Free Tier）。
+3.  在 **Security** -> **Database Access** 中创建一个数据库用户，记住用户名和密码。
+4.  在 **Security** -> **Network Access** 中，将你的IP地址（例如 `0.0.0.0/0` 允许所有IP，仅建议用于测试）加入白名单。
+5.  回到 **Database** -> **Clusters**，点击 "Connect"，选择 "Connect your application"，复制连接字符串。
+
+然后，在你的代码中使用复制的连接字符串，并替换其中的 `<password>` 和 `<dbname>`：
+
+```javascript
+async function connectToAtlas() {
+  try {
+    // 你的Atlas连接字符串，通常格式如下
+    const atlasConnectionString = 'mongodb+srv://你的用户名:<password>@集群地址.mongodb.net/edulens?retryWrites=true&w=majority';
+    
+    await mongoose.connect(atlasConnectionString, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    
+    console.log('✅ 成功连接到MongoDB Atlas！');
+  } catch (error) {
+    console.error('❌ 连接MongoDB Atlas失败：', error.message);
+  }
+}
+
+connectToAtlas();
+```
+
+
+
+
+
+### 调试 MongoDB 数据库 
+
+------
+
+**使用 MongoDB Compass（图形化界面）**
+
+MongoDB Compass 是官方提供的图形化界面工具，非常适合初学者查看和操作数据。
+
+1.  **下载与安装**：从 [MongoDB官网下载Compass](https://www.mongodb.com/try/download/compass)，选择免费的社区版（Community Edition）即可。
+2.  **连接数据库**：
+    *   对于**本地数据库**：启动Compass，在连接字符串输入框直接粘贴 `mongodb://localhost:27017`，然后点击 "Connect"。
+    *   对于**Atlas数据库**：在Compass中粘贴你从Atlas复制的完整连接字符串（包含用户名、密码和数据库名）。
+3.  **查看与操作数据**：连接成功后，你可以在左侧看到数据库列表。点击你的数据库（如 `edulens`），再点击集合（如 `users` 或 `annotations`），即可在右侧看到存储的文档（数据记录）。你可以在这里进行查询、修改、删除等操作，非常方便。
+
+------
+
+**使用 MongoDB Shell（命令行界面）**
+
+如果你更喜欢命令行操作，可以使用你安装的 MongoDB Shell (`mongosh`)。
+
+1.  **连接本地数据库**：打开终端，输入以下命令：
+    ```bash
+    mongosh "mongodb://localhost:27017/edulens"
+    ```
+2.  **连接Atlas数据库**：在终端中使用从Atlas复制的连接字符串：
+    ```bash
+    mongosh "mongodb+srv://你的用户名:密码@集群地址.mongodb.net/edulens"
+    ```
+3.  **常用Shell命令**：
+    *   `show dbs`：列出所有数据库。
+    *   `use edulens`：切换到 `edulens` 数据库。
+    *   `show collections`：列出当前数据库的所有集合。
+    *   `db.users.find()`：查询 `users` 集合中的所有文档。
+    *   `db.annotations.countDocuments({})`：统计 `annotations` 集合中的文档数量。
+
+
+
+
+
+### 错误解决：
+
+#### 后端服务报错（连接MongoDB失败）
+
+------
+
+**原因：**你的 Node 服务已经正常启动，但连不上本地 MongoDB 服务器（端口 27017），所以数据库操作都会失败。
+
+| 日志片段                                                     | 含义                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `npm run dev` / `nodemon app.js`                             | 你用 nodemon 启动开发模式，代码变动会自动重启。              |
+| `后端服务运行：http://localhost:3000`                        | Express（或其他框架）已在 3000 端口监听，HTTP 服务本身没问题。 |
+| `MongoDB连接失败: MongooseServerSelectionError: connect ECONNREFUSED 127.0.0.1:27017` | 关键错误：Mongoose 试图连 `localhost:27017`，但操作系统返回 `ECONNREFUSED`，说明 **本机没有 MongoDB 实例在监听该端口**。 |
+| `::1:27017` 也拒绝                                           | IPv6 的本地地址同样被拒绝，进一步确认 **MongoDB 根本没跑**。 |
+| `[MONGODB DRIVER] Warning: useNewUrlParser / useUnifiedTopology 已弃用` | 只是 deprecation 警告，不影响连接，可忽略或把选项删掉。      |
 
 
 
