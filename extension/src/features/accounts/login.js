@@ -195,6 +195,15 @@ async function handleLogin(form, errorEl) {
     const res = await cloudSync.login({ email, password });
     if (res.status === "success") {
       hideError(errorEl);
+
+      cloudSync.token = res.token;
+      cloudSync.user = res.data.user;
+      cloudSync.isOnline = true;
+      await chrome.storage.local.set({
+        cloudToken: res.token,
+        cloudUser: res.data.user,
+      });
+
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);
       showSuccessMessage("登录成功");
@@ -272,6 +281,7 @@ function showSuccessMessage(msg) {
   console.log("Success", msg);
 }
 
+//在面板上显示账号信息
 export async function updateLoginStatus(user) {
   const shadow = window.__EDULENS_SHADOW_ROOT__;
   shadow.querySelector(".user-status-area")?.remove();
@@ -294,27 +304,25 @@ export async function updateLoginStatus(user) {
 
   eventManager.on(area.querySelector(".logout-btn"), "click", handleLogout);
 
-  shadow.querySelector(".card-content")?.prepend(area);
+  shadow.querySelector(".functions")?.append(area);
 
   async function handleLogout() {
-    await chrome.storage.local.remove(["cloudToken", "cloudUser"]);
-    cloudSync.token = null;
-    cloudSync.user = null;
-    cloudSync.isOnline = false;
+    await cloudSync.clearAuth();
     window.__EDULENS_SHADOW_ROOT__.querySelector(".user-status-area")?.remove();
     showSuccessMessage("已退出登录");
   }
 }
 
-export function activateLogin() {
-  showForm();
-}
-
-export async function checkAndUpdateLoginStatus() {
+export async function activateLogin() {
   await cloudSync.init();
-  if (cloudSync.isOnline && cloudSync.user) {
-    updateLoginStatus(cloudSync.user);
-    return true;
+
+  // 如果本地有token，就验证有效性
+  if (cloudSync.token) {
+    const isValid = await cloudSync.validateToken();
+    if (isValid && cloudSync.user) {
+      updateLoginStatus(cloudSync.user);
+    }
+  } else {
+    showForm();
   }
-  return false;
 }

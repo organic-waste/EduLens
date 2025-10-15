@@ -12,6 +12,42 @@ const signToken = (id) => {
   });
 };
 
+router.get("/verify", async (req, res) => {
+  try {
+    const token = req.headers.authorization;
+    if (!token) {
+      return res.status(401).json({
+        status: "error",
+        message: "未提供 token",
+      });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(401).json({
+        status: "error",
+        message: "用户不存在",
+      });
+    }
+    res.json({
+      status: "success",
+      data: {
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          createAt: user.createAt,
+        },
+      },
+    });
+  } catch (error) {
+    res.status(401).json({
+      status: "error",
+      message: "Token无效或者已过期",
+    });
+  }
+});
+
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;

@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next(); //避免修改其他内容时重复哈希
 
-  this.password = await bcrypt.hash(this.password, 12); //12为saltRounds，成本因子
+  this.password = await bcrypt.hash(this.password, 10); //10为saltRounds，成本因子
   next();
 });
 

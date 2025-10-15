@@ -108,7 +108,7 @@
 }
 .login-submit-btn:hover,
 .register-submit-btn:hover {
-  background-color: #4338ca !important;
+  background-color: #4338ca;
 }
 
 .login-switch,
@@ -138,13 +138,13 @@
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 0.5rem;
-  background: var(--lighter-color);
+  padding: 3px;
+  background: var(--background-color);
   font-size: 14px;
   transition: background 0.3s ease;
 }
 .user-status-area:hover {
-  background: var(--secondary-color) !important;
+  background: var(--lighter-color);
 }
 
 /* .user-avatar {
@@ -175,10 +175,13 @@
 
 .logout-btn {
   background: none;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--main-color);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 2rem;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--main-color);
+}
+.logout-btn:hover {
+  border-color: var(--emphasis-color);
 }
