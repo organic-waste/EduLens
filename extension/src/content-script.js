@@ -3,7 +3,6 @@ import store from "./stores/filters.js";
 import { activateDraggablePanel } from "./features/draggablePanel.js";
 import eventManager from "./utils/eventManager.js";
 import { cloudSync } from "./utils/cloudSync.js";
-import { createLoginForm } from "./features/accounts/login.js";
 
 //统一的键盘管理
 function keydown(e, key, name) {
@@ -26,7 +25,6 @@ eventManager.on(window, "keydown", (e) => {
   await injectStyles();
   // injectIcon();
   activateDraggablePanel();
-  createLoginForm();
 
   //测试是否能连接到后端云服务
   const connected = await cloudSync.testConnection();

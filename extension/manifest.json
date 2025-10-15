@@ -19,12 +19,15 @@
       "css": [
         "styles/draggable-panel.css",
         "styles/base.css",
-        "styles/scroll-progress.css",
-        "styles/bookmark.css",
-        "styles/countdown.css",
-        "styles/mouse-enhance.css",
-        "styles/graffiti.css",
-        "styles/rectangle-annotation.css"
+        "styles/tools/scroll-progress.css",
+        "styles/tools/bookmark.css",
+        "styles/tools/countdown.css",
+        "styles/filters/mouse-enhance.css",
+        "styles/tools/graffiti.css",
+        "styles/tools/rectangle-annotation.css",
+        "styles/tools/screenshot.css",
+        "styles/tools/upload-image.css",
+        "styles/accounts/login.css"
       ]  
     }
   ],
