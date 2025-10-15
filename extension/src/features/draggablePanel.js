@@ -39,8 +39,11 @@ function DraggablePanel() {
 
   cardDiv = createEl("div", { class: "draggable-card" });
   const headerDiv = createEl("div", { class: "card-header" });
+  // const titleSpan = createEl("span", {
+  //   textContent: chrome.i18n.getMessage("panelHeader"),
+  // });
   const titleSpan = createEl("span", {
-    textContent: chrome.i18n.getMessage("panelHeader"),
+    textContent: "EduLens",
   });
   const contentDiv = createEl("div", { class: "card-content" });
   headerDiv.appendChild(titleSpan);

@@ -277,13 +277,20 @@ export async function updateLoginStatus(user) {
   shadow.querySelector(".user-status-area")?.remove();
   const area = createEl("div", { class: "user-status-area" });
   area.innerHTML = `
-    <div class="user-avatar">${user.username[0].toUpperCase()}</div>
     <div class="user-info">
       <span class="user-name">${user.username}</span>
-      <span class="user-email">${user.email}</span>
     </div>
     <button class="logout-btn">退出</button>
   `;
+
+  // area.innerHTML = `
+  //   <div class="user-avatar">${user.username[0].toUpperCase()}</div>
+  //   <div class="user-info">
+  //     <span class="user-name">${user.username}</span>
+  //     <span class="user-email">${user.email}</span>
+  //   </div>
+  //   <button class="logout-btn">退出</button>
+  // `;
 
   eventManager.on(area.querySelector(".logout-btn"), "click", handleLogout);
 
