@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
   },
   createAt: {
     type: Date,
-    default: Date.now,
+    default: new Date().toISOString,
   },
 });
 
@@ -33,16 +33,13 @@ const userSchema = new mongoose.Schema({
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next(); //避免修改其他内容时重复哈希
 
-  this.password = await bcrypt.hash(this.password, 12); //12 为saltRounds，成本因子
+  this.password = await bcrypt.hash(this.password, 12); //12为saltRounds，成本因子
   next();
 });
 
 //校验密码
-userSchema.methods.correctPassword = async function (
-  candidatePassword,
-  userPassword
-) {
-  return await bcrypt.compare(candidatePassword, userPassword);
+userSchema.methods.correctPassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
 module.exports = mongoose.model("User", userSchema);

@@ -137,19 +137,17 @@
 .user-status-area {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-around;
   padding: 0.5rem;
-  background: #f8fafc;
-  border-radius: 6px;
-  margin-bottom: 1rem;
+  background: var(--lighter-color);
   font-size: 14px;
   transition: background 0.3s ease;
 }
 .user-status-area:hover {
-  background: #f1f5f9 !important;
+  background: var(--secondary-color) !important;
 }
 
-.user-avatar {
+/* .user-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -159,7 +157,7 @@
   align-items: center;
   justify-content: center;
   font-weight: bold;
-}
+} */
 
 .user-info {
   flex: 1;
@@ -168,12 +166,12 @@
 }
 .user-name {
   font-weight: 600;
-  color: #1f2937;
+  color: var(--main-color);
 }
-.user-email {
+/* .user-email {
   font-size: 12px;
   color: #6b7280;
-}
+} */
 
 .logout-btn {
   background: none;
