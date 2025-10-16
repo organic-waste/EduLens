@@ -3946,6 +3946,40 @@ MongoDB Compass 是官方提供的图形化界面工具，非常适合初学者�
 
 
 
+#### `createAt` 字段时间跟本机时间不同
+
+---
+
+**原因：**
+
+```js
+createAt: {
+  type: Date,
+  default: new Date().toISOString,
+}
+```
+
+- `new Date().toISOString` 是一个**字符串**，而且它在**代码加载时**就执行了。
+- **所有新用户的 `createAt` 都会被设置成代码启动时的时间**，而不是用户创建时的时间。
+- 而且 `toISOString` 返回的是字符串，而字段类型是 `Date`，这会导致类型不匹配，**可能引发存储问题或时区偏差**。
+
+---
+
+**解决：**
+
+```js
+createAt: {
+  type: Date,
+  default: Date.now,
+}
+```
+
+- `Date.now` 是一个**函数引用**，Mongoose 会在**创建新文档时调用它**，生成当前时间。
+- 返回的是时间戳（毫秒数），Mongoose 会自动将其转换为 `Date` 类型，**符合字段类型定义**。
+
+- 注意：Mongoose 默认使用 **UTC 时间**（协调世界时），而电脑显示的是 **本地时区**（比如中国是 UTC+8），因此时间看似不同。
+
+
 
 
 

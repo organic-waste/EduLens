@@ -150,7 +150,6 @@
   color: var(--hover-color);
 }
 
-/* 动画元素 */
 .animation-elements {
   position: absolute;
   top: 0;
@@ -167,7 +166,6 @@
   transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 不同形状的SVG元素 */
 .anim-element-1 {
   top: -5vh;
   left: -5vh;
@@ -200,7 +198,6 @@
   animation: rotate-medium 10s linear infinite reverse;
 }
 
-/* SVG形状定义 */
 .circle-shape {
   border-radius: 50%;
   background: var(--lighter-color);
@@ -269,7 +266,6 @@
   transform-origin: 100% 100%;
 }
 
-/* 扩展动画元素 */
 .anim-element-expand {
   width: 200vh;
   height: 200vh;
@@ -310,7 +306,6 @@
   }
 }
 
-/* 表单切换动画 */
 .form-transition-enter {
   opacity: 0;
   transform: translateY(2vh);
@@ -333,7 +328,6 @@
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-/* 用户状态区域 */
 .user-status-area {
   display: flex;
   align-items: center;
