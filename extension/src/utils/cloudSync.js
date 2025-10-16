@@ -59,8 +59,6 @@ class CloudSync {
     try {
       const response = await fetch(`${this.baseURL}/test`);
       if (response.ok) {
-        const data = await response.json();
-        console.log("连接后端成功", data);
         this.isOnline = true;
         return true;
       }

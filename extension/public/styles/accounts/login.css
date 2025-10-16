@@ -1,64 +1,68 @@
+/* 登录页面样式 */
 .login-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.6);
+  width: 100%;
+  height: 100%;
+  background: var(--mask-color);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10000;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  z-index: 10002;
+  backdrop-filter: blur(2px);
 }
 
 .login-container {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 400px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  animation: slideIn 0.3s ease-out;
+  width: 45vh;
+  background: var(--background-color);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(12, 44, 104, 0.3);
+  overflow: hidden;
+  transition: height 0.4s ease;
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.login-container.open {
+  grid-template-rows: 1fr;
 }
 
 .login-close-btn {
   position: absolute;
-  top: 12px;
-  right: 16px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  right: 4vh;
+  top: 1vh;
+  z-index: 10001;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s;
 }
-.login-close-btn:hover {
-  background-color: #f5f5f5 !important;
+
+.login-form-container,
+.register-form-container {
+  overflow: hidden;
+  z-index: 10000;
+  padding: 3vh;
+  position: relative;
+  overflow: hidden;
 }
+
+/* .login-form-container {
+  height: 38vh;
+}
+
+.register-form-container {
+  height: 48vh;
+} */
 
 .login-form-container h2,
 .register-form-container h2 {
-  margin: 0 0 1.5rem 0;
-  color: #333;
+  color: var(--emphasis-color);
+  font-size: 2.8vh;
+  margin: 1vh;
+  margin-bottom: 2vh;
   text-align: center;
   font-weight: 600;
 }
@@ -67,121 +71,303 @@
 .register-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1vh;
 }
 
 .input-group {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.8vh;
 }
+
 .input-group label {
-  font-size: 14px;
+  font-size: 1.8vh;
+  color: var(--main-color);
   font-weight: 500;
-  color: #374151;
 }
+
 .input-group input {
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
+  padding: 1.2vh;
+  border: 1px solid var(--secondary-color);
   border-radius: 6px;
-  font-size: 14px;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.input-group input:focus {
-  border-color: #4f46e5;
+  font-size: 1.7vh;
+  background: white;
+  transition: all 0.2s ease;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.input-group input:focus {
+  border-color: var(--hover-color);
+  box-shadow: 0 0 0 3px rgba(84, 132, 201, 0.1);
 }
 
 .login-submit-btn,
 .register-submit-btn {
-  background: #4f46e5;
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-top: 0.5rem;
+  margin-top: 1vh;
 }
+
 .login-submit-btn:hover,
 .register-submit-btn:hover {
-  background-color: #4338ca;
+  background: var(--hover-color);
+}
+
+.login-submit-btn:disabled,
+.register-submit-btn:disabled {
+  background: var(--secondary-color);
+  cursor: not-allowed;
+}
+
+.login-error-message,
+.register-error-message {
+  color: var(--emphasis-error-color);
+  font-size: 1.6vh;
+  text-align: center;
+  margin-top: 1.5vh;
+  padding: 1vh;
+  background: rgba(212, 67, 67, 0.1);
+  border-radius: 4px;
+  display: none;
 }
 
 .login-switch,
 .register-switch {
   text-align: center;
-  margin-top: 1rem;
-  color: #666;
-  font-size: 14px;
+  margin-top: 2vh;
+  font-size: 1.6vh;
+  color: var(--main-color);
 }
+
 .login-switch a,
 .register-switch a {
-  color: #4f46e5;
+  color: var(--emphasis-color);
   text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
 }
 
-.login-error-message,
-.register-error-message {
-  color: #dc2626;
-  font-size: 14px;
-  text-align: center;
-  margin-top: 1rem;
-  min-height: 20px;
-  display: none;
+.login-switch a:hover,
+.register-switch a:hover {
+  color: var(--hover-color);
 }
 
-.user-status-area {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 3px;
-  background: var(--background-color);
-  font-size: 14px;
-  transition: background 0.3s ease;
+/* 动画元素 */
+.animation-elements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
 }
-.user-status-area:hover {
+
+.anim-element {
+  position: absolute;
+  opacity: 0.6;
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 不同形状的SVG元素 */
+.anim-element-1 {
+  top: -5vh;
+  left: -5vh;
+  width: 12vh;
+  height: 12vh;
+  animation: rotate-slow 12s linear infinite;
+}
+
+.anim-element-2 {
+  top: 5vh;
+  left: 5vh;
+  width: 8vh;
+  height: 8vh;
+  animation: rotate-medium 8s linear infinite reverse;
+}
+
+.anim-element-3 {
+  top: 15vh;
+  left: 20vh;
+  width: 6vh;
+  height: 6vh;
+  animation: rotate-fast 6s linear infinite;
+}
+
+.anim-element-4 {
+  top: 25vh;
+  left: 15vh;
+  width: 10vh;
+  height: 10vh;
+  animation: rotate-medium 10s linear infinite reverse;
+}
+
+/* SVG形状定义 */
+.circle-shape {
+  border-radius: 50%;
   background: var(--lighter-color);
 }
 
-/* .user-avatar {
-  width: 32px;
-  height: 32px;
+.square-shape {
+  border-radius: 15%;
+  background: var(--lighter-color);
+}
+
+.triangle-shape {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  background: var(--lighter-color);
+}
+
+.oval-shape {
   border-radius: 50%;
-  background: #4f46e5;
-  color: white;
+  background: var(--lighter-color);
+  width: 10vh;
+  height: 6vh;
+}
+
+.star-shape {
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+  background: var(--lighter-color);
+}
+
+.heart-shape {
+  background: var(--lighter-color);
+  width: 8vh;
+  height: 8vh;
+  position: relative;
+}
+
+.heart-shape:before,
+.heart-shape:after {
+  content: "";
+  background: var(--lighter-color);
+  border-radius: 50%;
+  position: absolute;
+  width: 5vh;
+  height: 5vh;
+  top: 0;
+}
+
+.heart-shape:before {
+  left: -2.5vh;
+  transform: rotate(-45deg);
+  transform-origin: 0 100%;
+}
+
+.heart-shape:after {
+  left: 2.5vh;
+  transform: rotate(45deg);
+  transform-origin: 100% 100%;
+}
+
+/* 扩展动画元素 */
+.anim-element-expand {
+  width: 200vh;
+  height: 200vh;
+  top: -100vh;
+  left: -100vh;
+  border-radius: 50%;
+  opacity: 0.9;
+  background: var(--lighter-color);
+  z-index: 2;
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 旋转动画 */
+@keyframes rotate-slow {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate-medium {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate-fast {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 表单切换动画 */
+.form-transition-enter {
+  opacity: 0;
+  transform: translateY(2vh);
+}
+
+.form-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.form-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.form-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-2vh);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* 用户状态区域 */
+.user-status-area {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-weight: bold;
-} */
+  justify-content: space-between;
+  padding: 1vh 1.5vh;
+  background: var(--lighter-color);
+  border-radius: 6px;
+  margin: 1vh;
+  border: 1px solid var(--secondary-color);
+}
 
 .user-info {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 0.3vh;
 }
+
 .user-name {
-  font-weight: 600;
-  color: var(--main-color);
+  font-size: 1.8vh;
+  color: var(--emphasis-color);
+  font-weight: 500;
 }
-/* .user-email {
-  font-size: 12px;
-  color: #6b7280;
-} */
 
 .logout-btn {
-  background: none;
-  border: 1px solid var(--main-color);
-  padding: 0.25rem 0.5rem;
+  padding: 0.8vh 1.5vh;
+  background: var(--error-color);
+  color: white;
+  border: none;
   border-radius: 4px;
-  font-size: 2rem;
+  font-size: 1.6vh;
   cursor: pointer;
-  color: var(--main-color);
+  transition: background 0.2s ease;
 }
+
 .logout-btn:hover {
-  border-color: var(--emphasis-color);
+  background: var(--emphasis-error-color);
 }

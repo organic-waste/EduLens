@@ -12,9 +12,12 @@ function showForm() {
   }
 
   const loginOverlay = createEl("div", { class: "login-overlay" });
-  const loginContainer = createEl("div", { class: "login-container" });
+  const loginContainer = createEl("div", {
+    class: "login-container  login-mode open",
+  });
+
   const closeBtn = createEl("button", {
-    class: "login-close-btn",
+    class: "login-close-btn icon-btn",
     innerHTML: "×",
   });
 
@@ -22,8 +25,31 @@ function showForm() {
     loginOverlay.remove();
   });
 
+  // 添加动画元素
+  const animationElements = createEl("div", { class: "animation-elements" });
+
+  // 创建不同形状的元素
+  const element1 = createEl("div", {
+    class: "anim-element anim-element-1 circle-shape",
+  });
+  const element2 = createEl("div", {
+    class: "anim-element anim-element-2 square-shape",
+  });
+  const element3 = createEl("div", {
+    class: "anim-element anim-element-3 triangle-shape",
+  });
+  const element4 = createEl("div", {
+    class: "anim-element anim-element-4 heart-shape",
+  });
+
+  animationElements.appendChild(element1);
+  animationElements.appendChild(element2);
+  animationElements.appendChild(element3);
+  animationElements.appendChild(element4);
+
   const loginForm = createLoginFormContent();
   loginContainer.appendChild(closeBtn);
+  loginContainer.appendChild(animationElements);
   loginContainer.appendChild(loginForm);
   loginOverlay.appendChild(loginContainer);
 
@@ -40,48 +66,53 @@ function showForm() {
   });
 }
 
-//登录表单
+// 登录表单
 function createLoginFormContent() {
   const container = createEl("div", { class: "login-form-container" });
   const title = createEl("h2");
-  title.textContent = "登录 EduLens 账号";
+  title.textContent = chrome.i18n.getMessage("loginTitle");
 
   const form = createEl("form", { class: "login-form" });
   form.append(
     createInputGroup({
       type: "email",
       id: "login-email",
-      placeholder: "请输入邮箱",
-      label: "邮箱",
+      placeholder: chrome.i18n.getMessage("emailPlaceholder"),
+      label: chrome.i18n.getMessage("emailLabel"),
       required: true,
     }),
     createInputGroup({
       type: "password",
       id: "login-password",
-      placeholder: "请输入密码",
-      label: "密码",
+      placeholder: chrome.i18n.getMessage("passwordPlaceholder"),
+      label: chrome.i18n.getMessage("passwordLabel"),
       required: true,
     }),
     createEl("button", {
       type: "submit",
-      class: "login-submit-btn",
-      textContent: "登录",
+      class: "login-submit-btn button",
+      textContent: chrome.i18n.getMessage("loginButton"),
     })
   );
 
   const errorMsg = createEl("div", { class: "login-error-message" });
   const switchLink = createEl("div", { class: "login-switch" });
-  switchLink.innerHTML = `还没有账号？ <a href="#" class="switch-to-register-link">立即注册</a>`;
+  switchLink.innerHTML = `${chrome.i18n.getMessage(
+    "noAccount"
+  )} <a href="#" class="switch-to-register-link">${chrome.i18n.getMessage(
+    "registerLink"
+  )}</a>`;
   container.append(title, form, errorMsg, switchLink);
 
   eventManager.on(
     switchLink.querySelector(".switch-to-register-link"),
     "click",
-    (e) => {
+    async (e) => {
       e.preventDefault();
-      switchToRegisterForm(container);
+      await switchToRegisterForm(container);
     }
   );
+
   eventManager.on(form, "submit", async (e) => {
     e.preventDefault();
     await handleLogin(form, errorMsg);
@@ -95,66 +126,109 @@ function createRegisterFormContent() {
   const container = createEl("div", { class: "register-form-container" });
 
   const title = createEl("h2");
-  title.textContent = "注册 EduLens 账号";
+  title.textContent = chrome.i18n.getMessage("registerTitle");
 
   const form = createEl("form", { class: "register-form" });
   form.append(
     createInputGroup({
       type: "text",
       id: "register-username",
-      placeholder: "请输入用户名",
-      label: "用户名",
+      placeholder: chrome.i18n.getMessage("usernamePlaceholder"),
+      label: chrome.i18n.getMessage("usernameLabel"),
       required: true,
     }),
     createInputGroup({
       type: "email",
       id: "register-email",
-      placeholder: "请输入邮箱",
-      label: "邮箱",
+      placeholder: chrome.i18n.getMessage("emailPlaceholder"),
+      label: chrome.i18n.getMessage("emailLabel"),
       required: true,
     }),
     createInputGroup({
       type: "password",
       id: "register-password",
-      placeholder: "请输入密码（至少6位）",
-      label: "密码",
+      placeholder: chrome.i18n.getMessage("passwordPlaceholder"),
+      label: chrome.i18n.getMessage("passwordLabel"),
       required: true,
     }),
     createInputGroup({
       type: "password",
       id: "register-confirm-password",
-      placeholder: "请再次输入密码",
-      label: "确认密码",
+      placeholder: chrome.i18n.getMessage("confirmPasswordPlaceholder"),
+      label: chrome.i18n.getMessage("confirmPasswordLabel"),
       required: true,
     }),
     createEl("button", {
       type: "submit",
-      class: "register-submit-btn",
-      textContent: "注册",
+      class: "register-submit-btn button",
+      textContent: chrome.i18n.getMessage("registerButton"),
     })
   );
 
   const errorMsg = createEl("div", { class: "register-error-message" });
 
   const switchLink = createEl("div", { class: "register-switch" });
-  switchLink.innerHTML = `已有账号？ <a href="#" class="switch-to-login-link">立即登录</a>`;
+  switchLink.innerHTML = `${chrome.i18n.getMessage(
+    "hasAccount"
+  )} <a href="#" class="switch-to-login-link">${chrome.i18n.getMessage(
+    "loginLink"
+  )}</a>`;
 
   container.append(title, form, errorMsg, switchLink);
 
   eventManager.on(
     switchLink.querySelector(".switch-to-login-link"),
     "click",
-    (e) => {
+    async (e) => {
       e.preventDefault();
-      switchToLoginForm(container);
+      await switchToLoginForm(container);
     }
   );
+
   eventManager.on(form, "submit", async (e) => {
     e.preventDefault();
     await handleRegister(form, errorMsg);
   });
 
   return container;
+}
+
+// 带动画的表单切换
+async function switchToRegisterForm(currentContainer) {
+  const parent = currentContainer.parentElement;
+  parent.classList.remove("login-mode");
+  parent.classList.add("register-mode");
+  const animationElements = parent.querySelector(".animation-elements");
+  const animElement = animationElements.querySelector(".anim-element-2");
+
+  // 执行扩展动画
+  animElement.classList.add("anim-element-expand");
+
+  // 等待动画展开
+  await new Promise((resolve) => setTimeout(resolve, 400));
+
+  const newContainer = createRegisterFormContent();
+  currentContainer.remove();
+  parent.appendChild(newContainer);
+
+  await new Promise((resolve) => setTimeout(resolve, 200));
+}
+
+async function switchToLoginForm(currentContainer) {
+  const parent = currentContainer.parentElement;
+  parent.classList.remove("register-mode");
+  parent.classList.add("login-mode");
+  const animationElements = parent.querySelector(".animation-elements");
+  const animElement = animationElements.querySelector(".anim-element-1");
+
+  // 移除扩展类以恢复原状
+  animElement.classList.remove("anim-element-expand");
+
+  await new Promise((resolve) => setTimeout(resolve, 400));
+
+  const newContainer = createLoginFormContent();
+  currentContainer.remove();
+  parent.appendChild(newContainer);
 }
 
 function createInputGroup({ type, id, placeholder, label, required }) {
@@ -164,18 +238,18 @@ function createInputGroup({ type, id, placeholder, label, required }) {
   labelEl.textContent = label;
   const input = createEl("input", { type, id, placeholder, required });
 
-  eventManager.on(input, "focus", () => (input.style.borderColor = "#4f46e5"));
-  eventManager.on(input, "blur", () => (input.style.borderColor = "#d1d5db"));
+  eventManager.on(input, "focus", () => {
+    input.style.borderColor = "var(--hover-color)";
+    input.style.boxShadow = "0 0 0 3px rgba(84, 132, 201, 0.1)";
+  });
+
+  eventManager.on(input, "blur", () => {
+    input.style.borderColor = "var(--secondary-color)";
+    input.style.boxShadow = "none";
+  });
 
   group.append(labelEl, input);
   return group;
-}
-
-function switchToRegisterForm(container) {
-  container.parentNode.replaceChild(createRegisterFormContent(), container);
-}
-function switchToLoginForm(container) {
-  container.parentNode.replaceChild(createLoginFormContent(), container);
 }
 
 // 登录和注册处理
@@ -183,12 +257,14 @@ async function handleLogin(form, errorEl) {
   const email = form.querySelector("#login-email").value.trim();
   const password = form.querySelector("#login-password").value.trim();
 
-  if (!email || !password) return showError(errorEl, "请填写邮箱和密码");
-  if (!isValidEmail(email)) return showError(errorEl, "请输入有效的邮箱地址");
+  if (!email || !password)
+    return showError(errorEl, chrome.i18n.getMessage("fillEmailPassword"));
+  if (!isValidEmail(email))
+    return showError(errorEl, chrome.i18n.getMessage("validEmail"));
 
   const btn = form.querySelector(".login-submit-btn");
   const btnText = btn.textContent;
-  btn.textContent = "登录中...";
+  btn.textContent = chrome.i18n.getMessage("loggingIn");
   btn.disabled = true;
 
   try {
@@ -206,12 +282,12 @@ async function handleLogin(form, errorEl) {
 
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);
-      showSuccessMessage("登录成功");
+      showSuccessMessage(chrome.i18n.getMessage("loginSuccess"));
     } else {
-      showError(errorEl, res.message || "登录失败");
+      showError(errorEl, res.message || chrome.i18n.getMessage("loginFailed"));
     }
   } catch (error) {
-    showError(errorEl, error.message || "网络错误，请稍后重试");
+    showError(errorEl, error.message || chrome.i18n.getMessage("networkError"));
   } finally {
     btn.textContent = btnText;
     btn.disabled = false;
@@ -227,21 +303,23 @@ async function handleRegister(form, errorEl) {
     .value.trim();
 
   if (!username || !email || !password || !confirmPassword)
-    return showError(errorEl, "请填写所有字段");
-  if (!isValidEmail(email)) return showError(errorEl, "请输入有效的邮箱地址");
-  if (username.length < 3) return showError(errorEl, "用户名至少需要3个字符");
-  if (password.length < 6) return showError(errorEl, "密码至少需要6个字符");
+    return showError(errorEl, chrome.i18n.getMessage("fillAllFields"));
+  if (!isValidEmail(email))
+    return showError(errorEl, chrome.i18n.getMessage("validEmail"));
+  if (username.length < 3)
+    return showError(errorEl, chrome.i18n.getMessage("usernameMinLength"));
+  if (password.length < 6)
+    return showError(errorEl, chrome.i18n.getMessage("passwordMinLength"));
   if (password !== confirmPassword)
-    return showError(errorEl, "两次输入的密码不一致");
+    return showError(errorEl, chrome.i18n.getMessage("passwordMismatch"));
 
   const btn = form.querySelector(".register-submit-btn");
   const btnText = btn.textContent;
-  btn.textContent = "注册中...";
+  btn.textContent = chrome.i18n.getMessage("registering");
   btn.disabled = true;
 
   try {
     const res = await cloudSync.register({ username, email, password });
-
     if (res.status === "success") {
       cloudSync.token = res.token;
       cloudSync.user = res.data.user;
@@ -253,12 +331,12 @@ async function handleRegister(form, errorEl) {
       hideError(errorEl);
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);
-      showSuccessMessage("注册成功");
+      showSuccessMessage(chrome.i18n.getMessage("registerSuccess"));
     } else {
       showError(errorEl, res.message);
     }
   } catch (error) {
-    showError(errorEl, "网络错误，请稍后重试");
+    showError(errorEl, chrome.i18n.getMessage("networkError"));
   } finally {
     btn.textContent = btnText;
     btn.disabled = false;
@@ -281,7 +359,7 @@ function showSuccessMessage(msg) {
   console.log("Success", msg);
 }
 
-//在面板上显示账号信息
+// 在面板上显示账号信息
 export async function updateLoginStatus(user) {
   const shadow = window.__EDULENS_SHADOW_ROOT__;
   shadow.querySelector(".user-status-area")?.remove();
@@ -290,17 +368,10 @@ export async function updateLoginStatus(user) {
     <div class="user-info">
       <span class="user-name">${user.username}</span>
     </div>
-    <button class="logout-btn">退出</button>
+    <button class="logout-btn">${chrome.i18n.getMessage(
+      "logoutButton"
+    )}</button>
   `;
-
-  // area.innerHTML = `
-  //   <div class="user-avatar">${user.username[0].toUpperCase()}</div>
-  //   <div class="user-info">
-  //     <span class="user-name">${user.username}</span>
-  //     <span class="user-email">${user.email}</span>
-  //   </div>
-  //   <button class="logout-btn">退出</button>
-  // `;
 
   eventManager.on(area.querySelector(".logout-btn"), "click", handleLogout);
 
@@ -309,7 +380,7 @@ export async function updateLoginStatus(user) {
   async function handleLogout() {
     await cloudSync.clearAuth();
     window.__EDULENS_SHADOW_ROOT__.querySelector(".user-status-area")?.remove();
-    showSuccessMessage("已退出登录");
+    showSuccessMessage(chrome.i18n.getMessage("logoutSuccess"));
   }
 }
 
