@@ -23,9 +23,9 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 6,
   },
-  createAt: {
+  createdAt: {
     type: Date,
-    default: new Date().toISOString,
+    default: Date.now,
   },
 });
 

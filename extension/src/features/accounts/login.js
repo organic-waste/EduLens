@@ -25,10 +25,8 @@ function showForm() {
     loginOverlay.remove();
   });
 
-  // 添加动画元素
   const animationElements = createEl("div", { class: "animation-elements" });
 
-  // 创建不同形状的元素
   const element1 = createEl("div", {
     class: "anim-element anim-element-1 circle-shape",
   });
@@ -201,7 +199,6 @@ async function switchToRegisterForm(currentContainer) {
   const animationElements = parent.querySelector(".animation-elements");
   const animElement = animationElements.querySelector(".anim-element-2");
 
-  // 执行扩展动画
   animElement.classList.add("anim-element-expand");
 
   // 等待动画展开

@@ -12,6 +12,7 @@ const signToken = (id) => {
   });
 };
 
+//直接认证 token 是否有效
 router.get("/verify", async (req, res) => {
   try {
     const token = req.headers.authorization;
@@ -36,7 +37,7 @@ router.get("/verify", async (req, res) => {
           id: user._id,
           username: user.username,
           email: user.email,
-          createAt: user.createAt,
+          createdAt: user.createdAt,
         },
       },
     });
@@ -79,7 +80,7 @@ router.post("/register", async (req, res) => {
           id: newUser._id,
           username: newUser.username,
           email: newUser.email,
-          createAt: newUser.createAt,
+          createdAt: newUser.createdAt,
         },
       },
     });
@@ -117,7 +118,7 @@ router.post("/login", async (req, res) => {
           id: user._id,
           username: user.username,
           email: user.email,
-          createAt: user.createAt,
+          createdAt: user.createdAt,
         },
       },
     });
