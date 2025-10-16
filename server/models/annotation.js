@@ -11,7 +11,6 @@ const annotationSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  pageTitle: String,
   annotations: {
     type: mongoose.Schema.Mixed,
     default: {},

@@ -141,7 +141,7 @@ function createControls() {
     id: "brush-slider",
     type: "range",
     min: "1",
-    max: "50",
+    max: "15",
     value: String(store.penBrushSize),
     style: "width:12vh;",
   });
@@ -163,7 +163,7 @@ function createControls() {
     id: "brush-input",
     type: "number",
     min: "1",
-    max: "50",
+    max: "15",
     value: store.penBrushSize,
   });
   eventManager.on(brushSizeValueDisplay, "mousedown", (e) => {
