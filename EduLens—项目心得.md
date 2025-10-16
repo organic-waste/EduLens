@@ -3213,6 +3213,66 @@ SVG 节点就是 DOM，事件与 HTML 完全一致：
 
 
 
+### 自适应高度过渡动画
+
+CSS Transition 只能对可计算的数值做插值。  `height:auto` 并不是一个具体数值，所以 `0→auto` 或 `auto→具体值` 都不会触发过渡，而是瞬间完成，因此无法生效过渡动画。
+
+--------------------------------------------------
+**常见 3 种可行方案**  
+
+| 方案                  | 是否推荐 | 原理                                                     | 备注                                        |
+| --------------------- | -------- | -------------------------------------------------------- | ------------------------------------------- |
+| 1. 写死 max-height    | ★★☆      | 把容器 `max-height` 从 0 过渡到「一个足够大的值」        | 简单，但时间/曲线会有偏差；过大值会延迟触发 |
+| 2. grid-template-rows | ★★★      | `grid-template-rows:0fr→1fr`                             | 现代浏览器都支持，无需 JS，真正「自适应」   |
+| 3. JS 取高度再赋值    | ★★★      | 先 `el.scrollHeight→style.height=px→强制回流→再改目标值` | 最精确，也最易封装成通用钩子                |
+
+--------------------------------------------------
+**代码示例**  
+
+1. **max-height**  trick（纯 CSS，最简单）  
+```css
+.collapsible{
+  max-height:0;
+  overflow:hidden;
+  transition:max-height .4s cubic-bezier(.4,0,.2,1);
+}
+.collapsible.open{
+  /* 只要比你真实内容高就行 */
+  max-height:500px;
+}
+```
+
+2. **grid 0fr→1fr**（纯 CSS，真自适应，推荐）  
+```css
+.parent{
+  display:grid;
+  grid-template-rows:0fr;
+  transition:grid-template-rows .4s;
+}
+.parent.open{
+  grid-template-rows:1fr;
+}
+.content{
+  overflow:hidden;
+}
+```
+
+3. **JS 精准版**（React/Vue/原生都通用）  
+```js
+function slideDown(el){
+  el.style.height='auto';        // 先让浏览器算出实际高度
+  const h=el.scrollHeight+'px';
+  el.style.height='0px';         // 立即收回去
+  el.offsetHeight;               // 强制回流
+  el.style.height=h;             // 再过渡到真实高度
+  el.addEventListener('transitionend',()=>{
+    el.style.height='auto';      // 动画完恢复 auto，方便后续内容再变
+  },{once:true});
+}
+```
+
+
+
 
 
 ### 错误解决：
@@ -4175,4 +4235,6 @@ list.appendChild(frag);                         // ③ 一次提交
 - 团队协作标注（分享标注链接）
 
 #### 登录注册页面国际化i18n
+
+#### 调整登录注册面板样式动画
 

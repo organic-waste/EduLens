@@ -72,27 +72,27 @@
     "message": "Delete annotation"
   },
   
-  "screenshotDOMBtn":{
-    "message":"DOM Screenshot"
+  "screenshotDOMBtn": {
+    "message": "DOM Screenshot"
   },
-  "screenshotRegionBtn":{
-    "message":"Region Screenshot"
+  "screenshotRegionBtn": {
+    "message": "Region Screenshot"
   },
-    "screenshotScrollBtn": {
+  "screenshotScrollBtn": {
     "message": "Scrolling Screenshot"
   },
-  "screenshotTooltip":{
+  "screenshotTooltip": {
     "message": "Click anywhere to end the screenshot"
   },
 
-  "imageBtn":{
-    "message":"Suspend Images"
+  "imageBtn": {
+    "message": "Suspend Images"
   },
-  "imageDelete":{
-    "message":"Delete Images"
+  "imageDelete": {
+    "message": "Delete Images"
   },
-  "imagePinToggle":{
-    "message":"Toggle Fixed/Scroll"
+  "imagePinToggle": {
+    "message": "Toggle Fixed/Scroll"
   },
 
   "popupTitle": {
@@ -100,5 +100,96 @@
   },
   "popupEnable": {
     "message": "Enable EduLens"
+  },
+
+  "loginTitle": {
+    "message": "Login to EduLens"
+  },
+  "registerTitle": {
+    "message": "Register EduLens Account"
+  },
+  "emailLabel": {
+    "message": "Email"
+  },
+  "emailPlaceholder": {
+    "message": "Enter your email"
+  },
+  "passwordLabel": {
+    "message": "Password"
+  },
+  "passwordPlaceholder": {
+    "message": "Enter your password"
+  },
+  "usernameLabel": {
+    "message": "Username"
+  },
+  "usernamePlaceholder": {
+    "message": "Enter username"
+  },
+  "confirmPasswordLabel": {
+    "message": "Confirm Password"
+  },
+  "confirmPasswordPlaceholder": {
+    "message": "Confirm your password"
+  },
+  "loginButton": {
+    "message": "Login"
+  },
+  "registerButton": {
+    "message": "Register"
+  },
+  "noAccount": {
+    "message": "Don't have an account?"
+  },
+  "hasAccount": {
+    "message": "Already have an account?"
+  },
+  "registerLink": {
+    "message": "Sign up now"
+  },
+  "loginLink": {
+    "message": "Sign in now"
+  },
+  "loggingIn": {
+    "message": "Logging in..."
+  },
+  "registering": {
+    "message": "Registering..."
+  },
+  "loginSuccess": {
+    "message": "Login successful"
+  },
+  "registerSuccess": {
+    "message": "Registration successful"
+  },
+  "logoutSuccess": {
+    "message": "Logged out successfully"
+  },
+  "fillEmailPassword": {
+    "message": "Please enter email and password"
+  },
+  "validEmail": {
+    "message": "Please enter a valid email address"
+  },
+  "fillAllFields": {
+    "message": "Please fill in all fields"
+  },
+  "usernameMinLength": {
+    "message": "Username must be at least 3 characters"
+  },
+  "passwordMinLength": {
+    "message": "Password must be at least 6 characters"
+  },
+  "passwordMismatch": {
+    "message": "Passwords do not match"
+  },
+  "networkError": {
+    "message": "Network error, please try again later"
+  },
+  "loginFailed": {
+    "message": "Login failed"
+  },
+  "logoutButton": {
+    "message": "Logout"
   }
 }
