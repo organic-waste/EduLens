@@ -269,14 +269,6 @@ async function handleLogin(form, errorEl) {
     if (res.status === "success") {
       hideError(errorEl);
 
-      cloudSync.token = res.token;
-      cloudSync.user = res.data.user;
-      cloudSync.isOnline = true;
-      await chrome.storage.local.set({
-        cloudToken: res.token,
-        cloudUser: res.data.user,
-      });
-
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);
       showSuccessMessage(chrome.i18n.getMessage("loginSuccess"));
@@ -318,13 +310,6 @@ async function handleRegister(form, errorEl) {
   try {
     const res = await cloudSync.register({ username, email, password });
     if (res.status === "success") {
-      cloudSync.token = res.token;
-      cloudSync.user = res.data.user;
-      cloudSync.isOnline = true;
-      await chrome.storage.local.set({
-        cloudToken: res.token,
-        cloudUser: res.data.user,
-      });
       hideError(errorEl);
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);

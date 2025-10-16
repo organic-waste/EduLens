@@ -1,3 +1,6 @@
+import annotation from "../../../server/models/annotation";
+import { enableUserScroll } from "./controlInteraction";
+
 /* 实时协作的云同步功能 */
 class CloudSync {
   constructor() {
@@ -55,6 +58,7 @@ class CloudSync {
     await chrome.storage.local.remove(["cloudToken", "cloudUser"]);
   }
 
+  /* 测试相关 */
   async testConnection() {
     try {
       const response = await fetch(`${this.baseURL}/test`);
@@ -86,7 +90,19 @@ class CloudSync {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
       });
-      return await response.json();
+      const data = await response.json();
+
+      if (data.status === "success") {
+        this.token = data.token;
+        this.user = data.data.user;
+        this.isOnline = true;
+      }
+      await chrome.storage.local.set({
+        cloudToken: this.token,
+        cloudUser: this.user,
+      });
+
+      return data;
     } catch (error) {
       return { status: "error", message: "网络错误，请稍后重试" };
     }
@@ -99,9 +115,72 @@ class CloudSync {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
       });
-      return await response.json();
+      const data = await response.json();
+
+      if (data.status === "success") {
+        this.token = data.token;
+        this.user = data.data.user;
+        this.isOnline = true;
+      }
+      await chrome.storage.local.set({
+        cloudToken: this.token,
+        cloudUser: this.user,
+      });
+
+      return data;
     } catch (error) {
       return { status: "error", message: "网络错误，请稍后重试" };
+    }
+  }
+
+  async syncAnnotations(pageUrl, annotations) {
+    //没登录则跳过云同步
+    if (!this.isOnline || !this.token) return;
+
+    try {
+      const response = await fetch(`${this.baseURL}/annotations/sync`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `${this.token}`,
+        },
+        body: JSON.stringify({
+          pageUrl,
+          annotations,
+        }),
+      });
+      const data = await response.json();
+
+      if (data.status === "success") {
+        return data.data.annotation;
+      } else {
+        console.warn("同步数据获取失败：", data.message);
+      }
+    } catch (error) {
+      console.error("同步云端标注失败", error);
+    }
+  }
+
+  async loadAnnotations(pageUrl) {
+    if (!this.isOnline || !this.token) return;
+
+    try {
+      const response = await fetch(
+        `${this.baseURL}/annotations/by-url?url=${encodeURIComponent(pageUrl)}`,
+        {
+          headers: {
+            Authorization: `${this.token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.status === "success" && data.data.annotation) {
+        return data.data.annotation.annotations;
+      }
+    } catch (error) {
+      console.error("加载云端标注失败:", error);
     }
   }
 }
