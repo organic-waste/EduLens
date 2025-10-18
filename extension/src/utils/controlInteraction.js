@@ -1,5 +1,4 @@
 /* 控制页面交互 */
-
 export function preventPageInteraction() {
   document.body.style.userSelect = "none";
   document.body.style.pointerEvents = "none";
