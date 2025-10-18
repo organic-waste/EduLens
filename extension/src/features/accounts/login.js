@@ -271,7 +271,7 @@ async function handleLogin(form, errorEl) {
 
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);
-      showSuccessMessage(chrome.i18n.getMessage("loginSuccess"));
+      console.log(username + ":" + chrome.i18n.getMessage("loginSuccess"));
     } else {
       showError(errorEl, res.message || chrome.i18n.getMessage("loginFailed"));
     }
@@ -313,7 +313,7 @@ async function handleRegister(form, errorEl) {
       hideError(errorEl);
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);
-      showSuccessMessage(chrome.i18n.getMessage("registerSuccess"));
+      console.log(username + ":" + chrome.i18n.getMessage("loginSuccess"));
     } else {
       showError(errorEl, res.message);
     }
@@ -336,9 +336,6 @@ function showError(el, msg) {
 function hideError(el) {
   el.textContent = "";
   el.style.display = "none";
-}
-function showSuccessMessage(msg) {
-  console.log("Success", msg);
 }
 
 // 在面板上显示账号信息

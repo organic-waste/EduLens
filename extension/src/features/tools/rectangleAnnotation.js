@@ -124,7 +124,7 @@ function listenerMouseDown(e) {
     }
     //点击矩阵外部
     else {
-      console.log("点击到矩阵外部");
+      // console.log("点击到矩阵外部");
       exitEditingMode();
       e.stopPropagation();
     }
