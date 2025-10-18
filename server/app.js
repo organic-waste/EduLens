@@ -17,7 +17,7 @@ mongoose
   .catch((error) => console.log("MongoDB连接失败:", error));
 
 app.use("/api/auth", require("./routes/user"));
-app.use("/api/annotations", require("./routes/annotations"));
+app.use("/api/annotations", require("./routes/annotation"));
 app.use("/api/test", (req, res) => {
   res.json({ message: "API服务正常运行" });
 });

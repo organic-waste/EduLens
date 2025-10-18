@@ -3928,6 +3928,91 @@ MongoDB Compass 是官方提供的图形化界面工具，非常适合初学者�
 
 
 
+### Mongoose 中 SchemaType 类型总结
+
+---
+
+**1. 内置 SchemaTypes**
+
+| 类型         | 描述                                                         | 示例值                          |
+| ------------ | ------------------------------------------------------------ | ------------------------------- |
+| `String`     | 字符串类型（默认 UTF-8）                                     | `"hello"`                       |
+| `Number`     | 数字类型（JavaScript 双精度浮点数）                          | `42` 或 `3.14`                  |
+| `Date`       | 日期类型（JavaScript Date 对象，存储为 BSON 日期）           | `new Date()`                    |
+| `Buffer`     | 二进制数据（存储为 BSON Buffer）                             | `Buffer.from("hello")`          |
+| `Boolean`    | 布尔类型                                                     | `true` 或 `false`               |
+| `Mixed`      | 任意类型（通过 `Schema.Types.Mixed` 或 `mongoose.Mixed` 定义） | `{ any: "value" }`              |
+| `ObjectId`   | 对象 ID（通过 `Schema.Types.ObjectId` 定义，通常用于关联其他集合） | `new mongoose.Types.ObjectId()` |
+| `Array`      | 数组类型（通过 `[]` 或 `[String]` 等定义）                   | `["a", "b"]` 或 `[1, 2]`        |
+| `Decimal128` | 高精度小数（通过 `Schema.Types.Decimal128` 定义，适合金融计算） | `123.456`                       |
+| `Map`        | Map 类型（ES6 Map，存储为 BSON 对象）                        | `new Map([["key", "value"]])`   |
+
+**示例代码**
+
+```javascript
+const mongoose = require('mongoose');
+
+const schema = new mongoose.Schema({
+  name: String,                // 简写形式
+  age: { type: Number, min: 0 }, // 带选项的完整形式
+  email: { type: String, required: true },
+  tags: [String],              // 字符串数组
+  metadata: mongoose.Mixed,    // 任意类型
+  createdAt: { type: Date, default: Date.now },
+  objectId: mongoose.Schema.Types.ObjectId,
+  decimal: mongoose.Schema.Types.Decimal128
+});
+```
+
+---
+
+**2. 自定义类型（扩展 SchemaType）**
+
+如果内置类型无法满足需求，可以通过继承 `mongoose.SchemaType` 创建自定义类型。例如，创建一个 `Email` 类型：
+
+```javascript
+class Email extends mongoose.SchemaType {
+  constructor(key, options) {
+    super(key, options, 'Email');
+  }
+  cast(val) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(val)) {
+      throw new Error('Email: invalid email format');
+    }
+    return val;
+  }
+}
+
+// 注册自定义类型
+mongoose.Schema.Types.Email = Email;
+
+// 使用自定义类型
+const userSchema = new mongoose.Schema({
+  email: { type: Email, required: true }
+});
+```
+
+---
+
+**3. 类型选项（Type Options）**
+
+每个类型支持额外选项，用于数据验证或设置默认值：
+
+| 选项        | 描述                                                      |
+| ----------- | --------------------------------------------------------- |
+| `required`  | 是否为必填字段（布尔值或自定义函数）                      |
+| `default`   | 默认值（值或函数）                                        |
+| `validate`  | 自定义验证器（函数或对象，包含 `validator` 和 `message`） |
+| `get`/`set` | 自定义 getter/setter 函数（用于数据转换）                 |
+| `alias`     | 字段别名（虚拟字段，不存储在数据库中）                    |
+| `index`     | 是否创建索引（布尔值或对象，如 `{ unique: true }`）       |
+| `min`/`max` | 数字类型的最小/最大值限制                                 |
+| `enum`      | 字符串类型的允许值数组（如 `enum: ['male', 'female']`）   |
+| `match`     | 字符串类型的正则表达式验证（如 `match: /pattern/`）       |
+
+
+
 ### 错误解决：
 
 #### 后端服务报错（连接MongoDB失败）
@@ -4271,4 +4356,8 @@ list.appendChild(frag);                         // ③ 一次提交
 #### 登录注册页面国际化i18n
 
 #### 调整登录注册面板样式动画
+
+
+
+
 
