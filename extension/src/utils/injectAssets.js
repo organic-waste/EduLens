@@ -1,3 +1,5 @@
+/* 在 shadow DOM 中注入样式 */
+
 // 注入图标样式文件
 export function injectIcon() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;

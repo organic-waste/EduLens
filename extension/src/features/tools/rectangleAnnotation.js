@@ -3,6 +3,7 @@ import eventManager from "../../utils/eventManager.js";
 import store from "../../stores/tools.js";
 import { getOffsetPos, createEl } from "../../utils/operateEl.js";
 import { getPageKey, getId } from "../../utils/getIdentity.js";
+import { getPageDataByType, savePageData } from "../../utils/storageManager.js";
 import {
   preventPageInteraction,
   restorePageInteraction,
@@ -674,11 +675,7 @@ function hideTooltip(rectId) {
 
 async function saveRectangles() {
   try {
-    const pageKey = getPageKey();
-    const result = await chrome.storage.local.get({ rectangles: {} });
-    const rects = result.rectangles;
-    rects[pageKey] = rectangles;
-    await chrome.storage.local.set({ rects });
+    await savePageData("rectangles", rectangles);
   } catch (error) {
     console.error(error);
   }
@@ -686,9 +683,7 @@ async function saveRectangles() {
 
 async function loadRectangles() {
   try {
-    const pageKey = getPageKey();
-    const result = await chrome.storage.local.get({ rects: {} });
-    rectangles = result.rects[pageKey] || [];
+    rectangles = await getPageDataByType("rectangles");
   } catch (error) {
     console.error(error);
     rectangles = [];

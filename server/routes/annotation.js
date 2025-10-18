@@ -1,17 +1,13 @@
 /* 涂鸦标注路由 */
 const express = require("express");
 const Annotation = require("../models/annotation");
-const {
-  updateLoginStatus,
-} = require("../../extension/src/features/accounts/login");
-const { model } = require("mongoose");
 
 const router = express.Router();
 
 //更新标注数据
-router.post("/sync", protect, async (req, res) => {
+router.post("/sync", async (req, res) => {
   try {
-    const { pageUrl, pageTitle, annotations } = req.body;
+    const { pageUrl, annotations } = req.body;
     const userId = req.userId;
 
     let annotation = await Annotation.findOne({
@@ -20,13 +16,11 @@ router.post("/sync", protect, async (req, res) => {
     });
     if (annotation) {
       annotation.annotations = annotations;
-      annotation.pageTitle = pageTitle;
       await annotation.save();
     } else {
       annotation = await Annotation.create({
         userId,
         pageUrl,
-        pageTitle,
         annotations,
       });
     }
@@ -42,12 +36,12 @@ router.post("/sync", protect, async (req, res) => {
   }
 });
 
-//获取所有标注
+//获取所有标注数据
 router.get("/by-id", async (req, res) => {
   try {
     const userId = req.userId;
     const annotations = (await Annotation.find({ userId })).toSorted({
-      updateAt: -1,
+      updatedAt: -1,
     });
 
     res.json({
@@ -64,7 +58,7 @@ router.get("/by-id", async (req, res) => {
   }
 });
 
-// 根据URL获取特定标注
+// 根据URL获取特定数据
 router.get("/by-url", async (req, res) => {
   try {
     const { url } = req.query;

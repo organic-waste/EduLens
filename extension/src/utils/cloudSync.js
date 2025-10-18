@@ -1,7 +1,8 @@
-import annotation from "../../../server/models/annotation";
-import { enableUserScroll } from "./controlInteraction";
-
 /* 实时协作的云同步功能 */
+
+import { getPageKey } from "./getIdentity.js";
+import { getPageData, savePageData } from "./storageManager.js";
+
 class CloudSync {
   constructor() {
     this.baseURL = "http://localhost:3000/api";
@@ -133,6 +134,7 @@ class CloudSync {
     }
   }
 
+  /* 数据同步相关 */
   async syncAnnotations(pageUrl, annotations) {
     //没登录则跳过云同步
     if (!this.isOnline || !this.token) return;
@@ -182,6 +184,44 @@ class CloudSync {
     } catch (error) {
       console.error("加载云端标注失败:", error);
     }
+  }
+
+  //同步云端最新数据
+  async syncCurrentPage() {
+    if (!this.isOnline || !this.token) return;
+
+    try {
+      const pageUrl = getPageKey();
+      const pageData = await getPageData();
+
+      return await this.syncAnnotations(pageUrl, pageData);
+    } catch (error) {
+      console.error("同步云端最新数据失败:", error);
+    }
+  }
+
+  //将云端当前页面数据加载到本地
+  async loadCurrentPageFromCloud() {
+    if (!this.isOnline || !this.token) return;
+
+    try {
+      const pageUrl = getPageKey();
+      const cloudData = await this.loadAnnotations(pageUrl);
+
+      if (cloudData) {
+        await savePageData("bookmarks", cloudData.bookmarks || []);
+        await savePageData("canvas", cloudData.canvas || "");
+        await savePageData("rectangles", cloudData.rectangles || []);
+        await savePageData("images", cloudData.images || []);
+
+        // 触发页面重新加载数据
+        chrome.runtime.sendMessage({ type: "RELOAD" });
+        return true;
+      }
+    } catch (error) {
+      console.error("将云端当前页面数据加载到本地 :", error);
+    }
+    return false;
   }
 }
 

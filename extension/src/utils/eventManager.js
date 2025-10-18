@@ -1,4 +1,4 @@
-//管理事件监听器
+/* 管理元素事件监听 */
 
 class EventManager {
   constructor() {

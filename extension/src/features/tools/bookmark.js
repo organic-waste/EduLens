@@ -3,6 +3,11 @@ import eventManager from "../../utils/eventManager.js";
 import MonitorSPARoutes from "../../utils/monitorSPARoutes.js";
 import { getId, getPageKey } from "../../utils/getIdentity.js";
 import { createEl } from "../../utils/operateEl.js";
+import {
+  getPageData,
+  getPageDataByType,
+  savePageData,
+} from "../../utils/storageManager.js";
 
 let addDiv = null;
 let btnDiv = null;
@@ -79,52 +84,37 @@ function createBookmarkEle(scrollTop, text, id) {
   switchPanel(true);
 }
 
-async function getBookmark() {
-  // 传递 {} 作为默认值
-  const result = await chrome.storage.local.get({ bookmarks: {} });
-  return result.bookmarks;
-}
-
 async function saveBookmark(scrollTop, text, id) {
-  let bookmarks = await getBookmark();
-  const pageKey = getPageKey();
-
-  if (!bookmarks[pageKey]) {
-    bookmarks[pageKey] = [];
-  }
-  bookmarks[pageKey].push({
+  let bookmarks = await getPageDataByType("bookmarks");
+  const newBookmark = {
     scrollTop: scrollTop,
     text: text,
     id: id,
-  });
-  await chrome.storage.local.set({ bookmarks });
+  };
+
+  bookmarks.push(newBookmark);
+  await savePageData("bookmarks", bookmarks);
   createBookmarkEle(scrollTop, text, id);
 }
 
 async function removeBookmark(el) {
   const id = el.dataset.id;
-  const pageKey = getPageKey();
-  let bookmarks = await getBookmark();
+  let bookmarks = await getPageDataByType("bookmarks");
 
-  if (bookmarks[pageKey]) {
-    bookmarks[pageKey] = bookmarks[pageKey].filter((item) => {
-      return item.id !== id;
-    });
-    await chrome.storage.local.set({ bookmarks });
-  }
+  const updatedBookmarks = bookmarks.filter((item) => item.id !== id);
+  await savePageData("bookmarks", updatedBookmarks);
   el.remove();
 }
 
 async function loadBookmarks() {
   const pageKey = getPageKey();
   if (pageKey === oldPageKey) return;
-  let bookmarks = await getBookmark();
-  if (bookmarks[pageKey]) {
-    bookmarks[pageKey].forEach((item) =>
-      createBookmarkEle(item.scrollTop, item.text, item.id)
-    );
-    oldPageKey = pageKey;
-  }
+
+  const bookmarks = await getPageDataByType("bookmarks");
+  bookmarks.forEach((item) =>
+    createBookmarkEle(item.scrollTop, item.text, item.id)
+  );
+  oldPageKey = pageKey;
 }
 
 function createBookmark() {

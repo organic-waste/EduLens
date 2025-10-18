@@ -2,8 +2,8 @@
 import eventManager from "../../utils/eventManager.js";
 import store from "../../stores/tools.js";
 import MonitorSPARoutes from "../../utils/monitorSPARoutes.js";
-import { getPageKey } from "../../utils/getIdentity.js";
 import { getOffsetPos, createEl } from "../../utils/operateEl.js";
+import { getPageDataByType, savePageData } from "../../utils/storageManager.js";
 import { activateRectangleAnnotation } from "./rectangleAnnotation.js";
 import { activateImageAnnotation } from "./uploadImage.js";
 
@@ -353,11 +353,7 @@ async function saveDrawing() {
   if (!drawingCanvas) return;
   try {
     const dataURL = drawingCanvas.toDataURL("image/png"); //指定以png的形式保存
-    const pageKey = getPageKey();
-    const result = await chrome.storage.local.get({ canvas: {} });
-    const canvas = result.canvas;
-    canvas[pageKey] = dataURL;
-    await chrome.storage.local.set({ canvas });
+    await savePageData("canvas", dataURL);
   } catch (error) {
     console.log(error);
   }
@@ -366,9 +362,7 @@ async function saveDrawing() {
 async function loadDrawing() {
   if (!drawingCtx || !drawingCanvas) return;
   try {
-    const pageKey = getPageKey();
-    const result = await chrome.storage.local.get({ canvas: {} });
-    const dataURL = result.canvas[pageKey];
+    const dataURL = await getPageDataByType("canvas");
 
     if (dataURL) {
       let img = new Image();

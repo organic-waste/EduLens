@@ -1,4 +1,4 @@
-// 操作元素相关工具函数
+/* 操作元素 */
 
 export function createEl(tag, attrs = {}, ...children) {
   const el = document.createElement(tag);

@@ -12,14 +12,14 @@ const annotationSchema = new mongoose.Schema({
     required: true,
   },
   annotations: {
-    type: mongoose.Schema.Mixed,
+    type: mongoose.Schema.Types.Mixed,
     default: {},
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-  updateAt: {
+  updatedAt: {
     type: Date,
     default: Date.now,
   },
@@ -30,7 +30,7 @@ annotationSchema.index({ userId: 1, pageUrl: 1 }, { unique: true });
 
 //更新标注时自动更新updatedAt
 annotationSchema.pre("save", function (next) {
-  this.updateAt = Date.now();
+  this.updatedAt = Date.now();
   next();
 });
 
