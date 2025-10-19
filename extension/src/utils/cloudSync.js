@@ -1,5 +1,4 @@
 /* 实时协作的云同步功能 */
-
 import { getPageKey } from "./getIdentity.js";
 import { getPageData, savePageData } from "./storageManager.js";
 
@@ -9,6 +8,7 @@ class CloudSync {
     this.isOnline = false;
     this.token = null;
     this.user = null;
+    this.currentRoomId = null;
   }
 
   async init() {
@@ -136,8 +136,8 @@ class CloudSync {
 
   /* 数据同步相关 */
   async syncAnnotations(pageUrl, annotations) {
-    //没登录则跳过云同步
-    if (!this.isOnline || !this.token) return;
+    //没登录或没有房间则跳过云同步
+    if (!this.isOnline || !this.token || !this.currentRoomId) return;
 
     try {
       const response = await fetch(`${this.baseURL}/annotations/sync`, {
@@ -147,6 +147,7 @@ class CloudSync {
           Authorization: `${this.token}`,
         },
         body: JSON.stringify({
+          roomId: this.currentRoomId,
           pageUrl,
           annotations,
         }),
@@ -164,7 +165,7 @@ class CloudSync {
   }
 
   async loadAnnotations(pageUrl) {
-    if (!this.isOnline || !this.token) return;
+    if (!this.isOnline || !this.token || !this.currentRoomId) return;
 
     try {
       const response = await fetch(
@@ -186,9 +187,110 @@ class CloudSync {
     }
   }
 
+  setCurrentRoom(roomId) {
+    this.currentRoomId = roomId;
+    // 切换房间时重新加载数据
+    this.loadCurrentPageFromCloud();
+  }
+
+  // 获取用户所有房间
+  async getUserRooms() {
+    if (!this.isOnline || !this.token) return [];
+
+    try {
+      const response = await fetch(`${this.baseURL}/rooms/my-rooms`, {
+        headers: {
+          Authorization: `${this.token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (data.status === "success") {
+        return data.data.rooms;
+      }
+    } catch (error) {
+      console.error("获取用户房间失败:", error);
+      return [];
+    }
+  }
+
+  async createRoom(roomData) {
+    if (!this.isOnline || !this.token) return null;
+
+    try {
+      const response = await fetch(`${this.baseURL}/rooms/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `${this.token}`,
+        },
+        body: JSON.stringify(roomData),
+      });
+
+      const data = await response.json();
+      if (data.status === "success") {
+        return data.data.room;
+      } else {
+        console.warn("创建房间失败：", data.message);
+      }
+    } catch (error) {
+      console.error("创建房间失败:", error);
+    }
+    return null;
+  }
+
+  async joinRoom(shareCode) {
+    if (!this.isOnline || !this.token) return null;
+
+    try {
+      const response = await fetch(`${this.baseURL}/rooms/join`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `${this.token}`,
+        },
+        body: JSON.stringify({ shareCode }),
+      });
+
+      const data = await response.json();
+      if (data.status === "success") {
+        return data.data.room;
+      } else {
+        console.warn("加入房间失败：", data.message);
+      }
+    } catch (error) {
+      console.error("加入房间失败:", error);
+    }
+    return null;
+  }
+
+  async generateShareCode(roomId) {
+    if (!this.isOnline || !this.token) return null;
+
+    try {
+      const response = await fetch(
+        `${this.baseURL}/rooms/${roomId}/generate-share-code`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `${this.token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (data.status === "success") {
+        return data.data.shareCode;
+      }
+    } catch (error) {
+      console.error("生成分享码失败:", error);
+    }
+    return null;
+  }
+
   //同步云端最新数据
   async syncCurrentPage() {
-    if (!this.isOnline || !this.token) return;
+    if (!this.isOnline || !this.token || !this.currentRoomId) return;
 
     try {
       const pageUrl = getPageKey();
@@ -202,7 +304,7 @@ class CloudSync {
 
   //将云端当前页面数据加载到本地
   async loadCurrentPageFromCloud() {
-    if (!this.isOnline || !this.token) return;
+    if (!this.isOnline || !this.token || !this.currentRoomId) return;
 
     try {
       const pageUrl = getPageKey();
