@@ -1,6 +1,6 @@
 // 上传图片
-import eventManager from "../../stores/eventManager.js";
-import store from "../../stores/tools.js";
+import eventStore from "../../stores/eventStore.js";
+import store from "../../stores/toolStore.js";
 import { getOffsetPos, createEl } from "../../utils/operateEl.js";
 import { getPageKey, getId } from "../../utils/getIdentity.js";
 import { getPageDataByType, savePageData } from "../../utils/storageManager.js";
@@ -44,7 +44,7 @@ export function activateImageAnnotation() {
       innerHTML:
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="75 75 500 500"><path d="M160 144C151.2 144 144 151.2 144 160L144 480C144 488.8 151.2 496 160 496L480 496C488.8 496 496 488.8 496 480L496 160C496 151.2 488.8 144 480 144L160 144zM96 160C96 124.7 124.7 96 160 96L480 96C515.3 96 544 124.7 544 160L544 480C544 515.3 515.3 544 480 544L160 544C124.7 544 96 515.3 96 480L96 160zM224 192C241.7 192 256 206.3 256 224C256 241.7 241.7 256 224 256C206.3 256 192 241.7 192 224C192 206.3 206.3 192 224 192zM360 264C368.5 264 376.4 268.5 380.7 275.8L460.7 411.8C465.1 419.2 465.1 428.4 460.8 435.9C456.5 443.4 448.6 448 440 448L200 448C191.1 448 182.8 443 178.7 435.1C174.6 427.2 175.2 417.6 180.3 410.3L236.3 330.3C240.8 323.9 248.1 320.1 256 320.1C263.9 320.1 271.2 323.9 275.7 330.3L292.9 354.9L339.4 275.9C343.7 268.6 351.6 264.1 360.1 264.1z" fill="white"/></svg>',
     });
-    eventManager.on(imageButton, "click", (e) => {
+    eventStore.on(imageButton, "click", (e) => {
       fileInput.click();
       store.updateState("isImage");
       e.stopPropagation();
@@ -59,7 +59,7 @@ export function activateImageAnnotation() {
       accept: "image/*",
       style: "display:none;",
     });
-    eventManager.on(fileInput, "change", handleFileChange);
+    eventStore.on(fileInput, "change", handleFileChange);
     shadowRoot.appendChild(fileInput);
   }
 
@@ -146,15 +146,15 @@ function renderImage(imgData) {
   wrap.append(imgEl, controls);
   drawingContainer.appendChild(wrap);
 
-  eventManager.on(deleteBtn, "click", (e) => {
+  eventStore.on(deleteBtn, "click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     removeImage(imgData.id);
   });
-  eventManager.on(deleteBtn, "mousedown", (e) => e.stopPropagation());
+  eventStore.on(deleteBtn, "mousedown", (e) => e.stopPropagation());
 
   // 定位切换
-  eventManager.on(pinBtn, "click", (e) => {
+  eventStore.on(pinBtn, "click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (imgData.fixed) {
@@ -173,10 +173,10 @@ function renderImage(imgData) {
       : '<svg t="1759978010518" class="icon" viewBox="-70 -100 1214 1214" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1559" width="200" height="200"><path d="M741 373.2l-11.4-85.2H784c26.4 0 48-21.6 48-48V48c0-26.4-21.6-48-48-48H240C213.6 0 192 21.6 192 48v192c0 26.4 21.6 48 48 48h54.4l-11.4 85.2C187.2 438.8 128 541.4 128 656c0 26.4 21.6 48 48 48h288v208c0 1.8 0.2 3.4 0.8 5l32 96c4.8 14.6 25.6 14.6 30.4 0l32-96c0.6-1.6 0.8-3.4 0.8-5V704h288c26.4 0 48-21.6 48-48 0-114.6-59.2-217.2-155-282.8zM229 608c16.6-77 71.2-140 143-175.6L404 192H288V96h448v96h-116l32 240.4c71.6 35.6 126.4 98.8 143 175.6z" p-id="1560" fill="white"></path></svg>';
     saveImages();
   });
-  eventManager.on(pinBtn, "mousedown", (e) => e.stopPropagation());
+  eventStore.on(pinBtn, "mousedown", (e) => e.stopPropagation());
 
   // 双击进入编辑
-  eventManager.on(wrap, "dblclick", (e) => {
+  eventStore.on(wrap, "dblclick", (e) => {
     e.preventDefault();
     e.stopPropagation();
     enterEditingMode(imgData);
@@ -240,11 +240,11 @@ function exitEditingMode() {
 }
 
 function setupEventListeners() {
-  eventManager.on(shadowRoot, "mousedown", onMouseDown);
-  eventManager.on(shadowRoot, "mousemove", onMouseMove);
-  eventManager.on(shadowRoot, "mouseup", onMouseUp);
-  eventManager.on(shadowRoot, "mouseleave", onMouseUp);
-  eventManager.on(document, "mousedown", onDocumentMouseDown);
+  eventStore.on(shadowRoot, "mousedown", onMouseDown);
+  eventStore.on(shadowRoot, "mousemove", onMouseMove);
+  eventStore.on(shadowRoot, "mouseup", onMouseUp);
+  eventStore.on(shadowRoot, "mouseleave", onMouseUp);
+  eventStore.on(document, "mousedown", onDocumentMouseDown);
 }
 
 function onDocumentMouseDown(e) {
@@ -353,7 +353,7 @@ function createHandles(wrap, img) {
     handle.dataset.type = h.type;
     handle.style.left = `${h.x}px`;
     handle.style.top = `${h.y}px`;
-    eventManager.on(handle, "mousedown", (e) => {
+    eventStore.on(handle, "mousedown", (e) => {
       e.stopPropagation();
       e.preventDefault();
       const { x, y } = getPointerByMode(e, img.fixed);

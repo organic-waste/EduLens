@@ -1,5 +1,5 @@
 // 倒计时组件
-import eventManager from "../../stores/eventManager.js";
+import eventStore from "../../stores/eventStore.js";
 import { createEl } from "../../utils/operateEl.js";
 
 let countdownContainer = null;
@@ -94,7 +94,7 @@ export function activateCountdown() {
     class: "button",
     textContent: chrome.i18n.getMessage("countdownStartBtn"),
   });
-  eventManager.on(countdownButton, "click", createCountdown);
+  eventStore.on(countdownButton, "click", createCountdown);
   inputArea.append(countdownInput, countdownButton);
 
   const displayArea = createEl("div", {
@@ -106,7 +106,7 @@ export function activateCountdown() {
     class: "delete-button",
     textContent: "×",
   });
-  eventManager.on(countdownCancel, "click", cancelCountdown);
+  eventStore.on(countdownCancel, "click", cancelCountdown);
   displayArea.append(countdownDisplay, countdownCancel);
 
   countdownContainer.append(inputArea, displayArea);
@@ -117,7 +117,7 @@ export function activateCountdown() {
   }
 
   // 正则输入验证
-  eventManager.on(countdownInput, "input", (e) => {
+  eventStore.on(countdownInput, "input", (e) => {
     const value = e.target.value;
     if (!/^[0-9]*([.][0-9]{0,1})?$/.test(value)) {
       console.log("正则不匹配");

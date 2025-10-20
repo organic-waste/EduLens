@@ -9,6 +9,7 @@ class CloudSync {
     this.token = null;
     this.user = null;
     this.currentRoomId = null;
+    this.authFailureCallback = null;
   }
 
   async init() {
@@ -29,15 +30,46 @@ class CloudSync {
     return false;
   }
 
+  //设置认证失败回调（弹出重新登录页面）
+  setAuthFailureCallback(callback) {
+    this.authFailureCallback = callback;
+  }
+
+  async handleAuthFailure() {
+    console.log("[EduLens] 认证已过期，需要重新登录");
+    await this.clearAuth();
+
+    if (this.onAuthFailure) {
+      this.onAuthFailure();
+    }
+  }
+
+  //封装请求方法，统一处理认证失效等问题
+  async makeRequest(url, options = {}) {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: this.token ? `${this.token}` : "",
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.status === 401) {
+        await this.handleAuthFailure();
+        console.error("认证已过期，请重新登录");
+      }
+      return response;
+    } catch (error) {
+      console.error(`网络请求失败: ${error.message}`);
+    }
+  }
+
   async validateToken() {
     if (!this.token) return false;
     try {
-      const response = await fetch(`${this.baseURL}/auth/verify`, {
+      const response = await this.makeRequest(`${this.baseURL}/auth/verify`, {
         method: "GET",
-        headers: {
-          Authorization: `${this.token}`,
-          "Content-Type": "application/json",
-        },
       });
       if (response.ok) {
         const result = await response.json();
@@ -48,8 +80,11 @@ class CloudSync {
       }
     } catch (error) {
       console.warn("Token 验证失败：", error);
+      //防止重复处理认证失效
+      if (!error.message.includes("认证已过期")) {
+        await this.clearAuth();
+      }
     }
-    await this.clearAuth();
     return false;
   }
 
@@ -141,18 +176,17 @@ class CloudSync {
     if (!this.isOnline || !this.token || !this.currentRoomId) return;
 
     try {
-      const response = await fetch(`${this.baseURL}/annotations/sync`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `${this.token}`,
-        },
-        body: JSON.stringify({
-          roomId: this.currentRoomId,
-          pageUrl,
-          annotations,
-        }),
-      });
+      const response = await this.makeRequest(
+        `${this.baseURL}/annotations/sync`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            roomId: this.currentRoomId,
+            pageUrl,
+            annotations,
+          }),
+        }
+      );
       const data = await response.json();
 
       if (data.status === "success") {
@@ -169,13 +203,8 @@ class CloudSync {
     if (!this.isOnline || !this.token || !this.currentRoomId) return;
 
     try {
-      const response = await fetch(
-        `${this.baseURL}/annotations/by-url?url=${encodeURIComponent(pageUrl)}`,
-        {
-          headers: {
-            Authorization: `${this.token}`,
-          },
-        }
+      const response = await this.makeRequest(
+        `${this.baseURL}/annotations/by-url?url=${encodeURIComponent(pageUrl)}`
       );
 
       const data = await response.json();
@@ -199,11 +228,7 @@ class CloudSync {
     if (!this.isOnline || !this.token) return [];
 
     try {
-      const response = await fetch(`${this.baseURL}/rooms/my-rooms`, {
-        headers: {
-          Authorization: `${this.token}`,
-        },
-      });
+      const response = await this.makeRequest(`${this.baseURL}/rooms/my-rooms`);
       console.log(" response: ", response);
       const data = await response.json();
       console.log("data: ", data);
@@ -220,12 +245,8 @@ class CloudSync {
     if (!this.isOnline || !this.token) return null;
 
     try {
-      const response = await fetch(`${this.baseURL}/rooms/create`, {
+      const response = awaitthis.makeRequest(`${this.baseURL}/rooms/create`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `${this.token}`,
-        },
         body: JSON.stringify(roomData),
       });
 
@@ -245,12 +266,8 @@ class CloudSync {
     if (!this.isOnline || !this.token) return null;
 
     try {
-      const response = await fetch(`${this.baseURL}/rooms/join`, {
+      const response = await this.makeRequest(`${this.baseURL}/rooms/join`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `${this.token}`,
-        },
         body: JSON.stringify({ shareCode }),
       });
 
@@ -270,13 +287,10 @@ class CloudSync {
     if (!this.isOnline || !this.token) return null;
 
     try {
-      const response = await fetch(
+      const response = awaitthis.makeRequest(
         `${this.baseURL}/rooms/${roomId}/generate-share-code`,
         {
           method: "POST",
-          headers: {
-            Authorization: `${this.token}`,
-          },
         }
       );
 

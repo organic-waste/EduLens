@@ -1,8 +1,8 @@
 import { injectStyles, injectIcon } from "./utils/injectAssets.js";
-import store from "./stores/filters.js";
+import store from "./stores/filterStore.js";
 import { activateDraggablePanel } from "./features/draggablePanel.js";
-import eventManager from "./stores/eventManager.js";
-import { cloudSync } from "./stores/cloudSync.js";
+import eventStore from "./stores/eventStore.js";
+import { cloudSync } from "./services/cloudSync.js";
 
 //统一的键盘管理
 function keydown(e, key, name) {
@@ -15,7 +15,7 @@ function keydown(e, key, name) {
   }
 }
 
-eventManager.on(window, "keydown", (e) => {
+eventStore.on(window, "keydown", (e) => {
   keydown(e, "h", "mouseHighlight");
   keydown(e, "s", "spotlight");
   keydown(e, "r", "readingSpotlight");

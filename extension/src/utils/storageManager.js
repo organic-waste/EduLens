@@ -4,7 +4,6 @@
  * 存储格式：
  * { [pageUrl]: { bookmarks: [], canvas: string, rectangles: [], images: [] } }
  */
-
 import { getPageKey } from "./getIdentity";
 
 export async function getPageData() {

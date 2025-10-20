@@ -1,7 +1,7 @@
 //三种截图
-import eventManager from "../../stores/eventManager.js";
+import eventStore from "../../stores/eventStore.js";
 import { createEl } from "../../utils/operateEl.js";
-import store from "../../stores/tools.js";
+import store from "../../stores/toolStore.js";
 import {
   preventPageInteraction,
   restorePageInteraction,
@@ -47,9 +47,9 @@ export function activateScreenshot() {
   funcDiv.appendChild(screenshotDiv);
 
   //绑定按钮点击事件
-  eventManager.on(DOMBtn, "click", (e) => handleScreenshot("dom", e));
-  eventManager.on(regionBtn, "click", (e) => handleScreenshot("region", e));
-  eventManager.on(scrollBtn, "click", (e) => handleScreenshot("scroll", e));
+  eventStore.on(DOMBtn, "click", (e) => handleScreenshot("dom", e));
+  eventStore.on(regionBtn, "click", (e) => handleScreenshot("region", e));
+  eventStore.on(scrollBtn, "click", (e) => handleScreenshot("scroll", e));
 }
 
 async function handleScreenshot(type) {
@@ -81,9 +81,9 @@ function DOMScreenshot() {
   window.globalClickMouseDowned = null;
   window.globalClickDownTime = null;
 
-  eventManager.on(document, "mousedown", listenerMousedown);
-  eventManager.on(document, "mousemove", listenerMousemove);
-  eventManager.on(document, "mouseup", listenerMouseup);
+  eventStore.on(document, "mousedown", listenerMousedown);
+  eventStore.on(document, "mousemove", listenerMousemove);
+  eventStore.on(document, "mouseup", listenerMouseup);
 
   function listenerMousedown(e) {
     if (!store.isDOM) return;
@@ -166,9 +166,9 @@ function regionScreenshot() {
     shadowRoot.appendChild(regionDiv);
   }
 
-  eventManager.on(document, "mousedown", (e) => listenerMouseDown(e));
-  eventManager.on(document, "mousemove", (e) => listenerMouseMove(e));
-  eventManager.on(document, "mouseup", (e) => listenerMouseUp(e));
+  eventStore.on(document, "mousedown", (e) => listenerMouseDown(e));
+  eventStore.on(document, "mousemove", (e) => listenerMouseMove(e));
+  eventStore.on(document, "mouseup", (e) => listenerMouseUp(e));
 
   function listenerMouseDown(e) {
     if (!store.isRegion) return;
@@ -260,7 +260,7 @@ async function scrollScreenshot() {
   shadowRoot.append(stopIndicator, stopText);
   stopIndicator.style.display = "block";
   stopText.style.display = "block";
-  eventManager.on(
+  eventStore.on(
     document,
     "mousedown",
     () => {

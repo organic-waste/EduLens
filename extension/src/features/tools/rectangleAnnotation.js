@@ -1,6 +1,6 @@
 // 创建矩形注释
-import eventManager from "../../stores/eventManager.js";
-import store from "../../stores/tools.js";
+import eventStore from "../../stores/eventStore.js";
+import store from "../../stores/toolStore.js";
 import { getOffsetPos, createEl } from "../../utils/operateEl.js";
 import { getPageKey, getId } from "../../utils/getIdentity.js";
 import { getPageDataByType, savePageData } from "../../utils/storageManager.js";
@@ -47,8 +47,8 @@ export function activateRectangleAnnotation() {
       innerHTML:
         '<svg t="1758595217758" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7344" width="200" height="200"><path d="M0 837.818182l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7345" fill="#ffffff"></path><path d="M232.727273 837.818182l558.545455 0 0 93.090909-558.545455 0 0-93.090909Z" p-id="7346" fill="#ffffff"></path><path d="M93.090909 232.727273l93.090909 0 0 558.545455-93.090909 0 0-558.545455Z" p-id="7347" fill="#ffffff"></path><path d="M0 0l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7348" fill="#ffffff"></path><path d="M232.727273 93.090909l558.545455 0 0 93.090909-558.545455 0 0-93.090909Z" p-id="7349" fill="#ffffff"></path><path d="M837.818182 837.818182l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7350" fill="#ffffff"></path><path d="M837.818182 0l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7351" fill="#ffffff"></path><path d="M837.818182 232.727273l93.090909 0 0 558.545455-93.090909 0 0-558.545455Z" p-id="7352" fill="#ffffff"></path></svg>',
     });
-    eventManager.on(rectangleButton, "click", toggleRectangleMode);
-    eventManager.on(rectangleButton, "mousedown", (e) => e.stopPropagation());
+    eventStore.on(rectangleButton, "click", toggleRectangleMode);
+    eventStore.on(rectangleButton, "mousedown", (e) => e.stopPropagation());
     toolGroupDiv.appendChild(rectangleButton);
   }
   loadRectangles().then(() => {
@@ -77,11 +77,11 @@ function toggleRectangleMode() {
 
 function setupEventListeners() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
-  eventManager.on(shadowRoot, "mousedown", listenerMouseDown);
-  eventManager.on(shadowRoot, "mousemove", listenerMouseMove);
-  eventManager.on(shadowRoot, "mouseup", listenerMouseUp);
-  eventManager.on(shadowRoot, "mouseleave", listenerMouseUp);
-  eventManager.on(shadowRoot, "dblclick", handleDblClick);
+  eventStore.on(shadowRoot, "mousedown", listenerMouseDown);
+  eventStore.on(shadowRoot, "mousemove", listenerMouseMove);
+  eventStore.on(shadowRoot, "mouseup", listenerMouseUp);
+  eventStore.on(shadowRoot, "mouseleave", listenerMouseUp);
+  eventStore.on(shadowRoot, "dblclick", handleDblClick);
 }
 
 function listenerMouseDown(e) {
@@ -316,19 +316,19 @@ function renderRectangles(rect) {
   });
   rectDiv.append(textContainer, tooltip);
 
-  eventManager.on(textInput, "input", (e) => {
+  eventStore.on(textInput, "input", (e) => {
     rect.text = e.target.value;
     tooltip.textContent = e.target.value;
     saveRectangles();
   });
-  eventManager.on(textInput, "mousedown", (e) => e.stopPropagation());
-  eventManager.on(textInput, "click", (e) => e.stopPropagation());
+  eventStore.on(textInput, "mousedown", (e) => e.stopPropagation());
+  eventStore.on(textInput, "click", (e) => e.stopPropagation());
 
-  eventManager.on(deleteBtn, "click", (e) => {
+  eventStore.on(deleteBtn, "click", (e) => {
     e.stopPropagation();
     removeRectangle(rect.id);
   });
-  eventManager.on(deleteBtn, "mousedown", (e) => e.stopPropagation());
+  eventStore.on(deleteBtn, "mousedown", (e) => e.stopPropagation());
   drawingContainer.appendChild(rectDiv);
 }
 
@@ -422,7 +422,7 @@ function createHandles(rectDiv, rect) {
     handle.dataset.type = h.type;
     handle.style.left = `${h.x}px`;
     handle.style.top = `${h.y}px`;
-    eventManager.on(handle, "mousedown", (e) => {
+    eventStore.on(handle, "mousedown", (e) => {
       e.stopPropagation();
       e.preventDefault();
       //获取container位置转为获取canvas的位置

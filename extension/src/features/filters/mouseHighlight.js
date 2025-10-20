@@ -1,5 +1,5 @@
 // 鼠标高亮
-import eventManager from "../../stores/eventManager.js";
+import eventStore from "../../stores/eventStore.js";
 import { createEl } from "../../utils/operateEl.js";
 
 let highlightDiv = null;
@@ -21,11 +21,11 @@ function Highlight(e) {
 }
 
 export function activateHighlight() {
-  eventManager.on(document, "mousemove", Highlight);
+  eventStore.on(document, "mousemove", Highlight);
 }
 
 export function deactivateHighlight() {
-  eventManager.off(window, "mousemove", Highlight);
+  eventStore.off(window, "mousemove", Highlight);
   if (highlightDiv) {
     highlightDiv.remove();
     highlightDiv = null;
