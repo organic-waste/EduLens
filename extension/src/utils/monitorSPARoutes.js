@@ -1,6 +1,5 @@
 /* 监听 SPA 页面路由改动 */
-
-import eventManager from "../stores/eventManager.js";
+import eventStore from "../stores/eventStore.js";
 
 export default function MonitorSPARoutes(fn) {
   let lastURL = window.location.href;
@@ -21,12 +20,12 @@ export default function MonitorSPARoutes(fn) {
     childList: true,
   });
 
-  eventManager.on(window, "popstate", () => {
+  eventStore.on(window, "popstate", () => {
     // console.log('popstate');
     setTimeout(fn, 0);
   });
 
-  eventManager.on(window, "hashchange", () => {
+  eventStore.on(window, "hashchange", () => {
     // console.log('hashchange');
     setTimeout(fn, 0);
   });

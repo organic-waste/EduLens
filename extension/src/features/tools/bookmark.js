@@ -1,5 +1,5 @@
 //创建定位书签
-import eventManager from "../../stores/eventManager.js";
+import eventStore from "../../stores/eventStore.js";
 import MonitorSPARoutes from "../../utils/monitorSPARoutes.js";
 import { getId, getPageKey } from "../../utils/getIdentity.js";
 import { createEl } from "../../utils/operateEl.js";
@@ -36,7 +36,7 @@ function createBookmarkEle(scrollTop, text, id) {
     class: "delete-button",
     textContent: "×",
   });
-  eventManager.on(deleteBtn, "click", (e) => {
+  eventStore.on(deleteBtn, "click", (e) => {
     e.stopPropagation();
     removeBookmark(bookmarkDiv);
   });
@@ -56,23 +56,23 @@ function createBookmarkEle(scrollTop, text, id) {
     }
   }
 
-  eventManager.on(bookmarkDiv, "mouseenter", () => {
+  eventStore.on(bookmarkDiv, "mouseenter", () => {
     tooltip.style.opacity = "1";
     tooltip.style.pointerEvents = "all";
     switchPanel(true);
   });
-  eventManager.on(bookmarkDiv, "mouseleave", () => {
+  eventStore.on(bookmarkDiv, "mouseleave", () => {
     switchPanel(false);
   });
 
-  eventManager.on(tooltip, "mouseover", () => {
+  eventStore.on(tooltip, "mouseover", () => {
     switchPanel(true);
   });
-  eventManager.on(tooltip, "mouseleave", () => {
+  eventStore.on(tooltip, "mouseleave", () => {
     switchPanel(false);
   });
 
-  eventManager.on(bookmarkDiv, "click", () => {
+  eventStore.on(bookmarkDiv, "click", () => {
     window.scrollTo({
       top: scrollTop,
       behavior: "smooth",
@@ -142,7 +142,7 @@ export function activateBookmark() {
     class: "button",
     textContent: chrome.i18n.getMessage("bookmarkAddBtn"),
   });
-  eventManager.on(btnDiv, "click", createBookmark);
+  eventStore.on(btnDiv, "click", createBookmark);
   addDiv.appendChild(btnDiv);
 
   funcDiv = shadowRoot.querySelector(".functions");

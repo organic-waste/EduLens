@@ -1,5 +1,5 @@
 // 阅读聚光灯
-import eventManager from "../../stores/eventManager.js";
+import eventStore from "../../stores/eventStore.js";
 import { createEl } from "../../utils/operateEl.js";
 
 let readingSpotlightDiv = null;
@@ -27,11 +27,11 @@ export function activateReadingSpotlight() {
   }
 
   readingSpotlightDiv.style.display = "block";
-  eventManager.on(document, "mousemove", ReadingSpotlight);
+  eventStore.on(document, "mousemove", ReadingSpotlight);
 }
 
 export function deactivateReadingSpotlight() {
-  eventManager.off(window, "mousemove", ReadingSpotlight);
+  eventStore.off(window, "mousemove", ReadingSpotlight);
   if (readingSpotlightDiv) {
     readingSpotlightDiv.style.display = "none";
   }

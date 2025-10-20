@@ -1,5 +1,5 @@
 // 滚动进度指示器
-import eventManager from "../../stores/eventManager.js";
+import eventStore from "../../stores/eventStore.js";
 import { createEl } from "../../utils/operateEl.js";
 
 let scrollDiv = null;
@@ -41,12 +41,12 @@ export function activateScrollProgress() {
       cardDiv.appendChild(funcDiv);
     }
   }
-  eventManager.on(window, "scroll", ScrollProgress);
+  eventStore.on(window, "scroll", ScrollProgress);
   ScrollProgress();
 }
 
 export function deactivateScrollProgress() {
-  eventManager.off(window, "scroll", ScrollProgress);
+  eventStore.off(window, "scroll", ScrollProgress);
   if (scrollDiv) {
     scrollDiv.remove();
     scrollDiv = null;

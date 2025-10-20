@@ -1,7 +1,7 @@
 import { createEl } from "../../utils/operateEl.js";
-import { cloudSync } from "../../stores/cloudSync.js";
+import { cloudSync } from "../../services/cloudSync.js";
 import { activateRoomSelector } from "./room.js";
-import eventManager from "../../stores/eventManager.js";
+import eventStore from "../../stores/eventStore.js";
 
 function showForm() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
@@ -22,7 +22,7 @@ function showForm() {
     innerHTML: "×",
   });
 
-  eventManager.on(closeBtn, "click", () => {
+  eventStore.on(closeBtn, "click", () => {
     loginOverlay.remove();
   });
 
@@ -54,13 +54,13 @@ function showForm() {
 
   shadowRoot.appendChild(loginOverlay);
 
-  eventManager.on(loginOverlay, "click", (e) => {
+  eventStore.on(loginOverlay, "click", (e) => {
     if (e.target === loginOverlay) {
       loginOverlay.remove();
     }
   });
 
-  eventManager.on(loginContainer, "click", (e) => {
+  eventStore.on(loginContainer, "click", (e) => {
     e.stopPropagation();
   });
 }
@@ -103,7 +103,7 @@ function createLoginFormContent() {
   )}</a>`;
   container.append(title, form, errorMsg, switchLink);
 
-  eventManager.on(
+  eventStore.on(
     switchLink.querySelector(".switch-to-register-link"),
     "click",
     async (e) => {
@@ -112,7 +112,7 @@ function createLoginFormContent() {
     }
   );
 
-  eventManager.on(form, "submit", async (e) => {
+  eventStore.on(form, "submit", async (e) => {
     e.preventDefault();
     await handleLogin(form, errorMsg);
   });
@@ -175,7 +175,7 @@ function createRegisterFormContent() {
 
   container.append(title, form, errorMsg, switchLink);
 
-  eventManager.on(
+  eventStore.on(
     switchLink.querySelector(".switch-to-login-link"),
     "click",
     async (e) => {
@@ -184,7 +184,7 @@ function createRegisterFormContent() {
     }
   );
 
-  eventManager.on(form, "submit", async (e) => {
+  eventStore.on(form, "submit", async (e) => {
     e.preventDefault();
     await handleRegister(form, errorMsg);
   });
@@ -236,12 +236,12 @@ function createInputGroup({ type, id, placeholder, label, required }) {
   labelEl.textContent = label;
   const input = createEl("input", { type, id, placeholder, required });
 
-  eventManager.on(input, "focus", () => {
+  eventStore.on(input, "focus", () => {
     input.style.borderColor = "var(--hover-color)";
     input.style.boxShadow = "0 0 0 3px rgba(84, 132, 201, 0.1)";
   });
 
-  eventManager.on(input, "blur", () => {
+  eventStore.on(input, "blur", () => {
     input.style.borderColor = "var(--secondary-color)";
     input.style.boxShadow = "none";
   });
@@ -269,10 +269,11 @@ async function handleLogin(form, errorEl) {
     const res = await cloudSync.login({ email, password });
     if (res.status === "success") {
       hideError(errorEl);
-
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);
       console.log(username + ":" + chrome.i18n.getMessage("loginSuccess"));
+
+      await activateRoomSelector();
     } else {
       showError(errorEl, res.message || chrome.i18n.getMessage("loginFailed"));
     }
@@ -315,6 +316,8 @@ async function handleRegister(form, errorEl) {
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);
       console.log(username + ":" + chrome.i18n.getMessage("loginSuccess"));
+
+      await activateRoomSelector();
     } else {
       showError(errorEl, res.message);
     }
@@ -353,7 +356,7 @@ export async function updateLoginStatus(user) {
     )}</button>
   `;
 
-  eventManager.on(area.querySelector(".logout-btn"), "click", handleLogout);
+  eventStore.on(area.querySelector(".logout-btn"), "click", handleLogout);
 
   shadow.querySelector(".functions")?.append(area);
 
@@ -368,6 +371,9 @@ export async function updateLoginStatus(user) {
 
 export async function activateLogin() {
   await cloudSync.init();
+
+  // 设置认证失败回调
+  cloudSync.setAuthFailureCallback(showForm);
 
   // 如果本地有token，就验证有效性
   if (cloudSync.token) {

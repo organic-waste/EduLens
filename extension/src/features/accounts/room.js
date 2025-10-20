@@ -1,6 +1,6 @@
 import { createEl } from "../../utils/operateEl.js";
-import eventManager from "../../stores/eventManager.js";
-import { roomManager } from "../../stores/roomManager.js";
+import eventStore from "../../stores/eventStore.js";
+import { roomStore } from "../../stores/roomStore.js";
 
 let selector = null;
 let shadowRoot = null;
@@ -9,52 +9,46 @@ let shadowRoot = null;
 export async function activateRoomSelector() {
   shadowRoot = window.__EDULENS_SHADOW_ROOT__;
 
-  await roomManager.loadUserRooms();
-
+  await roomStore.loadUserRooms();
+  selector = shadowRoot.querySelector(".room-selector");
+  if (selector) selector.remove();
   selector = createEl("div", { class: "room-selector" });
-  const currentRoomInfo = createEl("div", { class: "current-room-info" });
-  const roomActions = createEl("div", { class: "room-actions" });
-
-  if (this.currentRoom) {
-    currentRoomInfo.innerHTML = `
-        <span class="room-name">${this.currentRoom.name}</span>
-        <span class="room-members">${this.currentRoom.members.length} 名成员</span>
-      `;
-  } else {
-    currentRoomInfo.innerHTML = '<span class="no-room">未选择房间</span>';
-  }
-
-  roomActions.innerHTML = `
-      <button class="button room-list-btn">房间列表</button>
-      <button class="button create-room-btn">创建房间</button>
-      ${
-        this.currentRoom
-          ? `
-        <button class="button share-room-btn">分享</button>
-      `
-          : ""
-      }
+  selector.innerHTML = `
+      <div class="current-room-info">
+        ${
+          roomStore.currentRoom
+            ? `<span class="room-name">${roomStore.currentRoom.name}</span>
+             <span class="room-members">${roomStore.currentRoom.members.length} 名成员</span>`
+            : '<span class="no-room">未选择房间</span>'
+        }
+      </div>
+      <div class="room-actions">
+        <button class="button room-list-btn">房间列表</button>
+        <button class="button create-room-btn">创建房间</button>
+        ${
+          roomStore.currentRoom
+            ? '<button class="button share-room-btn">分享</button>'
+            : ""
+        }
+      </div>
     `;
-
-  selector.appendChild(currentRoomInfo);
-  selector.appendChild(roomActions);
 
   const functions = shadowRoot.querySelector(".functions");
   if (functions) {
     functions.appendChild(selector);
   }
-  eventManager.on(
+  eventStore.on(
     selector.querySelector(".room-list-btn"),
     "click",
     showRoomList
   );
-  eventManager.on(
+  eventStore.on(
     selector.querySelector(".create-room-btn"),
     "click",
     showCreateRoomForm
   );
   const shareBtn = selector.querySelector(".share-room-btn");
-  if (shareBtn) eventManager.on(shareBtn, "click", shareRoom);
+  if (shareBtn) eventStore.on(shareBtn, "click", shareRoom);
 }
 
 //展示房间列表
@@ -100,15 +94,15 @@ async function showRoomList() {
   sel.shadowRoot.appendChild(overlay);
 
   const close = () => overlay.remove();
-  eventManager.on(container.querySelector(".close-btn"), "click", close);
-  eventManager.on(overlay, "click", (e) => e.target === overlay && close());
-  eventManager.on(container.querySelector(".create-room-btn"), "click", () => {
+  eventStore.on(container.querySelector(".close-btn"), "click", close);
+  eventStore.on(overlay, "click", (e) => e.target === overlay && close());
+  eventStore.on(container.querySelector(".create-room-btn"), "click", () => {
     overlay.remove();
     showCreateRoomForm();
   });
 
   listWrapper.querySelectorAll(".switch-room-btn").forEach((btn) =>
-    eventManager.on(btn, "click", async (e) => {
+    eventStore.on(btn, "click", async (e) => {
       await roomStore.switchRoom(e.target.dataset.id);
       overlay.remove();
       renderRoomSelector();
@@ -147,7 +141,7 @@ function showCreateRoomForm() {
   shadowRoot.appendChild(overlay);
 
   const form = container.querySelector(".room-form");
-  eventManager.on(form, "submit", async (e) => {
+  eventStore.on(form, "submit", async (e) => {
     e.preventDefault();
     const room = await roomStore.createRoom({
       name: form.querySelector("#room-name").value.trim(),
@@ -161,13 +155,13 @@ function showCreateRoomForm() {
       console.error("创建房间失败");
     }
   });
-  eventManager.on(container.querySelector(".close-btn"), "click", () =>
+  eventStore.on(container.querySelector(".close-btn"), "click", () =>
     overlay.remove()
   );
-  eventManager.on(container.querySelector(".cancel-btn"), "click", () =>
+  eventStore.on(container.querySelector(".cancel-btn"), "click", () =>
     overlay.remove()
   );
-  eventManager.on(
+  eventStore.on(
     overlay,
     "click",
     (e) => e.target === overlay && overlay.remove()
@@ -197,9 +191,9 @@ async function shareRoom() {
   shadowRoot.appendChild(overlay);
 
   const close = () => overlay.remove();
-  eventManager.on(container.querySelector(".close-btn"), "click", close);
-  eventManager.on(overlay, "click", (e) => e.target === overlay && close());
-  eventManager.on(container.querySelector(".copy-btn"), "click", () => {
+  eventStore.on(container.querySelector(".close-btn"), "click", close);
+  eventStore.on(overlay, "click", (e) => e.target === overlay && close());
+  eventStore.on(container.querySelector(".copy-btn"), "click", () => {
     navigator.clipboard.writeText(code);
     console.log("分享码已复制");
     overlay.remove();

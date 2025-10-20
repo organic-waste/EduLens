@@ -1,5 +1,5 @@
 /* 管理元素事件监听 */
-class EventManager {
+class EventStore {
   constructor() {
     //使用 WeakMap 为对DOM元素的弱引用，在删除DOM后可以自动删除Map中的数据并进行自动垃圾回收
     this.listenerMap = new WeakMap();
@@ -82,4 +82,4 @@ class EventManager {
   }
 }
 
-export default new EventManager();
+export default new EventStore();

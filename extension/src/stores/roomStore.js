@@ -1,27 +1,32 @@
-import { cloudSync } from "./cloudSync";
+import { cloudSync } from "../services/cloudSync";
 
 /* 管理数据房间 */
-class RoomManager {
+class RoomStore {
   constructor() {
     this.currentRoom = null;
     this.userRooms = [];
   }
 
   async loadUserRooms() {
-    this.userRooms = await cloudSync.getUserRooms();
+    try {
+      this.userRooms = await cloudSync.getUserRooms();
 
-    //无任何房间时创建默认房间
-    if (this.userRooms.length === 0) {
-      const defaultRoom = await cloudSync.createRoom({
-        name: "我的个人空间",
-        description: "默认个人工作区",
-      });
-      this.userRooms = [defaultRoom];
-      await this.switchRoom(defaultRoom._id);
-    }
-    //无选中房间时默认取第一个
-    else if (!this.currentRoom) {
-      await this.switchRoom(this.userRooms[0]._id);
+      //无任何房间时创建默认房间
+      if (this.userRooms.length === 0) {
+        const defaultRoom = await cloudSync.createRoom({
+          name: "我的个人空间",
+          description: "默认个人工作区",
+        });
+        this.userRooms = [defaultRoom];
+        await this.switchRoom(defaultRoom._id);
+      }
+      //无选中房间时默认取第一个
+      else if (!this.currentRoom) {
+        await this.switchRoom(this.userRooms[0]._id);
+      }
+    } catch (error) {
+      console.error("加载用户房间失败:", error);
+      this.userRooms = [];
     }
   }
 
@@ -59,4 +64,4 @@ class RoomManager {
   }
 }
 
-export const roomManager = new RoomManager();
+export const roomStore = new RoomStore();

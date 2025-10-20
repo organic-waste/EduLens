@@ -1,5 +1,5 @@
 // 聚光灯
-import eventManager from "../../stores/eventManager.js";
+import eventStore from "../../stores/eventStore.js";
 import { createEl } from "../../utils/operateEl.js";
 
 let spotlightDiv = null;
@@ -20,11 +20,11 @@ function Spotlight(e) {
 }
 
 export function activateSpotlight() {
-  eventManager.on(document, "mousemove", Spotlight);
+  eventStore.on(document, "mousemove", Spotlight);
 }
 
 export function deactivateSpotlight() {
-  eventManager.off(window, "mousemove", Spotlight);
+  eventStore.off(window, "mousemove", Spotlight);
   if (spotlightDiv) {
     spotlightDiv.remove();
     spotlightDiv = null;
