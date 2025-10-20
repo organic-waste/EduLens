@@ -26,7 +26,7 @@
   width: 100%;
   border: none;
   background: transparent;
-  font-size: 2vh;
+  font-size: var(--normal-font-size);
   margin: 0;
   box-sizing: border-box;
   outline: none;
@@ -34,7 +34,7 @@
 
 .annotation-delete-btn {
   position: absolute;
-  font-size: 2vh;
+  font-size: var(--normal-font-size);
   top: 50%;
   right: 2px;
   transform: translateY(-50%);
@@ -47,7 +47,7 @@
   left: 0;
   width: 100%;
   background: rgba(0, 0, 0, 0.2);
-  font-size: 2.4vh;
+  font-size: var(--bolder-font-size);
   padding: 0.5vh;
   box-sizing: border-box;
   text-align: center;

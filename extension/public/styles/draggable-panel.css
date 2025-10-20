@@ -52,7 +52,7 @@
   border-radius: 10px;
   position: relative;
   width: 30vh;
-  height: 40vh;
+  height: 50vh;
   background: #fff;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
   transition: width 0.3s ease-in-out, height 0.3s ease-in-out;
@@ -68,14 +68,14 @@
   color: #fff;
   height: 5vh;
   padding-left: 3vh;
-  font-size: 2.5vh;
+  font-size: var(--bolder-font-size);
   border-radius: 10px 10px 0 0;
   white-space: nowrap;
 }
 
 .card-content {
   position: relative;
-  height: 35vh;
+  height: 45vh;
   border-radius: 0 0 10px 10px;
 }
 

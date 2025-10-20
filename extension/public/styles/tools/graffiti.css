@@ -21,7 +21,6 @@
   flex-wrap: wrap;
   justify-content: space-evenly;
   align-items: center;
-  gap: 1vh;
   padding: 0.5vh;
   width: 100%;
   height: auto;
@@ -68,7 +67,8 @@
 }
 
 #brush-input {
-  font-size: 2vh;
+  font-size: var(--normal-font-size);
+  font-weight: bolder;
   width: 6vh;
   color: var(--main-color);
   text-align: center;
@@ -77,7 +77,7 @@
   height: 3vh;
   padding: 0.5vh;
   background-color: #f3f3f3;
-  border: 1px solid var(--lighter-color);
+  border: 1px solid var(--main-color);
   border-radius: 4px;
   box-sizing: border-box;
 }
@@ -88,7 +88,7 @@
 }
 
 #graffiti-controls span {
-  font-size: 2vh;
+  font-size: var(--normal-font-size);
   min-width: 3vh;
   color: var(--main-color);
   text-align: center;

@@ -27,7 +27,7 @@
   border: 1px solid var(--main-color);
   white-space: nowrap;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  font-size: 2.4vh;
+  font-size: var(--bolder-font-size);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease-in-out;

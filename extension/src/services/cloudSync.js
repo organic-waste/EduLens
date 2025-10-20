@@ -36,7 +36,6 @@ class CloudSync {
   }
 
   async handleAuthFailure() {
-    console.log("[EduLens] 认证已过期，需要重新登录");
     await this.clearAuth();
 
     if (this.onAuthFailure) {
@@ -57,7 +56,7 @@ class CloudSync {
       });
       if (response.status === 401) {
         await this.handleAuthFailure();
-        console.error("认证已过期，请重新登录");
+        console.error("[EduLens] 认证已过期，请重新登录");
       }
       return response;
     } catch (error) {
@@ -171,10 +170,10 @@ class CloudSync {
   }
 
   /* 数据同步相关 */
-  async syncAnnotations(pageUrl, annotations) {
+  async syncAnnotations(annotations) {
     //没登录或没有房间则跳过云同步
     if (!this.isOnline || !this.token || !this.currentRoomId) return;
-
+    const pageUrl = getPageKey();
     try {
       const response = await this.makeRequest(
         `${this.baseURL}/annotations/sync`,
@@ -204,7 +203,9 @@ class CloudSync {
 
     try {
       const response = await this.makeRequest(
-        `${this.baseURL}/annotations/by-url?url=${encodeURIComponent(pageUrl)}`
+        `${this.baseURL}/annotations/${this.currentRoomId}/${encodeURIComponent(
+          pageUrl
+        )}`
       );
 
       const data = await response.json();
@@ -229,11 +230,9 @@ class CloudSync {
 
     try {
       const response = await this.makeRequest(`${this.baseURL}/rooms/my-rooms`);
-      console.log(" response: ", response);
       const data = await response.json();
-      console.log("data: ", data);
       if (data.status === "success") {
-        return data.data.rooms;
+        return data.data;
       }
     } catch (error) {
       console.error("获取用户房间失败:", error);
@@ -245,7 +244,7 @@ class CloudSync {
     if (!this.isOnline || !this.token) return null;
 
     try {
-      const response = awaitthis.makeRequest(`${this.baseURL}/rooms/create`, {
+      const response = await this.makeRequest(`${this.baseURL}/rooms/create`, {
         method: "POST",
         body: JSON.stringify(roomData),
       });
@@ -287,7 +286,7 @@ class CloudSync {
     if (!this.isOnline || !this.token) return null;
 
     try {
-      const response = awaitthis.makeRequest(
+      const response = await this.makeRequest(
         `${this.baseURL}/rooms/${roomId}/generate-share-code`,
         {
           method: "POST",
@@ -309,10 +308,8 @@ class CloudSync {
     if (!this.isOnline || !this.token || !this.currentRoomId) return;
 
     try {
-      const pageUrl = getPageKey();
       const pageData = await getPageData();
-
-      return await this.syncAnnotations(pageUrl, pageData);
+      return await this.syncAnnotations(pageData);
     } catch (error) {
       console.error("同步云端最新数据失败:", error);
     }

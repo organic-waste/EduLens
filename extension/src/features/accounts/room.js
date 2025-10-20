@@ -24,12 +24,7 @@ export async function activateRoomSelector() {
       </div>
       <div class="room-actions">
         <button class="button room-list-btn">房间列表</button>
-        <button class="button create-room-btn">创建房间</button>
-        ${
-          roomStore.currentRoom
-            ? '<button class="button share-room-btn">分享</button>'
-            : ""
-        }
+        <button class="button share-room-btn">分享</button>
       </div>
     `;
 
@@ -42,11 +37,11 @@ export async function activateRoomSelector() {
     "click",
     showRoomList
   );
-  eventStore.on(
-    selector.querySelector(".create-room-btn"),
-    "click",
-    showCreateRoomForm
-  );
+  // eventStore.on(
+  //   selector.querySelector(".create-room-btn"),
+  //   "click",
+  //   showCreateRoomForm
+  // );
   const shareBtn = selector.querySelector(".share-room-btn");
   if (shareBtn) eventStore.on(shareBtn, "click", shareRoom);
 }
@@ -91,7 +86,7 @@ async function showRoomList() {
   });
 
   overlay.appendChild(container);
-  sel.shadowRoot.appendChild(overlay);
+  shadowRoot.appendChild(overlay);
 
   const close = () => overlay.remove();
   eventStore.on(container.querySelector(".close-btn"), "click", close);
@@ -105,7 +100,7 @@ async function showRoomList() {
     eventStore.on(btn, "click", async (e) => {
       await roomStore.switchRoom(e.target.dataset.id);
       overlay.remove();
-      renderRoomSelector();
+      activateRoomSelector();
       console.log(`已切换到房间: ${roomStore.currentRoom.name}`);
     })
   );
@@ -194,6 +189,7 @@ async function shareRoom() {
   eventStore.on(container.querySelector(".close-btn"), "click", close);
   eventStore.on(overlay, "click", (e) => e.target === overlay && close());
   eventStore.on(container.querySelector(".copy-btn"), "click", () => {
+    //将分享码写入剪贴板
     navigator.clipboard.writeText(code);
     console.log("分享码已复制");
     overlay.remove();

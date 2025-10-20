@@ -50,10 +50,9 @@ export async function savePageData(dataType, data) {
     };
 
     await chrome.storage.local.set({ [pageKey]: updatedData });
-    return true;
+    return updatedData;
   } catch (error) {
     console.error("保存页面数据失败:", error);
-    return false;
   }
 }
 

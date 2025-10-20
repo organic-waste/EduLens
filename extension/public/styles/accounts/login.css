@@ -60,7 +60,7 @@
 .login-form-container h2,
 .register-form-container h2 {
   color: var(--emphasis-color);
-  font-size: 2.8vh;
+  font-size: var(--bolder-font-size);
   margin: 1vh;
   margin-bottom: 2vh;
   text-align: center;
@@ -81,7 +81,7 @@
 }
 
 .input-group label {
-  font-size: 1.8vh;
+  font-size: var(--lighter-font-size);
   color: var(--main-color);
   font-weight: 500;
 }
@@ -90,7 +90,7 @@
   padding: 1.2vh;
   border: 1px solid var(--secondary-color);
   border-radius: 6px;
-  font-size: 1.7vh;
+  font-size: var(--lighter-font-size);
   background: white;
   transition: all 0.2s ease;
   outline: none;
@@ -120,7 +120,7 @@
 .login-error-message,
 .register-error-message {
   color: var(--emphasis-error-color);
-  font-size: 1.6vh;
+  font-size: var(--lighter-font-size);
   text-align: center;
   margin-top: 1.5vh;
   padding: 1vh;
@@ -133,7 +133,7 @@
 .register-switch {
   text-align: center;
   margin-top: 2vh;
-  font-size: 1.6vh;
+  font-size: var(--lighter-font-size);
   color: var(--main-color);
 }
 
@@ -332,10 +332,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1vh 1.5vh;
-  background: var(--lighter-color);
+  padding: 0.5vh 1vh;
+  background: var(--normal-color);
   border-radius: 6px;
-  margin: 1vh;
+  margin: 0.5vh;
   border: 1px solid var(--secondary-color);
 }
 
@@ -346,9 +346,9 @@
 }
 
 .user-name {
-  font-size: 1.8vh;
+  font-size: var(--bolder-font-size);
   color: var(--emphasis-color);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .logout-btn {
@@ -357,7 +357,7 @@
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 1.6vh;
+  font-size: var(--normal-font-size);
   cursor: pointer;
   transition: background 0.2s ease;
 }
