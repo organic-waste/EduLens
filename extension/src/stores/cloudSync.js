@@ -1,6 +1,6 @@
 /* 实时协作的云同步功能 */
-import { getPageKey } from "./getIdentity.js";
-import { getPageData, savePageData } from "./storageManager.js";
+import { getPageKey } from "../utils/getIdentity.js";
+import { getPageData, savePageData } from "../utils/storageManager.js";
 
 class CloudSync {
   constructor() {
@@ -43,6 +43,7 @@ class CloudSync {
         const result = await response.json();
         this.user = result.data.user;
         this.isOnline = true;
+        console.log("[EduLens] 登录成功：", this.user.username);
         return true;
       }
     } catch (error) {
@@ -62,7 +63,7 @@ class CloudSync {
   /* 测试相关 */
   async testConnection() {
     try {
-      const response = await fetch(`${this.baseURL}/test`);
+      const response = await fetch(`${this.baseURL}/test/connection`);
       if (response.ok) {
         this.isOnline = true;
         return true;
@@ -76,7 +77,7 @@ class CloudSync {
 
   async healthCheck() {
     try {
-      const response = await fetch(`${this.baseURL}/health`);
+      const response = await fetch(`${this.baseURL}/test/health`);
       return response.ok;
     } catch (error) {
       return false;
@@ -203,8 +204,9 @@ class CloudSync {
           Authorization: `${this.token}`,
         },
       });
-
+      console.log(" response: ", response);
       const data = await response.json();
+      console.log("data: ", data);
       if (data.status === "success") {
         return data.data.rooms;
       }

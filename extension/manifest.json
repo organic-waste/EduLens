@@ -27,7 +27,8 @@
         "styles/tools/rectangle-annotation.css",
         "styles/tools/screenshot.css",
         "styles/tools/upload-image.css",
-        "styles/accounts/login.css"
+        "styles/accounts/login.css",
+        "styles/accounts/room.css"
       ]  
     }
   ],

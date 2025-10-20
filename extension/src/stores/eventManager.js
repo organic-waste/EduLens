@@ -1,5 +1,4 @@
 /* 管理元素事件监听 */
-
 class EventManager {
   constructor() {
     //使用 WeakMap 为对DOM元素的弱引用，在删除DOM后可以自动删除Map中的数据并进行自动垃圾回收

@@ -1,0 +1,122 @@
+/* 房间管理样式 */
+.room-selector {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--background-color);
+  border-bottom: 1px solid var(--secondary-color);
+  margin-bottom: 8px;
+}
+
+.current-room-info {
+  flex: 1;
+}
+
+.room-name {
+  font-weight: bold;
+  color: var(--emphasis-color);
+}
+
+.no-room {
+  color: var(--secondary-color);
+  font-style: italic;
+}
+
+.room-members {
+  font-size: 12px;
+  color: var(--main-color);
+  margin-left: 8px;
+}
+
+.room-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.room-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--mask-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+.room-list-container,
+.room-form-container,
+.share-dialog {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 300px;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.room-list-header,
+.room-form-header,
+.share-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.room-list {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.room-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--secondary-color);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.room-item:hover {
+  background: var(--lighter-color);
+}
+
+.room-item.active {
+  border-color: var(--hover-color);
+  background: var(--lighter-color);
+}
+
+.room-meta {
+  font-size: 12px;
+  color: var(--main-color);
+}
+
+.current-label {
+  color: var(--hover-color);
+  font-weight: bold;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.share-content {
+  text-align: center;
+}
+
+.share-hint {
+  font-size: 14px;
+  color: var(--main-color);
+  margin: 8px 0;
+}

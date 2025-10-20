@@ -1,6 +1,7 @@
 import { createEl } from "../../utils/operateEl.js";
-import { cloudSync } from "../../utils/cloudSync.js";
-import eventManager from "../../utils/eventManager.js";
+import { cloudSync } from "../../stores/cloudSync.js";
+import { activateRoomSelector } from "./room.js";
+import eventManager from "../../stores/eventManager.js";
 
 function showForm() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
@@ -355,6 +356,8 @@ export async function updateLoginStatus(user) {
   eventManager.on(area.querySelector(".logout-btn"), "click", handleLogout);
 
   shadow.querySelector(".functions")?.append(area);
+
+  await activateRoomSelector();
 
   async function handleLogout() {
     await cloudSync.clearAuth();

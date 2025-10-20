@@ -1,6 +1,6 @@
 /* 监听 SPA 页面路由改动 */
 
-import eventManager from "./eventManager.js";
+import eventManager from "../stores/eventManager.js";
 
 export default function MonitorSPARoutes(fn) {
   let lastURL = window.location.href;

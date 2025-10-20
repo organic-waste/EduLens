@@ -1,5 +1,5 @@
 //三种截图
-import eventManager from "../../utils/eventManager.js";
+import eventManager from "../../stores/eventManager.js";
 import { createEl } from "../../utils/operateEl.js";
 import store from "../../stores/tools.js";
 import {

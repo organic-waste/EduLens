@@ -1,5 +1,5 @@
 //创建定位书签
-import eventManager from "../../utils/eventManager.js";
+import eventManager from "../../stores/eventManager.js";
 import MonitorSPARoutes from "../../utils/monitorSPARoutes.js";
 import { getId, getPageKey } from "../../utils/getIdentity.js";
 import { createEl } from "../../utils/operateEl.js";

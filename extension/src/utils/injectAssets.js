@@ -26,6 +26,7 @@ const CSS_FILES = [
   "styles/tools/screenshot.css",
   "styles/tools/upload-image.css",
   "styles/accounts/login.css",
+  "styles/accounts/room.css",
 ];
 
 let shadowRoot = null;
