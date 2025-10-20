@@ -1,5 +1,5 @@
 // 创建涂鸦
-import eventManager from "../../utils/eventManager.js";
+import eventManager from "../../stores/eventManager.js";
 import store from "../../stores/tools.js";
 import MonitorSPARoutes from "../../utils/monitorSPARoutes.js";
 import { getOffsetPos, createEl } from "../../utils/operateEl.js";

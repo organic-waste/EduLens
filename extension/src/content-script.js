@@ -1,8 +1,8 @@
 import { injectStyles, injectIcon } from "./utils/injectAssets.js";
 import store from "./stores/filters.js";
 import { activateDraggablePanel } from "./features/draggablePanel.js";
-import eventManager from "./utils/eventManager.js";
-import { cloudSync } from "./utils/cloudSync.js";
+import eventManager from "./stores/eventManager.js";
+import { cloudSync } from "./stores/cloudSync.js";
 
 //统一的键盘管理
 function keydown(e, key, name) {
@@ -29,8 +29,8 @@ eventManager.on(window, "keydown", (e) => {
   //测试是否能连接到后端云服务
   const connected = await cloudSync.testConnection();
   if (connected) {
-    console.log("EduLens: 云服务已连接");
+    console.log("[EduLens] 云服务已连接");
   } else {
-    console.log("EduLens: 使用本地模式");
+    console.log("[EduLens] 使用本地模式");
   }
 })();

@@ -1,5 +1,5 @@
 // 创建矩形注释
-import eventManager from "../../utils/eventManager.js";
+import eventManager from "../../stores/eventManager.js";
 import store from "../../stores/tools.js";
 import { getOffsetPos, createEl } from "../../utils/operateEl.js";
 import { getPageKey, getId } from "../../utils/getIdentity.js";
@@ -54,7 +54,7 @@ export function activateRectangleAnnotation() {
   loadRectangles().then(() => {
     renderAllRectangles();
   });
-  EditingRectangleEventListeners();
+  setupEventListeners();
   chrome.runtime.onMessage.addListener((message) => {
     if (message.type === "RELOAD") {
       loadRectangles();
@@ -75,7 +75,7 @@ function toggleRectangleMode() {
   }
 }
 
-function EditingRectangleEventListeners() {
+function setupEventListeners() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
   eventManager.on(shadowRoot, "mousedown", listenerMouseDown);
   eventManager.on(shadowRoot, "mousemove", listenerMouseMove);

@@ -1,5 +1,5 @@
 // 上传图片
-import eventManager from "../../utils/eventManager.js";
+import eventManager from "../../stores/eventManager.js";
 import store from "../../stores/tools.js";
 import { getOffsetPos, createEl } from "../../utils/operateEl.js";
 import { getPageKey, getId } from "../../utils/getIdentity.js";
