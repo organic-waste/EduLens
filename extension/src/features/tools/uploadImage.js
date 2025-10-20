@@ -76,9 +76,19 @@ export function activateImageAnnotation() {
 function handleFileChange(e) {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    // 新图片默认尺寸和位置
+
+  //仅压缩大文件(超过500KB的)
+  if (file.size > 500000) {
+    compressImage(file).then((DataURL) => {
+      processImageData(DataURL);
+    });
+  } else {
+    const reader = new FileReader();
+    reader.onload = () => processImageData(reader.result);
+    reader.readAsDataURL(file);
+  }
+
+  function processImageData(dataURL) {
     const img = new Image();
     img.onload = () => {
       const maxW = 300;
@@ -95,7 +105,7 @@ function handleFileChange(e) {
         y: top,
         width: initW,
         height: initH,
-        src: reader.result,
+        src: dataURL,
         fixed: true,
       };
       images.push(newImg);
@@ -104,10 +114,43 @@ function handleFileChange(e) {
       enterEditingMode(newImg);
       fileInput.value = "";
     };
-    img.src = reader.result;
+    img.src = dataURL;
     store.updateState();
-  };
-  reader.readAsDataURL(file);
+  }
+}
+
+//图片压缩
+function compressImage(file, quality = 0.7) {
+  return new Promise((resolve) => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+
+    img.onload = () => {
+      //最大尺寸
+      const maxWidth = 800;
+      const maxHeight = 600;
+      let { width, height } = img;
+
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      if (height > maxHeight) {
+        width = (width * maxHeight) / height;
+        height = maxHeight;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+
+    img.src = URL.createObjectURL(file);
+    console.log("图片压缩成功");
+  });
 }
 
 function renderAllImages() {

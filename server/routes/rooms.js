@@ -15,11 +15,10 @@ router.get("/my-rooms", auth, async (req, res) => {
       .populate("owner", "username email")
       .populate("members", "username email")
       .sort({ updatedAt: -1 });
-    console.log("rooms: ", rooms);
-    rooms = rooms ? rooms : [];
+
     res.json({
       status: "success",
-      data: { rooms },
+      data: rooms || [],
     });
   } catch (error) {
     res.status(500).json({

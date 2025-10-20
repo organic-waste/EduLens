@@ -11,17 +11,22 @@ class RoomStore {
     try {
       this.userRooms = await cloudSync.getUserRooms();
 
+      // 确保 userRooms 是数组
+      // if (!Array.isArray(this.userRooms)) {
+      //   this.userRooms = [];
+      // }
+
       //无任何房间时创建默认房间
       if (this.userRooms.length === 0) {
         const defaultRoom = await cloudSync.createRoom({
           name: "我的个人空间",
           description: "默认个人工作区",
         });
-        this.userRooms = [defaultRoom];
+        this.userRooms = defaultRoom ? [defaultRoom] : [];
         await this.switchRoom(defaultRoom._id);
       }
       //无选中房间时默认取第一个
-      else if (!this.currentRoom) {
+      else if (!this.currentRoom && this.userRooms.length > 0) {
         await this.switchRoom(this.userRooms[0]._id);
       }
     } catch (error) {

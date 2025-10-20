@@ -11,9 +11,9 @@ const auth = (req, res, next) => {
       });
     }
 
-    const token = authHeader.split(" ")[1];
+    const token = authHeader;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = decoded.userId;
+    req.userId = decoded.id;
     next();
   } catch (error) {
     return res.status(401).json({

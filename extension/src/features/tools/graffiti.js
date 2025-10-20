@@ -6,6 +6,7 @@ import { getOffsetPos, createEl } from "../../utils/operateEl.js";
 import { getPageDataByType, savePageData } from "../../utils/storageManager.js";
 import { activateRectangleAnnotation } from "./rectangleAnnotation.js";
 import { activateImageAnnotation } from "./uploadImage.js";
+import { cloudSync } from "../../services/cloudSync.js";
 
 let drawingCanvas = null;
 let drawingCtx = null;
@@ -353,7 +354,8 @@ async function saveDrawing() {
   if (!drawingCanvas) return;
   try {
     const dataURL = drawingCanvas.toDataURL("image/png"); //指定以png的形式保存
-    await savePageData("canvas", dataURL);
+    const data = await savePageData("canvas", dataURL);
+    await cloudSync.syncAnnotations(data);
   } catch (error) {
     console.log(error);
   }

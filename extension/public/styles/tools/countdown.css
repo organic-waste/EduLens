@@ -10,7 +10,7 @@
 
 .countdown-display {
   flex: 1;
-  font-size: 2vh;
+  font-size: var(--normal-font-size);
   height: 100%;
   color: var(--main-color);
   font-weight: bold;

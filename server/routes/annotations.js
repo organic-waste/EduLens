@@ -29,6 +29,7 @@ router.post("/sync", auth, async (req, res) => {
     });
 
     if (annotation) {
+      console.log("annotation : ", annotation);
       annotation.annotations = annotations;
       annotation.version += 1;
       annotation.lastModified = new Date();
