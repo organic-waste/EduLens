@@ -4237,14 +4237,6 @@ Model.aggregate([
 
 
 
-#### 后端终端打印中字段重复
-
-------
-
-**原因：**Node.js MongoDB 驱动在调试输出时的序列化显示问题，不影响实际存储，数据库中实际上是正常的，不需要进行修改。
-
-
-
 
 
 ### 错误解决：
@@ -4281,6 +4273,41 @@ createAt: {
 - 返回的是时间戳（毫秒数），Mongoose 会自动将其转换为 `Date` 类型，**符合字段类型定义**。
 
 - 注意：Mongoose 默认使用 **UTC 时间**（协调世界时），而电脑显示的是 **本地时区**（比如中国是 UTC+8），因此时间看似不同。
+
+
+
+#### 后端终端打印中字段重复
+
+------
+
+**原因：**Node.js MongoDB 驱动在调试输出时的序列化显示问题，不影响实际存储，数据库中实际上是正常的，不需要进行修改。
+
+
+
+#### MongoDB 的唯一索引冲突
+
+------
+
+**问题：**
+
+```json
+E11000 duplicate key error collection: edulens.annotations index: userId_1_pageUrl_1 dup key: { userId: null, pageUrl: "https://www.runoob.com/" }
+```
+
+**原因：**
+
+- 集合 `edulens.annotations` 有一个唯一索引：`userId_1_pageUrl_1`
+- 这个索引要求 `userId` 和 `pageUrl` 的组合必须唯一
+- 当前有文档的 `userId: null` 和 `pageUrl: "https://www.runoob.com/"` 已经存在
+- 当尝试创建新的标注时，触发了重复键错误
+
+**解决：**
+
+1. 删除错误索引：`db.annotations.dropIndex("userId_1_pageUrl_1")`
+2. 创建正确索引：`db.annotations.createIndex({ roomId: 1, pageUrl: 1 }, { unique: true })`
+3. 确保代码中为：`AnnotationSchema.index({ roomId: 1, pageUrl: 1 }, { unique: true });`
+
+
 
 
 
@@ -4581,5 +4608,7 @@ list.appendChild(frag);                         // ③ 一次提交
 
 #### 图片等大文件分批上传
 
+#### 将URL存储改为完整URL
 
+解决如https://www.google.com/search在查询字符串不同时标注仍相同的问题
 

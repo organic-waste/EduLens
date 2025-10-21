@@ -1,7 +1,8 @@
+const http = require("http");
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-// const RoomSyncServer = require("./websocket-server");
+const WebsocketServer = require("./wsServer");
 require("dotenv").config();
 
 const app = express();
@@ -10,8 +11,8 @@ app.use(express.json({ limit: "50mb" }));
 //解析客户端发送的 URL 编码格式的请求体数据，将其转换为 Javascript 对象，并将其赋值给 req.body
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// const server = http.createServer(app);
-// const wsServer = new RoomSyncServer(server);
+const server = http.createServer(app);
+const wsServer = new WebsocketServer(server);
 
 mongoose
   .connect(process.env.MONGODB_URI, {

@@ -32,7 +32,7 @@
   height: 4vh;
   padding: 0;
   margin-left: 1vh;
-  border: 1px solid var(--secondary-color);
+  border: 1px solid var(--main-color);
   border-radius: 4px;
   background: #fff;
   cursor: pointer;
