@@ -1,13 +1,15 @@
 // 上传图片
 import eventStore from "../../stores/eventStore.js";
-import store from "../../stores/toolStore.js";
-import { getOffsetPos, createEl } from "../../utils/operateEl.js";
-import { getPageKey, getId } from "../../utils/getIdentity.js";
-import { getPageDataByType, savePageData } from "../../utils/storageManager.js";
+import toolStore from "../../stores/toolStore.js";
+import { getOffsetPos, createEl, getPageKey, getId } from "../../utils/index.js";
+import {
+  getPageDataByType,
+  savePageData,
+} from "../../services/index.js";
 import {
   preventPageInteraction,
   restorePageInteraction,
-} from "../../utils/controlInteraction.js";
+} from "../../utils/index.js";
 
 let shadowRoot = null;
 let drawingContainer = null;
@@ -46,7 +48,7 @@ export function activateImageAnnotation() {
     });
     eventStore.on(imageButton, "click", (e) => {
       fileInput.click();
-      store.updateState("isImage");
+      toolStore.updateState("isImage");
       e.stopPropagation();
     });
     toolGroupDiv.appendChild(imageButton);
@@ -115,7 +117,7 @@ function handleFileChange(e) {
       fileInput.value = "";
     };
     img.src = dataURL;
-    store.updateState();
+    toolStore.updateState();
   }
 }
 
@@ -231,7 +233,7 @@ function applyImageStyle(el, imgData) {
   el.style.top = `${imgData.y}px`;
   el.style.width = `${imgData.width}px`;
   el.style.height = `${imgData.height}px`;
-  el.style.borderColor = store.currentColor;
+  el.style.borderColor = toolStore.currentColor;
   el.style.position = imgData.fixed ? "fixed" : "absolute";
 }
 

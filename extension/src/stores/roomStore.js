@@ -1,4 +1,4 @@
-import { cloudSync } from "../services/cloudSync";
+import { cloudSync } from "../services/index.js";
 
 /* 管理数据房间 */
 class RoomStore {

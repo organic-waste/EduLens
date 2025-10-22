@@ -2786,6 +2786,32 @@ eventManager.on(document, 'mousedown', (e) => {
 
 
 
+#### 报错 `ReferenceError: process is not defined`
+
+------
+
+**原因：**在浏览器环境里使用了 `process.env`，这是 Node.js 才有的全局变量，浏览器并不认识它。
+
+**解决：**
+
+在项目根目录下创建或编辑 `.env` 文件（或 `.env.local`）：
+
+- 如果你是用 **Vite** 构建的项目（Vue、React、 vanilla JS ），可以使用 `VITE_` 前缀，并通过 `import.meta.env.VITE_API_URL` 使用，如下：
+
+  ```js
+  VITE_API_URL=https://your-api-url.com
+  VITE_WS_URL=wss://your-ws-url.com
+  
+  this.baseURL = import.meta.env.VITE_API_URL;
+  this.wsURL = import.meta.env.VITE_WS_URL;
+  ```
+
+- 如果你用的是 **Webpack**（ Create React App），可以使用 `REACT_APP_` 前缀，并通过 `process.env.REACT_APP_API_URL` 使用。
+
+
+
+
+
 ## **Html和Css相关**
 
 ### `.classList`和`.className`对比

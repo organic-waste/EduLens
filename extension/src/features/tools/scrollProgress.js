@@ -1,6 +1,6 @@
 // 滚动进度指示器
 import eventStore from "../../stores/eventStore.js";
-import { createEl } from "../../utils/operateEl.js";
+import { createEl } from "../../utils/index.js";
 
 let scrollDiv = null;
 let fillDiv = null;

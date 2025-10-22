@@ -1,7 +1,8 @@
 // 可拖动卡片面板
 import eventStore from "../stores/eventStore.js";
-import store from "../stores/filterStore.js";
-import { getOffsetPos, createEl } from "../utils/operateEl.js";
+import filterStore from "../stores/filterStore.js";
+import { getOffsetPos, createEl } from "../utils/index.js";
+import MonitorSPARoutes from "../utils/monitorSPARoutes.js";
 
 import { activateScrollProgress } from "./tools/scrollProgress.js";
 import { activateBookmark } from "./tools/bookmark.js";
@@ -105,7 +106,7 @@ function DraggablePanel() {
   // 拖动逻辑
   eventStore.on(panelDiv, "mousedown", (e) => {
     isMoved = false;
-    store.isDragging = true;
+    filterStore.isDragging = true;
     //e.clientX —— 鼠标相对于视口的横坐标。
     //box.offsetLeft —— 方块相对于定位祖先的横坐标
     //二者相减得到“鼠标点击点距离方块左边框”的距离,这样拖动时按钮不会瞬间跳到鼠标位置
@@ -119,13 +120,13 @@ function DraggablePanel() {
     isMoved = true;
     //确保在拖动状态下才能移动
 
-    if (store.isDragging) {
+    if (filterStore.isDragging) {
       updatePosition(e);
     }
   });
 
   eventStore.on(document, "mouseup", () => {
-    store.isDragging = false;
+    filterStore.isDragging = false;
     document.body.style.userSelect = ""; // 恢复文字可选中
   });
 

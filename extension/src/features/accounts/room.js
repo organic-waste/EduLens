@@ -1,4 +1,4 @@
-import { createEl } from "../../utils/operateEl.js";
+import { createEl } from "../../utils/index.js";
 import eventStore from "../../stores/eventStore.js";
 import { roomStore } from "../../stores/roomStore.js";
 
@@ -98,7 +98,13 @@ async function showRoomList() {
 
   listWrapper.querySelectorAll(".switch-room-btn").forEach((btn) =>
     eventStore.on(btn, "click", async (e) => {
-      await roomStore.switchRoom(e.target.dataset.id);
+      const newRoomId = e.target.dataset.id;
+      await roomStore.switchRoom(newRoomId);
+
+      const pageUrl = getPageKey();
+      if (websocketClient.isConnected) {
+        websocketClient.joinRoom(newRoomId, pageUrl);
+      }
       overlay.remove();
       activateRoomSelector();
       console.log(`已切换到房间: ${roomStore.currentRoom.name}`);
