@@ -1,12 +1,15 @@
 // 创建涂鸦
 import eventStore from "../../stores/eventStore.js";
-import store from "../../stores/toolStore.js";
-import MonitorSPARoutes from "../../utils/monitorSPARoutes.js";
-import { getOffsetPos, createEl } from "../../utils/operateEl.js";
-import { getPageDataByType, savePageData } from "../../utils/storageManager.js";
+import toolStore from "../../stores/toolStore.js";
+import { MonitorSPARoutes } from "../../utils/index.js";
+import { getOffsetPos, createEl } from "../../utils/index.js";
+import {
+  getPageDataByType,
+  savePageData,
+} from "../../services/index.js";
 import { activateRectangleAnnotation } from "./rectangleAnnotation.js";
 import { activateImageAnnotation } from "./uploadImage.js";
-import { cloudSync } from "../../services/cloudSync.js";
+import { cloudSync } from "../../services/index.js";
 
 let drawingCanvas = null;
 let drawingCtx = null;
@@ -89,25 +92,25 @@ function resizeCanvas() {
 function setToolMode(mode) {
   switch (mode) {
     case "pen":
-      store.updateState("isPen");
+      toolStore.updateState("isPen");
       drawingCtx.globalCompositeOperation = "source-over";
-      drawingCtx.strokeStyle = store.currentColor;
-      brushSizeValueDisplay.value = store.penBrushSize;
-      brushSizeSlider.value = store.penBrushSize;
+      drawingCtx.strokeStyle = toolStore.currentColor;
+      brushSizeValueDisplay.value = toolStore.penBrushSize;
+      brushSizeSlider.value = toolStore.penBrushSize;
       break;
     case "eraser":
-      store.updateState("isEraser");
+      toolStore.updateState("isEraser");
       drawingCtx.globalCompositeOperation = "destination-out";
       drawingCtx.strokeStyle = "rgba(0,0,0,1)";
-      brushSizeValueDisplay.value = store.eraserBrushSize;
-      brushSizeSlider.value = store.eraserBrushSize;
+      brushSizeValueDisplay.value = toolStore.eraserBrushSize;
+      brushSizeSlider.value = toolStore.eraserBrushSize;
       break;
     case "line":
-      store.updateState("isLine");
+      toolStore.updateState("isLine");
       drawingCtx.globalCompositeOperation = "source-over";
-      drawingCtx.strokeStyle = store.currentColor;
-      brushSizeValueDisplay.value = store.penBrushSize;
-      brushSizeSlider.value = store.penBrushSize;
+      drawingCtx.strokeStyle = toolStore.currentColor;
+      brushSizeValueDisplay.value = toolStore.penBrushSize;
+      brushSizeSlider.value = toolStore.penBrushSize;
       break;
   }
 }
@@ -125,11 +128,11 @@ function createControls() {
   colorPickerInput = createEl("input", {
     id: "color-input",
     type: "color",
-    value: store.currentColor,
+    value: toolStore.currentColor,
     title: chrome.i18n.getMessage("graffitiColor"),
   });
   eventStore.on(colorPickerInput, "input", (e) => {
-    store.currentColor = e.target.value;
+    toolStore.currentColor = e.target.value;
     setToolMode("pen");
   });
 
@@ -143,7 +146,7 @@ function createControls() {
     type: "range",
     min: "1",
     max: "15",
-    value: String(store.penBrushSize),
+    value: String(toolStore.penBrushSize),
     style: "width:12vh;",
   });
 
@@ -155,9 +158,9 @@ function createControls() {
     let size = parseInt(e.target.value, 10);
     brushSizeValueDisplay.value = size;
     brushSizeValueDisplay.textContent = size + "px";
-    store.isEraser
-      ? (store.eraserBrushSize = size)
-      : (store.penBrushSize = size);
+    toolStore.isEraser
+      ? (toolStore.eraserBrushSize = size)
+      : (toolStore.penBrushSize = size);
   });
 
   brushSizeValueDisplay = createEl("input", {
@@ -165,7 +168,7 @@ function createControls() {
     type: "number",
     min: "1",
     max: "15",
-    value: store.penBrushSize,
+    value: toolStore.penBrushSize,
   });
   eventStore.on(brushSizeValueDisplay, "mousedown", (e) => {
     e.stopPropagation();
@@ -177,9 +180,9 @@ function createControls() {
     if (value < 1) value = 1;
     if (value > 50) value = 50;
     e.target.value = value;
-    store.isEraser
-      ? (store.eraserBrushSize = value)
-      : (store.penBrushSize = value);
+    toolStore.isEraser
+      ? (toolStore.eraserBrushSize = value)
+      : (toolStore.penBrushSize = value);
     brushSizeSlider.value = value;
   });
 
@@ -280,14 +283,14 @@ function setupEventListeners() {
 }
 
 function startDrawing(e) {
-  if (store.isDragging || e.button !== 0) return;
-  if (!store.isEraser && !store.isPen && !store.isLine) return;
+  if (toolStore.isDragging || e.button !== 0) return;
+  if (!toolStore.isEraser && !toolStore.isPen && !toolStore.isLine) return;
 
-  store.isDrawing = true;
+  toolStore.isDrawing = true;
   drawingContainer.style.pointerEvents = "auto";
   ({ x: startX, y: startY } = getOffsetPos(e, drawingCanvas));
 
-  if (store.isLine) {
+  if (toolStore.isLine) {
     // 保存当前画布状态（包含之前的所有绘制内容）
     imageData = drawingCtx.getImageData(
       0,
@@ -302,15 +305,15 @@ function startDrawing(e) {
 }
 
 function draw(e) {
-  if (!store.isDrawing || !drawingCtx || store.isDragging) return;
-  if (!store.isEraser && !store.isPen && !store.isLine) return;
+  if (!toolStore.isDrawing || !drawingCtx || toolStore.isDragging) return;
+  if (!toolStore.isEraser && !toolStore.isPen && !toolStore.isLine) return;
   const { x, y } = getOffsetPos(e, drawingCanvas);
 
-  store.isEraser
-    ? (drawingCtx.lineWidth = store.eraserBrushSize)
-    : (drawingCtx.lineWidth = store.penBrushSize);
+  toolStore.isEraser
+    ? (drawingCtx.lineWidth = toolStore.eraserBrushSize)
+    : (drawingCtx.lineWidth = toolStore.penBrushSize);
 
-  if (!store.isLine) {
+  if (!toolStore.isLine) {
     drawingCtx.lineTo(x, y);
     drawingCtx.stroke();
     drawingCtx.beginPath();
@@ -325,10 +328,10 @@ function draw(e) {
 }
 
 function stopDrawing(e) {
-  if (store.isDragging) return;
-  if (!store.isEraser && !store.isPen && !store.isLine) return;
-  if (store.isDrawing) {
-    store.isDrawing = false;
+  if (toolStore.isDragging) return;
+  if (!toolStore.isEraser && !toolStore.isPen && !toolStore.isLine) return;
+  if (toolStore.isDrawing) {
+    toolStore.isDrawing = false;
     drawingContainer.style.pointerEvents = "none";
 
     const { x, y } = getOffsetPos(e, drawingCanvas);

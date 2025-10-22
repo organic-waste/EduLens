@@ -1,16 +1,16 @@
-import { injectStyles, injectIcon } from "./utils/injectAssets.js";
-import store from "./stores/filterStore.js";
+import { injectStyles, injectIcon } from "./utils/index.js";
+import filterStore from "./stores/filterStore.js";
 import { activateDraggablePanel } from "./features/draggablePanel.js";
 import eventStore from "./stores/eventStore.js";
-import { cloudSync } from "./services/cloudSync.js";
+import { cloudSync } from "./services/index.js";
 
 //统一的键盘管理
 function keydown(e, key, name) {
   if (e.altKey && e.key === key) {
-    if (store.active === name) {
-      store.setActive(null);
+    if (filterStore.active === name) {
+      filterStore.setActive(null);
     } else {
-      store.setActive(name);
+      filterStore.setActive(name);
     }
   }
 }

@@ -1,13 +1,15 @@
 // 创建矩形注释
 import eventStore from "../../stores/eventStore.js";
-import store from "../../stores/toolStore.js";
-import { getOffsetPos, createEl } from "../../utils/operateEl.js";
-import { getPageKey, getId } from "../../utils/getIdentity.js";
-import { getPageDataByType, savePageData } from "../../utils/storageManager.js";
+import toolStore from "../../stores/toolStore.js";
+import { getOffsetPos, createEl, getPageKey, getId } from "../../utils/index.js";
+import {
+  getPageDataByType,
+  savePageData,
+} from "../../services/index.js";
 import {
   preventPageInteraction,
   restorePageInteraction,
-} from "../../utils/controlInteraction.js";
+} from "../../utils/index.js";
 
 let isCreating = false; //是否还在创建矩阵中
 let isEditing = false; //是否有矩阵处于编辑模式
@@ -64,8 +66,8 @@ export function activateRectangleAnnotation() {
 
 //转换矩阵模式（编辑模式/查看模式）
 function toggleRectangleMode() {
-  store.updateState("isRectangle");
-  if (store.isRectangle) {
+  toolStore.updateState("isRectangle");
+  if (toolStore.isRectangle) {
     drawingContainer.style.cursor = "crosshair";
     exitEditingMode();
     preventPageInteraction();
@@ -89,7 +91,7 @@ function listenerMouseDown(e) {
   const { x, y } = getOffsetPos(e, drawingContainer);
 
   //创建新矩阵时
-  if (store.isRectangle && !isEditing) {
+  if (toolStore.isRectangle && !isEditing) {
     isCreating = true;
     startX = endX = x;
     startY = endY = y;
@@ -130,7 +132,7 @@ function listenerMouseDown(e) {
     }
   }
   //矩阵处于浏览态
-  else if (!store.isRectangle && !isEditing) {
+  else if (!toolStore.isRectangle && !isEditing) {
     const clickedRect = findTopmostRectangleAt(x, y);
     if (clickedRect) {
       exitEditingMode();
@@ -178,28 +180,28 @@ function listenerMouseMove(e) {
     }
   }
   //查看元素时
-  else if (!store.isRectangle && !isEditing) {
+  else if (!toolStore.isRectangle && !isEditing) {
     const hoveredRect = findTopmostRectangleAt(x, y);
     const hoveredRectId = hoveredRect?.id;
     // 当鼠标下方没有有效矩阵时
     if (!hoveredRect) {
-      if (store.currentHoveredRectId) {
-        if (store.hoverTimeout) {
-          clearTimeout(store.hoverTimeout);
+      if (toolStore.currentHoveredRectId) {
+        if (toolStore.hoverTimeout) {
+          clearTimeout(toolStore.hoverTimeout);
         }
-        hideTooltip(store.currentHoveredRectId);
-        store.currentHoveredRectId = null;
+        hideTooltip(toolStore.currentHoveredRectId);
+        toolStore.currentHoveredRectId = null;
       }
       return;
     }
 
     // 当转移hover的元素时
-    if (hoveredRectId && hoveredRectId !== store.currentHoveredRectId) {
-      if (store.hoverTimeout) {
-        clearTimeout(store.hoverTimeout);
+    if (hoveredRectId && hoveredRectId !== toolStore.currentHoveredRectId) {
+      if (toolStore.hoverTimeout) {
+        clearTimeout(toolStore.hoverTimeout);
       }
-      store.currentHoveredRectId = hoveredRectId;
-      store.hoverTimeout = setTimeout(() => {
+      toolStore.currentHoveredRectId = hoveredRectId;
+      toolStore.hoverTimeout = setTimeout(() => {
         showTooltip(hoveredRectId);
       }, 200);
     }
@@ -216,7 +218,7 @@ function listenerMouseUp() {
       width: Math.abs(endX - startX),
       height: Math.abs(endY - startY),
       text: "",
-      color: store.currentColor,
+      color: toolStore.currentColor,
     };
     //排除太小的矩阵
     if (newRect.width > 5 && newRect.height > 5) {
@@ -232,12 +234,12 @@ function listenerMouseUp() {
   //恢复其他操作
   isResizing = false;
   isMoving = false;
-  drawingContainer.style.cursor = store.isRectangle ? "crosshair" : "default";
+  drawingContainer.style.cursor = toolStore.isRectangle ? "crosshair" : "default";
   restorePageInteraction();
 }
 
 function handleDblClick(e) {
-  if (store.isRectangle || isEditing) return;
+  if (toolStore.isRectangle || isEditing) return;
   const { x, y } = getOffsetPos(e, drawingContainer);
 
   const clickedRect = findTopmostRectangleAt(x, y);
@@ -252,7 +254,7 @@ function createPreviewRectangle() {
   if (previewDiv) removePreviewRectangle();
   previewDiv = createEl("div", {
     class: "annotation-preview",
-    style: `border-color:${store.currentColor};border-width: ${store.brushSize}px`,
+    style: `border-color:${toolStore.currentColor};border-width: ${toolStore.brushSize}px`,
   });
   drawingContainer.appendChild(previewDiv);
 }
@@ -312,7 +314,7 @@ function renderRectangles(rect) {
   const tooltip = createEl("div", {
     class: "annotation-tooltip",
     textContent: rect.text,
-    style: `color:${store.currentColor};`,
+    style: `color:${toolStore.currentColor};`,
   });
   rectDiv.append(textContainer, tooltip);
 

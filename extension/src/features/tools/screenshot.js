@@ -1,13 +1,13 @@
 //三种截图
 import eventStore from "../../stores/eventStore.js";
-import { createEl } from "../../utils/operateEl.js";
-import store from "../../stores/toolStore.js";
+import toolStore from "../../stores/toolStore.js";
+import { createEl } from "../../utils/index.js";
 import {
   preventPageInteraction,
   restorePageInteraction,
   enableUserScroll,
   disableUserScroll,
-} from "../../utils/controlInteraction.js";
+} from "../../utils/index.js";
 
 let funcDiv = null;
 let screenshotDiv = null;
@@ -56,13 +56,13 @@ async function handleScreenshot(type) {
   //隐藏面板，防止影响截取原网站页面
   panelDiv.style.visibility = "hidden";
   if (type === "dom") {
-    store.updateState("isDOM");
+    toolStore.updateState("isDOM");
     DOMScreenshot();
   } else if (type === "region") {
-    store.updateState("isRegion");
+    toolStore.updateState("isRegion");
     regionScreenshot();
   } else if (type === "scroll") {
-    store.updateState("isScroll");
+    toolStore.updateState("isScroll");
     scrollScreenshot();
   }
 }
@@ -86,7 +86,7 @@ function DOMScreenshot() {
   eventStore.on(document, "mouseup", listenerMouseup);
 
   function listenerMousedown(e) {
-    if (!store.isDOM) return;
+    if (!toolStore.isDOM) return;
     target.style.pointerEvents = "none";
     isMousedown = true;
     preventPageInteraction();
@@ -99,7 +99,7 @@ function DOMScreenshot() {
   }
 
   function listenerMousemove(e) {
-    if (!store.isDOM) return;
+    if (!toolStore.isDOM) return;
 
     if (!isMousedown) {
       const paths = document.elementsFromPoint(e.clientX, e.clientY);
@@ -118,12 +118,12 @@ function DOMScreenshot() {
   }
 
   async function listenerMouseup(e) {
-    if (!store.isDOM) return;
+    if (!toolStore.isDOM) return;
     isMousedown = false;
     target.style.pointerEvents = "auto";
     restorePageInteraction();
     maskDiv.style.visibility = "hidden";
-    store.updateState();
+    toolStore.updateState();
 
     //点击DOM元素时
     if (window.globalClickMouseDowned && e.which === 1) {
@@ -171,7 +171,7 @@ function regionScreenshot() {
   eventStore.on(document, "mouseup", (e) => listenerMouseUp(e));
 
   function listenerMouseDown(e) {
-    if (!store.isRegion) return;
+    if (!toolStore.isRegion) return;
     preventPageInteraction();
     regionDiv.style.visibility = "visible";
     startX = endX = e.clientX;
@@ -182,7 +182,7 @@ function regionScreenshot() {
   }
 
   function listenerMouseMove(e) {
-    if (!store.isRegion) return;
+    if (!toolStore.isRegion) return;
     endX = e.clientX;
     endY = e.clientY;
 
@@ -197,10 +197,10 @@ function regionScreenshot() {
   }
 
   async function listenerMouseUp(e) {
-    if (!store.isRegion) return;
+    if (!toolStore.isRegion) return;
     regionDiv.style.visibility = "hidden";
     restorePageInteraction();
-    store.updateState();
+    toolStore.updateState();
 
     endX = e.clientX;
     endY = e.clientY;
@@ -352,7 +352,7 @@ async function scrollScreenshot() {
     const result = await combineImages(chunks);
     copyImg(result);
     downloadImg(result);
-    store.updateState();
+    toolStore.updateState();
     panelDiv.style.visibility = "visible";
     restorePageInteraction();
     enableUserScroll();

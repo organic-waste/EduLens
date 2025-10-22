@@ -1,13 +1,12 @@
 //创建定位书签
 import eventStore from "../../stores/eventStore.js";
-import MonitorSPARoutes from "../../utils/monitorSPARoutes.js";
-import { getId, getPageKey } from "../../utils/getIdentity.js";
-import { createEl } from "../../utils/operateEl.js";
+import { MonitorSPARoutes } from "../../utils/index.js";
+import { getId, getPageKey, createEl } from "../../utils/index.js";
 import {
   getPageData,
   getPageDataByType,
   savePageData,
-} from "../../utils/storageManager.js";
+} from "../../services/index.js";
 
 let addDiv = null;
 let btnDiv = null;

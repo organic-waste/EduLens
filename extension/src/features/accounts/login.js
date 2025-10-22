@@ -1,5 +1,5 @@
-import { createEl } from "../../utils/operateEl.js";
-import { cloudSync } from "../../services/cloudSync.js";
+import { createEl } from "../../utils/index.js";
+import { cloudSync } from "../../services/index.js";
 import { activateRoomSelector } from "./room.js";
 import eventStore from "../../stores/eventStore.js";
 
@@ -273,6 +273,13 @@ async function handleLogin(form, errorEl) {
       updateLoginStatus(res.data.user);
       console.log(username + ":" + chrome.i18n.getMessage("loginSuccess"));
 
+      //初始化 WebSocket
+      await cloudSync.initWebSocket();
+      if (roomStore.currentRoomId) {
+        const pageUrl = getPageKey();
+        websocketClient.joinRoom(roomStore.currentRoomId, pageUrl);
+      }
+
       await activateRoomSelector();
     } else {
       showError(errorEl, res.message || chrome.i18n.getMessage("loginFailed"));
@@ -316,6 +323,13 @@ async function handleRegister(form, errorEl) {
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);
       console.log(username + ":" + chrome.i18n.getMessage("loginSuccess"));
+
+      //初始化 WebSocket
+      await cloudSync.initWebSocket();
+      if (roomStore.currentRoomId) {
+        const pageUrl = getPageKey();
+        websocketClient.joinRoom(roomStore.currentRoomId, pageUrl);
+      }
 
       await activateRoomSelector();
     } else {
