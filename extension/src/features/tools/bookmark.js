@@ -1,4 +1,4 @@
-//创建定位书签
+/* 定位书签 */
 import eventStore from "../../stores/eventStore.js";
 import { MonitorSPARoutes } from "../../utils/index.js";
 import { getId, getPageKey, createEl } from "../../utils/index.js";
@@ -6,6 +6,7 @@ import {
   getPageData,
   getPageDataByType,
   savePageData,
+  syncManager,
 } from "../../services/index.js";
 
 let addDiv = null;
@@ -94,6 +95,12 @@ async function saveBookmark(scrollTop, text, id) {
   bookmarks.push(newBookmark);
   await savePageData("bookmarks", bookmarks);
   createBookmarkEle(scrollTop, text, id);
+
+  // 发送实时同步操作
+  syncManager.sendOperation({
+    type: "bookmark-add",
+    data: newBookmark,
+  });
 }
 
 async function removeBookmark(el) {
@@ -103,6 +110,12 @@ async function removeBookmark(el) {
   const updatedBookmarks = bookmarks.filter((item) => item.id !== id);
   await savePageData("bookmarks", updatedBookmarks);
   el.remove();
+
+  // 发送实时同步操作
+  syncManager.sendOperation({
+    type: "bookmark-delete",
+    data: { id },
+  });
 }
 
 async function loadBookmarks() {

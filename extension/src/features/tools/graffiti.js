@@ -1,15 +1,12 @@
-// 创建涂鸦
+/* 创建涂鸦 */
 import eventStore from "../../stores/eventStore.js";
 import toolStore from "../../stores/toolStore.js";
 import { MonitorSPARoutes } from "../../utils/index.js";
 import { getOffsetPos, createEl } from "../../utils/index.js";
-import {
-  getPageDataByType,
-  savePageData,
-} from "../../services/index.js";
+import { getPageDataByType, savePageData, syncManager } from "../../services/index.js";
 import { activateRectangleAnnotation } from "./rectangleAnnotation.js";
 import { activateImageAnnotation } from "./uploadImage.js";
-import { cloudSync } from "../../services/index.js";
+import { authManager } from "../../services/index.js";
 
 let drawingCanvas = null;
 let drawingCtx = null;
@@ -358,7 +355,12 @@ async function saveDrawing() {
   try {
     const dataURL = drawingCanvas.toDataURL("image/png"); //指定以png的形式保存
     const data = await savePageData("canvas", dataURL);
-    await cloudSync.syncAnnotations(data);
+    
+    // 发送实时同步操作
+    syncManager.sendOperation({
+      type: "canvas-update",
+      data: dataURL,
+    });
   } catch (error) {
     console.log(error);
   }

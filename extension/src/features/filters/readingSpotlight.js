@@ -1,4 +1,4 @@
-// 阅读聚光灯
+/* 阅读聚光灯 */
 import eventStore from "../../stores/eventStore.js";
 import { createEl } from "../../utils/index.js";
 

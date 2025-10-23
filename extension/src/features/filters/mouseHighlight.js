@@ -1,4 +1,4 @@
-// 鼠标高亮
+/* 鼠标高亮 */
 import eventStore from "../../stores/eventStore.js";
 import { createEl } from "../../utils/index.js";
 

@@ -8,11 +8,11 @@ const Annotation = require("./models/annotation");
 
 class WebsocketServer {
   constructor(server) {
-    this.wss = new WebSocket.Server({ server });
+    this.ws = new WebSocket.Server({ server });
     this.rooms = new Map();
     this.operations = new Map(); //储存操作队列
 
-    this.wss.on("connection", this.handleConnection.bind(this));
+    this.ws.on("connection", this.handleConnection.bind(this));
   }
 
   async handleConnection(ws) {

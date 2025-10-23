@@ -2,7 +2,7 @@ import { injectStyles, injectIcon } from "./utils/index.js";
 import filterStore from "./stores/filterStore.js";
 import { activateDraggablePanel } from "./features/draggablePanel.js";
 import eventStore from "./stores/eventStore.js";
-import { cloudSync } from "./services/index.js";
+import { apiClient } from "./services/index.js";
 
 //统一的键盘管理
 function keydown(e, key, name) {
@@ -27,7 +27,7 @@ eventStore.on(window, "keydown", (e) => {
   activateDraggablePanel();
 
   //测试是否能连接到后端云服务
-  const connected = await cloudSync.testConnection();
+  const connected = await apiClient.testConnection();
   if (connected) {
     console.log("[EduLens] 云服务已连接");
   } else {

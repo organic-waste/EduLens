@@ -1,11 +1,13 @@
-// 上传图片
+/* 上传图片 */
 import eventStore from "../../stores/eventStore.js";
 import toolStore from "../../stores/toolStore.js";
-import { getOffsetPos, createEl, getPageKey, getId } from "../../utils/index.js";
 import {
-  getPageDataByType,
-  savePageData,
-} from "../../services/index.js";
+  getOffsetPos,
+  createEl,
+  getPageKey,
+  getId,
+} from "../../utils/index.js";
+import { getPageDataByType, savePageData, syncManager } from "../../services/index.js";
 import {
   preventPageInteraction,
   restorePageInteraction,
@@ -626,6 +628,12 @@ function removeImage(id) {
 async function saveImages() {
   try {
     await savePageData("images", images);
+    
+    // 发送实时同步操作
+    syncManager.sendOperation({
+      type: "image-sync",
+      data: images,
+    });
   } catch (error) {
     console.error(error);
   }

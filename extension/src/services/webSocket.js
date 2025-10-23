@@ -1,4 +1,4 @@
-class WebSocketClient {
+class WebSocket {
   constructor() {
     this.ws = null;
     this.isConnected = false;
@@ -14,6 +14,10 @@ class WebSocketClient {
     this.url = url;
     return new Promise((resolve, reject) => {
       try {
+        // 关闭现有连接
+        if (this.ws) {
+          this.ws.close();
+        }
         this.ws = new WebSocket(url);
 
         this.ws.onopen = () => {
@@ -54,16 +58,16 @@ class WebSocketClient {
   }
 
   joinRoom(roomId, pageUrl) {
-    this.roomId = roomId;
-    this.pageUrl = pageUrl;
+    this.RoomId = roomId;
+    this.PageUrl = pageUrl;
     return this.send({ type: "join-room", roomId, pageUrl });
   }
 
   sendOperation(operation, clientVersion) {
     return this.send({
       type: "operation",
-      roomId: this.roomId,
-      pageUrl: this.pageUrl,
+      roomId: this.RoomId,
+      pageUrl: this.PageUrl,
       operation,
       clientVersion,
     });
@@ -111,4 +115,4 @@ class WebSocketClient {
   }
 }
 
-export const websocketClient = new WebSocketClient();
+export const webSocket = new WebSocket();

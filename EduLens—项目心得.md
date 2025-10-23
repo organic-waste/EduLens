@@ -3312,6 +3312,61 @@ function slideDown(el){
 
 
 
+### preflight（预检请求）
+
+浏览器开发者工具中的 preflight（预检请求）是 **CORS（跨源资源共享）机制** 的一部分，由浏览器自动发起，用于**检查服务器是否允许当前跨域请求**，防止贸然把敏感数据发到不该发的地方。
+
+---
+
+**触发条件**
+
+当请求满足**任一“非简单请求”条件**时，就会触发：
+
+| 条件             | 示例                                              |
+| ---------------- | ------------------------------------------------- |
+| 使用了非简单方法 | `PUT`、`DELETE`、`PATCH`                          |
+| 使用了非简单头   | `Content-Type: application/json`、`Authorization` |
+| 使用了自定义头   | `X-Custom-Header: abc`                            |
+
+---
+
+**例子**
+
+你想用 JavaScript 从前端 `https://a.com` 向 `https://b.com/api/data` 发送一个：
+
+```http
+POST /api/data
+Content-Type: application/json
+Authorization: Bearer xxx
+
+{ "name": "Tom" }
+```
+
+浏览器会先**自动发一个预检请求**：
+
+```http
+OPTIONS /api/data
+Origin: https://a.com
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: content-type,authorization
+```
+
+服务器必须返回：
+
+```http
+Access-Control-Allow-Origin: https://a.com
+Access-Control-Allow-Methods: POST
+Access-Control-Allow-Headers: content-type,authorization
+```
+
+否则浏览器会**拦截后续的真正请求**，并在控制台报错：
+
+> ⚠️ **CORS policy: PreflightMissingAllowOriginHeader**
+
+
+
+
+
 
 
 ### 错误解决：

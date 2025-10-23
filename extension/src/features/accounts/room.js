@@ -1,6 +1,8 @@
+/* 房间管理 */
 import { createEl } from "../../utils/index.js";
 import eventStore from "../../stores/eventStore.js";
-import { roomStore } from "../../stores/roomStore.js";
+import { roomManager, webSocketClient } from "../../services/index.js";
+import { getPageKey } from "../../utils/index.js";
 
 let selector = null;
 let shadowRoot = null;
@@ -9,16 +11,16 @@ let shadowRoot = null;
 export async function activateRoomSelector() {
   shadowRoot = window.__EDULENS_SHADOW_ROOT__;
 
-  await roomStore.loadUserRooms();
+  await roomManager.loadUserRooms();
   selector = shadowRoot.querySelector(".room-selector");
   if (selector) selector.remove();
   selector = createEl("div", { class: "room-selector" });
   selector.innerHTML = `
       <div class="current-room-info">
         ${
-          roomStore.currentRoom
-            ? `<span class="room-name">${roomStore.currentRoom.name}</span>
-             <span class="room-members">${roomStore.currentRoom.members.length} 名成员</span>`
+          roomManager.getCurrentRoom()
+            ? `<span class="room-name">${roomManager.getCurrentRoom().name}</span>
+             <span class="room-members">${roomManager.getCurrentRoom().members.length} 名成员</span>`
             : '<span class="no-room">未选择房间</span>'
         }
       </div>
@@ -61,10 +63,10 @@ async function showRoomList() {
   `;
 
   const listWrapper = container.querySelector(".room-list");
-  roomStore.userRooms.forEach((room) => {
+  roomManager.getUserRooms().forEach((room) => {
     const item = createEl("div", {
       class: `room-item ${
-        roomStore.currentRoomId === room._id ? "active" : ""
+        roomManager.getCurrentRoom()?._id === room._id ? "active" : ""
       }`,
       innerHTML: `
         <div class="room-info">
@@ -75,7 +77,7 @@ async function showRoomList() {
         </div>
         <div class="room-actions">
           ${
-            roomStore.currentRoomId !== room._id
+            roomManager.getCurrentRoom()?._id !== room._id
               ? `<button class="button switch-room-btn" data-id="${room._id}">切换</button>`
               : '<span class="current-label">当前</span>'
           }
@@ -99,15 +101,15 @@ async function showRoomList() {
   listWrapper.querySelectorAll(".switch-room-btn").forEach((btn) =>
     eventStore.on(btn, "click", async (e) => {
       const newRoomId = e.target.dataset.id;
-      await roomStore.switchRoom(newRoomId);
+      await roomManager.switchRoom(newRoomId);
 
       const pageUrl = getPageKey();
-      if (websocketClient.isConnected) {
-        websocketClient.joinRoom(newRoomId, pageUrl);
+      if (webSocketClient.isConnected()) {
+        webSocketClient.joinRoom(newRoomId, pageUrl);
       }
       overlay.remove();
       activateRoomSelector();
-      console.log(`已切换到房间: ${roomStore.currentRoom.name}`);
+      console.log(`已切换到房间: ${roomManager.getCurrentRoom().name}`);
     })
   );
 }
@@ -144,13 +146,13 @@ function showCreateRoomForm() {
   const form = container.querySelector(".room-form");
   eventStore.on(form, "submit", async (e) => {
     e.preventDefault();
-    const room = await roomStore.createRoom({
+    const room = await roomManager.createRoom({
       name: form.querySelector("#room-name").value.trim(),
       description: form.querySelector("#room-description").value.trim(),
     });
     overlay.remove();
     if (room) {
-      renderRoomSelector();
+      activateRoomSelector();
       console.log("房间创建成功");
     } else {
       console.error("创建房间失败");
@@ -171,7 +173,7 @@ function showCreateRoomForm() {
 
 //分享房间
 async function shareRoom() {
-  const code = await roomStore.generateShareCode();
+  const code = await roomManager.generateShareCode();
   if (!code) return console.error("生成分享码失败");
   const overlay = createEl("div", { class: "room-overlay" });
   const container = createEl("div", { class: "share-dialog" });

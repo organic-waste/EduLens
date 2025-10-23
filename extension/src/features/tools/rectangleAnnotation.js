@@ -1,11 +1,13 @@
-// 创建矩形注释
+/* 创建矩形注释 */
 import eventStore from "../../stores/eventStore.js";
 import toolStore from "../../stores/toolStore.js";
-import { getOffsetPos, createEl, getPageKey, getId } from "../../utils/index.js";
 import {
-  getPageDataByType,
-  savePageData,
-} from "../../services/index.js";
+  getOffsetPos,
+  createEl,
+  getPageKey,
+  getId,
+} from "../../utils/index.js";
+import { getPageDataByType, savePageData, syncManager } from "../../services/index.js";
 import {
   preventPageInteraction,
   restorePageInteraction,
@@ -234,7 +236,9 @@ function listenerMouseUp() {
   //恢复其他操作
   isResizing = false;
   isMoving = false;
-  drawingContainer.style.cursor = toolStore.isRectangle ? "crosshair" : "default";
+  drawingContainer.style.cursor = toolStore.isRectangle
+    ? "crosshair"
+    : "default";
   restorePageInteraction();
 }
 
@@ -678,6 +682,12 @@ function hideTooltip(rectId) {
 async function saveRectangles() {
   try {
     await savePageData("rectangles", rectangles);
+    
+    // 发送实时同步操作 - 同步所有矩形数据
+    syncManager.sendOperation({
+      type: "rectangle-sync",
+      data: rectangles,
+    });
   } catch (error) {
     console.error(error);
   }
