@@ -1,4 +1,4 @@
-// 倒计时组件
+/* 倒计时组件 */
 import eventStore from "../../stores/eventStore.js";
 import { createEl } from "../../utils/index.js";
 

@@ -1,4 +1,4 @@
-// 可拖动卡片面板
+/* 可拖动卡片面板 */
 import eventStore from "../stores/eventStore.js";
 import filterStore from "../stores/filterStore.js";
 import { getOffsetPos, createEl } from "../utils/index.js";

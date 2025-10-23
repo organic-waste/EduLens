@@ -1,7 +1,9 @@
+/* 登录和注册 */
 import { createEl } from "../../utils/index.js";
-import { cloudSync } from "../../services/index.js";
+import { authManager, webSocketClient, serviceInitializer } from "../../services/index.js";
 import { activateRoomSelector } from "./room.js";
 import eventStore from "../../stores/eventStore.js";
+import { getPageKey } from "../../utils/index.js";
 
 function showForm() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
@@ -266,20 +268,15 @@ async function handleLogin(form, errorEl) {
   btn.disabled = true;
 
   try {
-    const res = await cloudSync.login({ email, password });
+    const res = await authManager.login({ email, password });
     if (res.status === "success") {
       hideError(errorEl);
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);
-      console.log(username + ":" + chrome.i18n.getMessage("loginSuccess"));
+      console.log(res.data.user.username + ":" + chrome.i18n.getMessage("loginSuccess"));
 
       //初始化 WebSocket
-      await cloudSync.initWebSocket();
-      if (roomStore.currentRoomId) {
-        const pageUrl = getPageKey();
-        websocketClient.joinRoom(roomStore.currentRoomId, pageUrl);
-      }
-
+      await serviceInitializer.reinitialize();
       await activateRoomSelector();
     } else {
       showError(errorEl, res.message || chrome.i18n.getMessage("loginFailed"));
@@ -317,7 +314,7 @@ async function handleRegister(form, errorEl) {
   btn.disabled = true;
 
   try {
-    const res = await cloudSync.register({ username, email, password });
+    const res = await authManager.register({ username, email, password });
     if (res.status === "success") {
       hideError(errorEl);
       form.closest(".login-overlay").remove();
@@ -325,12 +322,7 @@ async function handleRegister(form, errorEl) {
       console.log(username + ":" + chrome.i18n.getMessage("loginSuccess"));
 
       //初始化 WebSocket
-      await cloudSync.initWebSocket();
-      if (roomStore.currentRoomId) {
-        const pageUrl = getPageKey();
-        websocketClient.joinRoom(roomStore.currentRoomId, pageUrl);
-      }
-
+      await serviceInitializer.reinitialize();
       await activateRoomSelector();
     } else {
       showError(errorEl, res.message);
@@ -377,23 +369,24 @@ export async function updateLoginStatus(user) {
   await activateRoomSelector();
 
   async function handleLogout() {
-    await cloudSync.clearAuth();
+    await authManager.clearAuth();
+    webSocketClient.disconnect();
     window.__EDULENS_SHADOW_ROOT__.querySelector(".user-status-area")?.remove();
     showSuccessMessage(chrome.i18n.getMessage("logoutSuccess"));
   }
 }
 
 export async function activateLogin() {
-  await cloudSync.init();
+  await serviceInitializer.initialize();
 
   // 设置认证失败回调
-  cloudSync.setAuthFailureCallback(showForm);
+  authManager.setAuthFailureCallback(showForm);
 
   // 如果本地有token，就验证有效性
-  if (cloudSync.token) {
-    const isValid = await cloudSync.validateToken();
-    if (isValid && cloudSync.user) {
-      updateLoginStatus(cloudSync.user);
+  if (authManager.getToken()) {
+    const isValid = await authManager.validateToken();
+    if (isValid && authManager.getUser()) {
+      updateLoginStatus(authManager.getUser());
     }
   } else {
     showForm();

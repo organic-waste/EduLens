@@ -1,4 +1,4 @@
-//三种截图
+/* 三种截图 */
 import eventStore from "../../stores/eventStore.js";
 import toolStore from "../../stores/toolStore.js";
 import { createEl } from "../../utils/index.js";
