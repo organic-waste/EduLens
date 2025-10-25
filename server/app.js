@@ -12,6 +12,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 const server = http.createServer(app);
+//确保 WebSocket 服务器和 HTTP 服务器使用同一个实例
 const wsServer = new WebsocketServer(server);
 
 mongoose
@@ -28,6 +29,7 @@ app.use("/api/annotations", require("./routes/annotations"));
 app.use("/api/rooms", require("./routes/rooms"));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`后端服务运行：http://localhost:${PORT}`);
+  console.log(`WebSocket服务运行：ws://localhost:${PORT}`);
 });

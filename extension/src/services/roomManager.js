@@ -17,6 +17,10 @@ class RoomManager {
     if (!authManager.isAuthenticated()) return [];
     this.isLoading = true;
     try {
+      if (!webSocketClient.isConnected()) {
+        await webSocketClient.connect();
+      }
+
       const response = await apiClient.request("/rooms/my-rooms");
       const data = await response.json();
 

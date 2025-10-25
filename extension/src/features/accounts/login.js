@@ -1,6 +1,10 @@
 /* 登录和注册 */
 import { createEl } from "../../utils/index.js";
-import { authManager, webSocketClient, serviceInitializer } from "../../services/index.js";
+import {
+  authManager,
+  webSocketClient,
+  serviceInitializer,
+} from "../../services/index.js";
 import { activateRoomSelector } from "./room.js";
 import eventStore from "../../stores/eventStore.js";
 import { getPageKey } from "../../utils/index.js";
@@ -273,10 +277,10 @@ async function handleLogin(form, errorEl) {
       hideError(errorEl);
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);
-      console.log(res.data.user.username + ":" + chrome.i18n.getMessage("loginSuccess"));
+      console.log(
+        res.data.user.username + ":" + chrome.i18n.getMessage("loginSuccess")
+      );
 
-      //初始化 WebSocket
-      await serviceInitializer.reinitialize();
       await activateRoomSelector();
     } else {
       showError(errorEl, res.message || chrome.i18n.getMessage("loginFailed"));
@@ -321,8 +325,6 @@ async function handleRegister(form, errorEl) {
       updateLoginStatus(res.data.user);
       console.log(username + ":" + chrome.i18n.getMessage("loginSuccess"));
 
-      //初始化 WebSocket
-      await serviceInitializer.reinitialize();
       await activateRoomSelector();
     } else {
       showError(errorEl, res.message);
@@ -350,6 +352,9 @@ function hideError(el) {
 
 // 在面板上显示账号信息
 export async function updateLoginStatus(user) {
+  //初始化 WebSocket
+  await serviceInitializer.initialize();
+
   const shadow = window.__EDULENS_SHADOW_ROOT__;
   shadow.querySelector(".user-status-area")?.remove();
   const area = createEl("div", { class: "user-status-area" });
@@ -363,30 +368,34 @@ export async function updateLoginStatus(user) {
   `;
 
   eventStore.on(area.querySelector(".logout-btn"), "click", handleLogout);
-
   shadow.querySelector(".functions")?.append(area);
 
   await activateRoomSelector();
+}
 
-  async function handleLogout() {
-    await authManager.clearAuth();
-    webSocketClient.disconnect();
-    window.__EDULENS_SHADOW_ROOT__.querySelector(".user-status-area")?.remove();
-    showSuccessMessage(chrome.i18n.getMessage("logoutSuccess"));
-  }
+async function handleLogout() {
+  await authManager.clearAuth();
+  webSocketClient.disconnect();
+  window.__EDULENS_SHADOW_ROOT__.querySelector(".user-status-area")?.remove();
+  showSuccessMessage(chrome.i18n.getMessage("logoutSuccess"));
 }
 
 export async function activateLogin() {
-  await serviceInitializer.initialize();
-
   // 设置认证失败回调
   authManager.setAuthFailureCallback(showForm);
+
+  await serviceInitializer.initialize();
 
   // 如果本地有token，就验证有效性
   if (authManager.getToken()) {
     const isValid = await authManager.validateToken();
-    if (isValid && authManager.getUser()) {
-      updateLoginStatus(authManager.getUser());
+    console.log("Token验证结果: ", isValid);
+    const user = authManager.getUser();
+    console.log("用户信息: ", user);
+    if (isValid && user) {
+      updateLoginStatus(user);
+    } else {
+      showForm();
     }
   } else {
     showForm();

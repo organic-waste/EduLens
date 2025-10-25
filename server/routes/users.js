@@ -15,7 +15,7 @@ const signToken = (id) => {
 //直接认证 token 是否有效
 router.get("/verify", async (req, res) => {
   try {
-    const token = req.headers.authorization;
+    const token = req.headers.authorization.split(" ")[1];
     if (!token) {
       return res.status(401).json({
         status: "error",

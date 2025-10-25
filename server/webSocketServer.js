@@ -8,11 +8,11 @@ const Annotation = require("./models/annotation");
 
 class WebsocketServer {
   constructor(server) {
-    this.ws = new WebSocket.Server({ server });
+    this.wss = new WebSocket.Server({ server });
     this.rooms = new Map();
     this.operations = new Map(); //储存操作队列
 
-    this.ws.on("connection", this.handleConnection.bind(this));
+    this.wss.on("connection", this.handleConnection.bind(this));
   }
 
   async handleConnection(ws) {
@@ -237,7 +237,7 @@ class WebsocketServer {
 
       case "image-add":
       case "image-update":
-        if (!newData.images) newData.iamge = [];
+        if (!newData.images) newData.iamges = [];
         const imgIndex = newData.images.findIndex(
           (i) => i.id === operation.data.id
         );
@@ -342,7 +342,6 @@ class WebsocketServer {
         annotations: annotation?.annotations || {},
         operations: pageOperations,
         version: pageOperations.length,
-        length,
       });
     } catch (error) {
       console.error("发送房间状态失败:", error);

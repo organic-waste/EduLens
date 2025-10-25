@@ -10,40 +10,51 @@ class WebSocketClient {
     this.currentPageUrl = null;
     this.messageHandlers = new Map();
     this.wsURL = import.meta.env.VITE_WS_URL;
+    this.isConnecting = false;
   }
 
   async connect() {
     if (this.wsConnected || !authManager.getToken()) {
       return false;
     }
+    return new Promise(async (resolve, reject) => {
+      try {
+        await webSocket.connect(this.wsURL);
+        webSocket.authenticate(authManager.getToken());
+        if (!authSuccess) {
+          throw new Error("WebSocket认证失败");
+        }
 
-    try {
-      await webSocket.connect(this.wsURL);
-      webSocket.authenticate(authManager.getToken());
+        // 注册内置消息处理器
+        webSocket.on("operation", this.handleOperation.bind(this));
+        webSocket.on("sync", this.handleSync.bind(this));
+        webSocket.on("operation-ack", this.handleOperationAck.bind(this));
+        webSocket.on("error", this.handleError.bind(this));
+        webSocket.on("close", this.handleClose.bind(this));
+        webSocket.on(
+          "authentication-success",
+          this.handleAuthSuccess.bind(this)
+        );
 
-      // 注册内置消息处理器
-      webSocket.on("operation", this.handleOperation.bind(this));
-      webSocket.on("sync", this.handleSync.bind(this));
-      webSocket.on("operation-ack", this.handleOperationAck.bind(this));
-      webSocket.on("error", this.handleError.bind(this));
-      webSocket.on("close", this.handleClose.bind(this));
-      webSocket.on(
-        "authentication-success",
-        this.handleAuthSuccess.bind(this)
-      );
+        this.wsConnected = true;
+        console.log("[EduLens] WebSocket 连接成功");
 
-      this.wsConnected = true;
-      console.log("[EduLens] WebSocket 连接成功");
-      // 如果已有房间信息，自动加入
-      if (this.currentRoomId) {
-        this.joinRoom(this.currentRoomId, this.currentPageUrl || getPageKey());
+        // 如果已有房间信息，自动加入
+        if (this.currentRoomId) {
+          this.joinRoom(
+            this.currentRoomId,
+            this.currentPageUrl || getPageKey()
+          );
+        }
+        resolve(true);
+      } catch (error) {
+        console.warn("[EduLens] WebSocket 连接失败:", error);
+        this.wsConnected = false;
+        reject(false);
+      } finally {
+        this.isConnecting = false;
       }
-      return true;
-    } catch (error) {
-      console.warn("[EduLens] WebSocket 连接失败:", error);
-      this.wsConnected = false;
-      return false;
-    }
+    });
   }
 
   disconnect() {

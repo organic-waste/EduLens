@@ -18,7 +18,7 @@ class WebSocket {
         if (this.ws) {
           this.ws.close();
         }
-        this.ws = new WebSocket(url);
+        this.ws = new window.WebSocket(url);
 
         this.ws.onopen = () => {
           console.log("WebSocket连接成功");
@@ -48,6 +48,7 @@ class WebSocket {
           reject(error);
         };
       } catch (error) {
+        console.error("WebSocket连接错误:", error);
         reject(error);
       }
     });
