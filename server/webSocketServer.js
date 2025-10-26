@@ -89,6 +89,7 @@ class WebsocketServer {
       return;
     }
     const { roomId, pageUrl } = message;
+    console.log("message: ", message);
     try {
       const room = await Room.findOne({
         _id: roomId,
@@ -105,13 +106,13 @@ class WebsocketServer {
 
       //离开之前的房间
       if (ws.roomId) {
-        this.leaveRoom(ws);
+        this.handleLeaveRoom(ws);
       }
       ws.roomId = roomId;
       ws.pageUrl = pageUrl;
 
       //初始化数据
-      if (this.rooms.has(roomId)) {
+      if (!this.rooms.has(roomId)) {
         this.rooms.set(roomId, new Set());
         this.operations.set(roomId, new Map());
       }
