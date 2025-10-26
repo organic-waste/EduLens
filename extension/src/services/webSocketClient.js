@@ -21,9 +21,6 @@ class WebSocketClient {
       try {
         await webSocket.connect(this.wsURL);
         webSocket.authenticate(authManager.getToken());
-        if (!authSuccess) {
-          throw new Error("WebSocket认证失败");
-        }
 
         // 注册内置消息处理器
         webSocket.on("operation", this.handleOperation.bind(this));

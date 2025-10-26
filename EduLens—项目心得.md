@@ -3892,6 +3892,79 @@ document.addEventListener('mouseup', () => {
 
 
 
+### ping 和 pong “心跳帧”
+
+------
+
+**作用**
+
+1. 探测对方是否还“活着”；  
+2. 防止中间网络设备（路由器、防火墙）因长时间无数据而断开连接；  
+3. 保持 NAT 映射不过期。
+
+它们属于 **协议级别的控制帧**，**不携带应用数据**，也**不会触发浏览器的 `onmessage`**。
+
+---
+
+**工作过程**
+
+```
+Client                    Server
+  |-------- Ping (0x9) ------>|
+  |<------- Pong (0xA) --------|
+```
+
+- 一方发送 Ping 帧后，**对端必须在协议层面自动、尽快地回一个 Pong 帧**（可以不带应用数据）。
+- 如果发送方在合理时间内收不到 Pong，就可以认为连接已失效，主动关闭或重连。
+
+| 环境                             | 能否发送/接收                                                |
+| -------------------------------- | ------------------------------------------------------------ |
+| **浏览器端**                     | ❌ **完全不可见**；浏览器自动回复 pong，但不会把 ping/pong 事件暴露给页面代码。 |
+| **Node.js 服务端**（如 `ws` 库） | ✅ 可以调用 `ws.ping(data, mask, cb)` 主动发 ping，也可监听 `'ping'` / `'pong'` 事件。 |
+
+---
+
+**Node.js 示例**
+
+```js
+import WebSocket from 'ws';
+const wss = new WebSocket.Server({ port: 8080 });
+
+wss.on('connection', ws => {
+  // 每 30s 发一次协议 ping
+  const timer = setInterval(() => {
+    ws.ping();           // 发送控制帧 Ping
+  }, 30000);
+
+  ws.on('pong', () => {
+    console.log('客户端回了 pong，还活着');
+  });
+
+  ws.on('close', () => clearInterval(timer));
+});
+```
+
+
+
+### 实时查看 `WebSocket `中的 `message`
+
+------------------------------------------------
+1. 打开面板  
+   `F12` → `Network` → 筛选框里点 **`WS`**（或过滤器输入 `websocket`）。
+
+2. 找到唯一那条 `101 Switching Protocols` 的记录  
+   状态码是 101，类型是 `websocket`，域名就是你连的地址。
+
+3. 看消息  
+   选中这条记录 → 右侧切到 **`Messages`** 子面板。  
+   这里会把**双向帧**按时间轴列出来：
+   - 绿色箭头 ↑ 表示**浏览器发出**  
+   - 红色箭头 ↓ 表示**服务器返回**  
+   - 文本帧直接显示内容；二进制帧会显示大小，可右键 `Save as...` 下载 `.bin` 文件。  
+   - **ping/pong 控制帧也会显示**，类型列标注为 `Ping`、`Pong`。
+
+
+
 
 
 
@@ -3915,6 +3988,8 @@ document.addEventListener('mouseup', () => {
 
 
 #### 报错 `413 Payload Too Large`
+
+------
 
 **原因：**需要上传`canvas`和`images`请求体太大，超过了服务器的默认限制。
 

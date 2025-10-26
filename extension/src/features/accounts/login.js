@@ -353,7 +353,9 @@ function hideError(el) {
 // 在面板上显示账号信息
 export async function updateLoginStatus(user) {
   //初始化 WebSocket
-  await serviceInitializer.initialize();
+  if (!serviceInitializer.isInitialized) {
+    await serviceInitializer.initialize();
+  }
 
   const shadow = window.__EDULENS_SHADOW_ROOT__;
   shadow.querySelector(".user-status-area")?.remove();
@@ -384,7 +386,8 @@ export async function activateLogin() {
   // 设置认证失败回调
   authManager.setAuthFailureCallback(showForm);
 
-  await serviceInitializer.initialize();
+  const authInitialized = await authManager.init();
+  console.log("[EduLens] 认证初始化结果:", authInitialized);
 
   // 如果本地有token，就验证有效性
   if (authManager.getToken()) {
