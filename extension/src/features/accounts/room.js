@@ -19,8 +19,12 @@ export async function activateRoomSelector() {
       <div class="current-room-info">
         ${
           roomManager.getCurrentRoom()
-            ? `<span class="room-name">${roomManager.getCurrentRoom().name}</span>
-             <span class="room-members">${roomManager.getCurrentRoom().members.length} 名成员</span>`
+            ? `<span class="room-name">${
+                roomManager.getCurrentRoom().name
+              }</span>
+             <span class="room-members">${
+               roomManager.getCurrentRoom().members.length
+             } 名成员</span>`
             : '<span class="no-room">未选择房间</span>'
         }
       </div>
@@ -59,7 +63,10 @@ async function showRoomList() {
       <button class="icon-btn close-btn">×</button>
     </div>
     <div class="room-list"></div>
+    <dic class="room-operations">
     <button class="button create-room-btn">创建新房间</button>
+    <button class="button join-room-btn">加入新房间</button>
+    </div>
   `;
 
   const listWrapper = container.querySelector(".room-list");
@@ -96,6 +103,10 @@ async function showRoomList() {
   eventStore.on(container.querySelector(".create-room-btn"), "click", () => {
     overlay.remove();
     showCreateRoomForm();
+  });
+  eventStore.on(container.querySelector(".join-room-btn"), "click", () => {
+    overlay.remove();
+    showJoinRoomForm();
   });
 
   listWrapper.querySelectorAll(".switch-room-btn").forEach((btn) =>
@@ -156,6 +167,59 @@ function showCreateRoomForm() {
       console.log("房间创建成功");
     } else {
       console.error("创建房间失败");
+    }
+  });
+  eventStore.on(container.querySelector(".close-btn"), "click", () =>
+    overlay.remove()
+  );
+  eventStore.on(container.querySelector(".cancel-btn"), "click", () =>
+    overlay.remove()
+  );
+  eventStore.on(
+    overlay,
+    "click",
+    (e) => e.target === overlay && overlay.remove()
+  );
+}
+
+//通过分享码加入新房间弹窗
+function showJoinRoomForm() {
+  const overlay = createEl("div", { class: "room-overlay" });
+  const container = createEl("div", { class: "room-form-container" });
+
+  container.innerHTML = `
+    <div class="room-form-header">
+      <h3>加入新房间</h3>
+      <button class="icon-btn close-btn">×</button>
+    </div>
+    <form class="room-form">
+      <div class="input-group">
+        <label for="room-name">房间分享码</label>
+        <input type="text" id="room-sharecode" required>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="button submit-btn">加入房间</button>
+        <button type="button" class="button cancel-btn">取消</button>
+      </div>
+    </form>
+  `;
+
+  overlay.appendChild(container);
+  shadowRoot.appendChild(overlay);
+
+  const form = container.querySelector(".room-form");
+  //提交事件监听直接绑定在表单元素而不是按钮
+  eventStore.on(form, "submit", async (e) => {
+    e.preventDefault();
+    const shareCode = form.querySelector("#room-sharecode").value.trim();
+    const room = await roomManager.joinRoom(shareCode);
+    overlay.remove();
+    if (room) {
+      activateRoomSelector();
+      console.log("房间创建成功");
+    } else {
+      console.error("创建房间失败");
+      window.alert("创建房间失败");
     }
   });
   eventStore.on(container.querySelector(".close-btn"), "click", () =>
