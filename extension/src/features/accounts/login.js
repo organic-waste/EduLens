@@ -376,10 +376,13 @@ export async function updateLoginStatus(user) {
 }
 
 async function handleLogout() {
+  console.log(`[EduLens]${chrome.i18n.getMessage("logoutSuccess")}`);
   await authManager.clearAuth();
   webSocketClient.disconnect();
-  window.__EDULENS_SHADOW_ROOT__.querySelector(".user-status-area")?.remove();
-  showSuccessMessage(chrome.i18n.getMessage("logoutSuccess"));
+  const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+  shadowRoot.querySelector(".user-status-area")?.remove();
+  shadowRoot.querySelector(".room-selector")?.remove();
+  showForm();
 }
 
 export async function activateLogin() {
@@ -392,9 +395,9 @@ export async function activateLogin() {
   // 如果本地有token，就验证有效性
   if (authManager.getToken()) {
     const isValid = await authManager.validateToken();
-    console.log("Token验证结果: ", isValid);
+    // console.log("Token验证结果: ", isValid);
     const user = authManager.getUser();
-    console.log("用户信息: ", user);
+    // console.log("用户信息: ", user);
     if (isValid && user) {
       updateLoginStatus(user);
     } else {

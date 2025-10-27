@@ -125,3 +125,9 @@
   color: var(--main-color);
   margin: 8px 0;
 }
+
+.room-operations{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

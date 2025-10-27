@@ -108,6 +108,7 @@ router.post("/:roomId/generate-share-code", auth, async (req, res) => {
     }
 
     const shareCode = room.generateShareCode();
+    room.shareCode = shareCode;
     await room.save();
 
     res.json({

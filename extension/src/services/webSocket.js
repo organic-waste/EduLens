@@ -46,7 +46,8 @@ class WS {
             event.code !== 1000 &&
             this.reconnectAttempts < this.maxReconnectAttempts
           ) {
-            this.handleReconnect();
+            console.log("event.code: ", event.code);
+            // this.handleReconnect();
           }
         };
 
@@ -82,7 +83,6 @@ class WS {
   }
 
   send(message) {
-    console.log("this.ws: ", this.ws);
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
       return true;
@@ -106,7 +106,8 @@ class WS {
 
   //指数退避的自动重连
   handleReconnect() {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) return false;
+    if (this.reconnectAttempts >= this.maxReconnectAttempts || this.isConnected)
+      return false;
     this.reconnectAttempts++;
     const delay = Math.min(1000 * this.reconnectAttempts, 10000);
     console.log(

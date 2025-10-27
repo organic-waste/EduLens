@@ -171,7 +171,6 @@ class SyncManager {
 
   // 使用HTTP来处理实时操作处理
   sendOperation(operation) {
-    console.trace();
     // 如果WebSocket可用，优先使用WebSocket
     if (webSocketClient.isConnected()) {
       return webSocketClient.sendOperation(operation, this.currentVersion);
