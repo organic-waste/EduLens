@@ -7,7 +7,7 @@ import {
   getPageKey,
   getId,
 } from "../../utils/index.js";
-import { getPageDataByType, savePageData, syncManager } from "../../services/index.js";
+import { storageManager, syncManager } from "../../services/index.js";
 import {
   preventPageInteraction,
   restorePageInteraction,
@@ -71,7 +71,7 @@ export function activateImageAnnotation() {
   loadImages().then(renderAllImages);
 
   chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === "RELOAD") {
+    if (message.type === "RELOAD_IMAGES") {
       loadImages().then(renderAllImages);
     }
   });
@@ -627,11 +627,11 @@ function removeImage(id) {
 /* 持久化 */
 async function saveImages() {
   try {
-    await savePageData("images", images);
-    
+    await storageManager.savePageData("images", images);
+
     // 发送实时同步操作
     syncManager.sendOperation({
-      type: "image-sync",
+      type: "image-update",
       data: images,
     });
   } catch (error) {
@@ -641,7 +641,7 @@ async function saveImages() {
 
 async function loadImages() {
   try {
-    images = await getPageDataByType("images");
+    images = await storageManager.getPageDataByType("images");
   } catch (error) {
     console.error(error);
     images = [];

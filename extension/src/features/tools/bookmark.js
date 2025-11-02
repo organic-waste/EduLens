@@ -2,12 +2,7 @@
 import eventStore from "../../stores/eventStore.js";
 import { MonitorSPARoutes } from "../../utils/index.js";
 import { getId, getPageKey, createEl } from "../../utils/index.js";
-import {
-  getPageData,
-  getPageDataByType,
-  savePageData,
-  syncManager,
-} from "../../services/index.js";
+import { storageManager, syncManager } from "../../services/index.js";
 
 let addDiv = null;
 let btnDiv = null;
@@ -85,7 +80,7 @@ function createBookmarkEle(scrollTop, text, id) {
 }
 
 async function saveBookmark(scrollTop, text, id) {
-  let bookmarks = await getPageDataByType("bookmarks");
+  let bookmarks = await storageManager.getPageDataByType("bookmarks");
   const newBookmark = {
     scrollTop: scrollTop,
     text: text,
@@ -93,7 +88,7 @@ async function saveBookmark(scrollTop, text, id) {
   };
 
   bookmarks.push(newBookmark);
-  await savePageData("bookmarks", bookmarks);
+  await storageManager.savePageData("bookmarks", bookmarks);
   createBookmarkEle(scrollTop, text, id);
 
   // 发送实时同步操作
@@ -105,10 +100,10 @@ async function saveBookmark(scrollTop, text, id) {
 
 async function removeBookmark(el) {
   const id = el.dataset.id;
-  let bookmarks = await getPageDataByType("bookmarks");
+  let bookmarks = await storageManager.getPageDataByType("bookmarks");
 
   const updatedBookmarks = bookmarks.filter((item) => item.id !== id);
-  await savePageData("bookmarks", updatedBookmarks);
+  await storageManager.savePageData("bookmarks", updatedBookmarks);
   el.remove();
 
   // 发送实时同步操作
@@ -122,7 +117,7 @@ async function loadBookmarks() {
   const pageKey = getPageKey();
   if (pageKey === oldPageKey) return;
 
-  const bookmarks = await getPageDataByType("bookmarks");
+  const bookmarks = await storageManager.getPageDataByType("bookmarks");
   bookmarks.forEach((item) =>
     createBookmarkEle(item.scrollTop, item.text, item.id)
   );
@@ -166,7 +161,7 @@ export function activateBookmark() {
   MonitorSPARoutes(loadBookmarks);
 
   chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === "RELOAD") {
+    if (message.type === "RELOAD_BOOKMARKS") {
       loadBookmarks();
     }
   });

@@ -1,8 +1,8 @@
+/* 管理数据房间相关*/
 import { roomManager } from "../services/index.js";
 import { webSocketClient } from "../services/index.js";
 import { getPageKey } from "../utils/index.js";
 
-/* 管理数据房间 - 现在直接使用 roomManager */
 class RoomStore {
   constructor() {
     this.currentRoom = null;

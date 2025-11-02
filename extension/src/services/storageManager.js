@@ -188,7 +188,8 @@ class StorageManager {
   }
 
   // 清理过期数据
-  async cleanupExpiredData(maxAge = 30 * 24 * 60 * 60 * 1000) { // 默认30天
+  async cleanupExpiredData(maxAge = 30 * 24 * 60 * 60 * 1000) {
+    // 默认30天
     try {
       const allData = await this.getAllPagesData();
       const now = Date.now();
@@ -214,13 +215,4 @@ class StorageManager {
   }
 }
 
-// 创建单例实例
 export const storageManager = new StorageManager();
-
-// 为了向后兼容，导出原有的函数接口
-export const getPageData = () => storageManager.getPageData();
-export const getAllPagesData = () => storageManager.getAllPagesData();
-export const savePageData = (dataType, data) => storageManager.savePageData(dataType, data);
-export const getPageDataByType = (dataType) => storageManager.getPageDataByType(dataType);
-export const clearPageData = () => storageManager.clearPageData();
-export const saveMultiplePageData = (dataObject) => storageManager.saveMultiplePageData(dataObject);
