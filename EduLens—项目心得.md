@@ -1002,6 +1002,75 @@ link.href = chrome.runtime.getURL('assets/fontawesome/css/all.min.css');
 
 
 
+#### `chrome`通信消息无法接收
+
+------
+
+**原因：**`chrome`通信只能存在于 `Content Script` 和 `Service Worker` 之间，不能在`Content Script`内部进行通信
+
+**解决：**不需要**通过 Service Worker 中转**，可以直接使用 **自定义事件（CustomEvent）** 或 **共享变量/函数** 进行通信。
+
+------
+
+❌ **不推荐方案：通过 Service Worker 中转**
+
+虽然技术上可行，但完全没有必要，而且会带来以下问题：
+
+- **性能差**：每次通信都要走一遍 `chrome.runtime.sendMessage` → Service Worker → `chrome.tabs.sendMessage`；
+- **代码冗余**：需要写一堆消息监听和转发逻辑；
+- **异步复杂**：需要处理 `sendResponse`、消息顺序、生命周期等问题；
+- **Service Worker 可能未激活**：MV3 中 Service Worker 是事件驱动的，可能被挂起，导致消息丢失或延迟。
+
+------
+
+**✅ 推荐方案：使用自定义事件（CustomEvent）**
+
+这是**最简单、最直接、性能最好**的方式，适用于 Content Script 内部多个脚本文件之间的通信。
+
+```javascript
+// 文件 A.js
+window.dispatchEvent(new CustomEvent("edulens-reload-all"));
+
+// 文件 B.js
+window.addEventListener("edulens-reload-all", () => {
+  console.log("收到全部刷新消息，重新加载画布");
+  loadDrawing();
+});
+```
+
+- **无需异步等待**，同步触发；
+- **不依赖 Service Worker**，避免消息往返延迟；
+- **代码清晰**，易于维护；
+- **不会触发 Chrome 的消息队列限制**（`chrome.runtime.sendMessage` 有性能瓶颈）。
+
+------
+
+**✅ 推荐方案：共享函数通信**
+
+**直接共享变量或函数是最轻量、最同步、最无依赖的方式**，比 CustomEvent 还简单，适合逻辑紧密耦合的场景。
+
+```javascript
+// 文件 A.js  定义一个全局函数
+window.reloadAllCanvases = function () {
+  console.log("正在重载所有画布...");
+  loadDrawing();
+};
+
+// 文件 B.js  直接调用这个函数
+window.reloadAllCanvases(); // 输出：正在重载所有画布...
+```
+
+**注意：**
+
+| **命名冲突**   | 所有变量都挂在 `window` 上，建议加前缀如 `__edulens_` 或使用闭包封装 |
+| -------------- | ------------------------------------------------------------ |
+| **加载顺序**   | 确保定义变量的文件先于使用它的文件加载（通过 `manifest.json` 中的顺序控制） |
+| **模块作用域** | 如果你用 `type="module"` 引入脚本，变量不会自动挂到 `window`，需要手动挂载 |
+
+
+
+
+
 
 ## **JavaScript相关**
 
@@ -3999,58 +4068,6 @@ WebSocket协议状态码是一个16位的整数，用于表示WebSocket连接的
   状态码1011表示服务器遇到异常。当服务器在处理WebSocket请求时遇到异常情况时，会发送状态码1011给客户端，表示服务器遇到异常。
 
 
-
-
-
-```
-{
-  "_id": {
-    "$oid": "68fc8bc2ea0f2e4ebe4df183"
-  },
-  "roomId": {
-    "$oid": "68f60365de482d5213c7bc8e"
-  },
-  "pageUrl": "https://www.marxists.org/chinese/maozedong/marxist.org-chinese-mao-19490814.htm",
-  "annotations": {
-    "bookmarks": [
-      {
-        "id": "mh60ywbv0.9",
-        "scrollTop": 3370,
-        "text": "毛选"
-      },
-      {
-        "id": "mh61nbmp0.5",
-        "scrollTop": 422,
-        "text": "4567890"
-      }
-    ],
-    "canvas": "内容省略，MongoDB中存储的是完整正常数据",
-    "rectangles": [],
-    "images": [
-      {
-        "fixed": true,
-        "height": 212,
-        "id": "mhhfm83d0.a",
-        "src": "内容省略",
-        "width": 300,
-        "x": 265,
-        "y": 363
-      }
-    ]
-  },
-  "version": 919,
-  "lastModified": {
-    "$date": "2025-11-02T08:12:19.433Z"
-  },
-  "createdAt": {
-    "$date": "2025-10-25T08:35:14.491Z"
-  },
-  "updatedAt": {
-    "$date": "2025-11-02T08:12:19.433Z"
-  },
-  "__v": 0
-}
-```
 
 
 

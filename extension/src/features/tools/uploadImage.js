@@ -70,11 +70,9 @@ export function activateImageAnnotation() {
   setupEventListeners();
   loadImages().then(renderAllImages);
 
-  chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === "RELOAD_IMAGES") {
-      loadImages().then(renderAllImages);
-    }
-  });
+  window.__edulens_reloadImages = () => {
+    loadImages().then(renderAllImages);
+  };
 }
 
 function handleFileChange(e) {

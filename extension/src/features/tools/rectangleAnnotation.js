@@ -54,11 +54,13 @@ export function activateRectangleAnnotation() {
     renderAllRectangles();
   });
   setupEventListeners();
-  chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === "RELOAD_RECTANGLES") {
-      loadRectangles();
-    }
-  });
+
+  window.__edulens_reloadRectangles = () => {
+    loadRectangles().then(() => {
+      //加载后记得重新渲染
+      renderAllRectangles();
+    });
+  };
 }
 
 //转换矩阵模式（编辑模式/查看模式）
