@@ -160,9 +160,7 @@ export function activateBookmark() {
   loadBookmarks();
   MonitorSPARoutes(loadBookmarks);
 
-  chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === "RELOAD_BOOKMARKS") {
-      loadBookmarks();
-    }
-  });
+  window.__edulens_reloadBookmarks = () => {
+    loadBookmarks();
+  };
 }

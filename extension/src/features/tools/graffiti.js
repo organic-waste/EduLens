@@ -404,10 +404,8 @@ export function activateGraffiti() {
 
   MonitorSPARoutes(handlePageChange);
 
-  // 监听远程画布更新
-  chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === "RELOAD_CANVAS") {
-      loadDrawing();
-    }
-  });
+  window.__edulens_reloadCanvas = () => {
+    console.log("收到画布更新消息");
+    loadDrawing();
+  };
 }

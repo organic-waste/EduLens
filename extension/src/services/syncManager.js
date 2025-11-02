@@ -140,7 +140,20 @@ class SyncManager {
           rectangles: cloudData.rectangles || [],
           images: cloudData.images || [],
         });
-        chrome.runtime.sendMessage({ type: "RELOAD" });
+        // 通知所有组件刷新
+
+        if (typeof window.__edulens_reloadCanvas === "function") {
+          window.__edulens_reloadCanvas();
+        }
+        if (typeof window.__edulens_reloadRectangles === "function") {
+          window.__edulens_reloadRectangles();
+        }
+        if (typeof window.__edulens_reloadBookmarks === "function") {
+          window.__edulens_reloadBookmarks();
+        }
+        if (typeof window.__edulens_reloadImages === "function") {
+          window.__edulens_reloadImages();
+        }
         return true;
       }
       return false;
@@ -199,7 +212,10 @@ class SyncManager {
               b.id === operation.data.id ? operation.data : b
             )
           );
-          chrome.runtime.sendMessage({ type: "RELOAD_BOOKMARKS" });
+          // 若已经在全局中保存了重新渲染函数时
+          if (typeof window.__edulens_reloadBookmarks === "function") {
+            window.__edulens_reloadBookmarks();
+          }
           break;
         case "bookmark-delete":
           await this.mergeData("bookmarks", (bookmarks) =>
@@ -208,7 +224,11 @@ class SyncManager {
           break;
         case "canvas-update":
           await storageManager.savePageData("canvas", operation.data);
-          chrome.runtime.sendMessage({ type: "RELOAD_CANVAS" });
+
+          if (typeof window.__edulens_reloadCanvas === "function") {
+            console.log("调用画布更新函数");
+            window.__edulens_reloadCanvas();
+          }
           break;
         case "rectangle-add":
           await this.mergeData("rectangles", (rectangles) => [
@@ -220,7 +240,10 @@ class SyncManager {
           // 如果 data 是数组，则替换整个矩形数组
           if (Array.isArray(operation.data)) {
             await storageManager.savePageData("rectangles", operation.data);
-            chrome.runtime.sendMessage({ type: "RELOAD_RECTANGLES" });
+
+            if (typeof window.__edulens_reloadRectangles === "function") {
+              window.__edulens_reloadRectangles();
+            }
           } else {
             // 如果是单个对象，则更新单个矩形
             await this.mergeData("rectangles", (rectangles) =>
@@ -245,7 +268,10 @@ class SyncManager {
           await this.mergeData("images", (images) =>
             images.map((i) => (i.id === operation.data.id ? operation.data : i))
           );
-          chrome.runtime.sendMessage({ type: "RELOAD_IMAGES" });
+
+          if (typeof window.__edulens_reloadImages === "function") {
+            window.__edulens_reloadImages();
+          }
           break;
         case "image-delete":
           await this.mergeData("images", (images) =>
