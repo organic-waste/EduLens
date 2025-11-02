@@ -3,10 +3,9 @@ import eventStore from "../../stores/eventStore.js";
 import toolStore from "../../stores/toolStore.js";
 import { MonitorSPARoutes } from "../../utils/index.js";
 import { getOffsetPos, createEl } from "../../utils/index.js";
-import { getPageDataByType, savePageData, syncManager } from "../../services/index.js";
+import { storageManager, syncManager } from "../../services/index.js";
 import { activateRectangleAnnotation } from "./rectangleAnnotation.js";
 import { activateImageAnnotation } from "./uploadImage.js";
-import { authManager } from "../../services/index.js";
 
 let drawingCanvas = null;
 let drawingCtx = null;
@@ -354,8 +353,8 @@ async function saveDrawing() {
   if (!drawingCanvas) return;
   try {
     const dataURL = drawingCanvas.toDataURL("image/png"); //指定以png的形式保存
-    const data = await savePageData("canvas", dataURL);
-    
+    const data = await storageManager.savePageData("canvas", dataURL);
+
     // 发送实时同步操作
     syncManager.sendOperation({
       type: "canvas-update",
@@ -369,7 +368,7 @@ async function saveDrawing() {
 async function loadDrawing() {
   if (!drawingCtx || !drawingCanvas) return;
   try {
-    const dataURL = await getPageDataByType("canvas");
+    const dataURL = await storageManager.getPageDataByType("canvas");
 
     if (dataURL) {
       let img = new Image();
@@ -404,4 +403,11 @@ export function activateGraffiti() {
   activateImageAnnotation();
 
   MonitorSPARoutes(handlePageChange);
+
+  // 监听远程画布更新
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message.type === "RELOAD_CANVAS") {
+      loadDrawing();
+    }
+  });
 }

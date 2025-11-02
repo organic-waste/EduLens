@@ -1,13 +1,8 @@
 /* 创建矩形注释 */
 import eventStore from "../../stores/eventStore.js";
 import toolStore from "../../stores/toolStore.js";
-import {
-  getOffsetPos,
-  createEl,
-  getPageKey,
-  getId,
-} from "../../utils/index.js";
-import { getPageDataByType, savePageData, syncManager } from "../../services/index.js";
+import { getOffsetPos, createEl, getId } from "../../utils/index.js";
+import { storageManager, syncManager } from "../../services/index.js";
 import {
   preventPageInteraction,
   restorePageInteraction,
@@ -60,7 +55,7 @@ export function activateRectangleAnnotation() {
   });
   setupEventListeners();
   chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === "RELOAD") {
+    if (message.type === "RELOAD_RECTANGLES") {
       loadRectangles();
     }
   });
@@ -681,11 +676,11 @@ function hideTooltip(rectId) {
 
 async function saveRectangles() {
   try {
-    await savePageData("rectangles", rectangles);
-    
+    await storageManager.savePageData("rectangles", rectangles);
+
     // 发送实时同步操作 - 同步所有矩形数据
     syncManager.sendOperation({
-      type: "rectangle-sync",
+      type: "rectangle-update",
       data: rectangles,
     });
   } catch (error) {
@@ -695,7 +690,7 @@ async function saveRectangles() {
 
 async function loadRectangles() {
   try {
-    rectangles = await getPageDataByType("rectangles");
+    rectangles = await storageManager.getPageDataByType("rectangles");
   } catch (error) {
     console.error(error);
     rectangles = [];

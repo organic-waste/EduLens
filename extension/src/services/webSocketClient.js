@@ -2,6 +2,7 @@
 import { webSocket } from "./webSocket.js";
 import { authManager } from "./authManager.js";
 import { getPageKey } from "../utils/index.js";
+import { roomManager } from "./roomManager.js";
 
 class WebSocketClient {
   constructor() {
@@ -36,13 +37,16 @@ class WebSocketClient {
         this.wsConnected = true;
         console.log("[EduLens] WebSocket 连接成功");
 
-        // 如果已有房间信息，自动加入
-        if (this.currentRoomId) {
-          this.joinRoom(
-            this.currentRoomId,
-            this.currentPageUrl || getPageKey()
-          );
+        // 如果已有房间信息，先设置好（认证成功后会自动加入）
+        if (!this.currentRoomId) {
+
+          const currentRoom = roomManager.getCurrentRoom();
+          if (currentRoom) {
+            this.currentRoomId = currentRoom._id;
+            this.currentPageUrl = getPageKey();
+          }
         }
+
         resolve(true);
       } catch (error) {
         console.warn("[EduLens] WebSocket 连接失败:", error);
@@ -64,14 +68,17 @@ class WebSocketClient {
   }
 
   async joinRoom(roomId, pageUrl) {
-    if (!this.wsConnected) return false;
+    if (!this.wsConnected) {
+      console.warn(`[EduLens] WebSocket未连接，无法加入房间 ${roomId}`);
+      return false;
+    }
 
     this.currentRoomId = roomId;
     this.currentPageUrl = pageUrl;
     try {
       return await webSocket.joinRoom(roomId, pageUrl);
     } catch (error) {
-      console.error("加入房间失败:", error);
+      console.error("[EduLens] 加入房间失败:", error);
       return false;
     }
   }
@@ -106,9 +113,29 @@ class WebSocketClient {
     this.emit("close", message);
   }
 
-  handleAuthSuccess(message) {
+  async handleAuthSuccess(message) {
     console.log("WebSocket 认证成功:", message);
     this.emit("authenticated", message);
+    
+    // 认证成功后，自动加入当前房间
+    try {
+      if (this.currentRoomId) {
+        // 如果已有房间ID，直接加入
+        await this.joinRoom(
+          this.currentRoomId,
+          this.currentPageUrl || getPageKey()
+        );
+      } else {
+        // 如果没有，尝试从 roomManager 获取当前房间并加入
+        const currentRoom = roomManager.getCurrentRoom();
+        if (currentRoom) {
+          const pageUrl = getPageKey();
+          await this.joinRoom(currentRoom._id, pageUrl);
+        }
+      }
+    } catch (error) {
+      console.warn("[EduLens] 自动加入房间失败:", error);
+    }
   }
 
   /* 事件系统 */

@@ -4,12 +4,7 @@ import { authManager } from "./authManager.js";
 import { webSocketClient } from "./webSocketClient.js";
 import { roomManager } from "./roomManager.js";
 import { getPageKey } from "../utils/index.js";
-import {
-  getPageData,
-  getPageDataByType,
-  savePageData,
-  saveMultiplePageData,
-} from "./storageManager.js";
+import { storageManager } from "./storageManager.js";
 
 class SyncManager {
   constructor() {
@@ -114,7 +109,7 @@ class SyncManager {
     this.isSyncing = true;
 
     try {
-      const pageData = await getPageData();
+      const pageData = await storageManager.getPageData();
       const result = await this.syncAnnotations(pageData);
       // 处理待处理的操作
       if (this.pendingOperations.length > 0) {
@@ -139,7 +134,7 @@ class SyncManager {
       const cloudData = await this.loadAnnotations(pageUrl);
 
       if (cloudData) {
-        await saveMultiplePageData({
+        await storageManager.saveMultiplePageData({
           bookmarks: cloudData.bookmarks || [],
           canvas: cloudData.canvas || "",
           rectangles: cloudData.rectangles || [],
@@ -204,6 +199,7 @@ class SyncManager {
               b.id === operation.data.id ? operation.data : b
             )
           );
+          chrome.runtime.sendMessage({ type: "RELOAD_BOOKMARKS" });
           break;
         case "bookmark-delete":
           await this.mergeData("bookmarks", (bookmarks) =>
@@ -211,7 +207,8 @@ class SyncManager {
           );
           break;
         case "canvas-update":
-          await savePageData("canvas", operation.data);
+          await storageManager.savePageData("canvas", operation.data);
+          chrome.runtime.sendMessage({ type: "RELOAD_CANVAS" });
           break;
         case "rectangle-add":
           await this.mergeData("rectangles", (rectangles) => [
@@ -220,11 +217,18 @@ class SyncManager {
           ]);
           break;
         case "rectangle-update":
-          await this.mergeData("rectangles", (rectangles) =>
-            rectangles.map((r) =>
-              r.id === operation.data.id ? operation.data : r
-            )
-          );
+          // 如果 data 是数组，则替换整个矩形数组
+          if (Array.isArray(operation.data)) {
+            await storageManager.savePageData("rectangles", operation.data);
+            chrome.runtime.sendMessage({ type: "RELOAD_RECTANGLES" });
+          } else {
+            // 如果是单个对象，则更新单个矩形
+            await this.mergeData("rectangles", (rectangles) =>
+              rectangles.map((r) =>
+                r.id === operation.data.id ? operation.data : r
+              )
+            );
+          }
           break;
         case "rectangle-delete":
           await this.mergeData("rectangles", (rectangles) =>
@@ -241,6 +245,7 @@ class SyncManager {
           await this.mergeData("images", (images) =>
             images.map((i) => (i.id === operation.data.id ? operation.data : i))
           );
+          chrome.runtime.sendMessage({ type: "RELOAD_IMAGES" });
           break;
         case "image-delete":
           await this.mergeData("images", (images) =>
@@ -256,9 +261,9 @@ class SyncManager {
   }
 
   async mergeData(dataType, mergeFunction) {
-    const currentData = await getPageDataByType(dataType);
+    const currentData = await storageManager.getPageDataByType(dataType);
     const newData = mergeFunction(currentData);
-    await savePageData(dataType, newData);
+    await storageManager.savePageData(dataType, newData);
   }
 
   handleOperationAck(message) {
@@ -271,7 +276,7 @@ class SyncManager {
     this.currentVersion = Math.max(this.currentVersion, version);
 
     if (annotations) {
-      saveMultiplePageData({
+      storageManager.saveMultiplePageData({
         bookmarks: annotations.bookmarks || [],
         canvas: annotations.canvas || "",
         rectangles: annotations.rectangles || [],

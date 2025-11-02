@@ -7,4 +7,3 @@ export { webSocket } from "./webSocket.js";
 export { webSocketClient } from "./webSocketClient.js";
 export { serviceInitializer } from "./serviceInitializer.js";
 export { storageManager } from "./storageManager.js";
-export * from "./storageManager.js";
