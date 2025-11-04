@@ -67,13 +67,28 @@ export function activateRectangleAnnotation() {
 function toggleRectangleMode() {
   toolStore.updateState("isRectangle");
   if (toolStore.isRectangle) {
+    drawingContainer.style.pointerEvents = "auto";
     drawingContainer.style.cursor = "crosshair";
     exitEditingMode();
-    preventPageInteraction();
+    updateRectanglesPointerEvents(true);
   } else {
+    drawingContainer.style.pointerEvents = "none";
     drawingContainer.style.cursor = "";
     restorePageInteraction();
+    updateRectanglesPointerEvents(false);
   }
+}
+
+//控制矩形的悬停鼠标样式
+function updateRectanglesPointerEvents(enable){
+  const allRects = drawingContainer.querySelectorAll(".annotation-rect");
+  allRects.forEach(rect => {
+    if(enable || isEditing){
+      rect.style.pointerEvents = "auto";
+    }else{
+      rect.style.pointerEvents = "none";
+    }
+  })
 }
 
 function setupEventListeners() {
@@ -88,6 +103,9 @@ function setupEventListeners() {
 function listenerMouseDown(e) {
   if (e.button !== 0) return;
   const { x, y } = getOffsetPos(e, drawingContainer);
+  console.log('mousedown');
+  console.log(toolStore.isRectangle);
+  console.log(isEditing);
 
   //创建新矩阵时
   if (toolStore.isRectangle && !isEditing) {
@@ -131,7 +149,7 @@ function listenerMouseDown(e) {
     }
   }
   //矩阵处于浏览态
-  else if (!toolStore.isRectangle && !isEditing) {
+  else if (!isEditing) {
     const clickedRect = findTopmostRectangleAt(x, y);
     if (clickedRect) {
       exitEditingMode();
@@ -290,7 +308,7 @@ function renderRectangles(rect) {
   const rectDiv = createEl("div", {
     class: "annotation-rect",
     "data-id": rect.id,
-    style: `left:${rect.x}px;top:${rect.y}px;width:${rect.width}px;height:${rect.height}px;border-color:${rect.color};`,
+    style: `left:${rect.x}px;top:${rect.y}px;width:${rect.width}px;height:${rect.height}px;border-color:${rect.color};pointer-events:${toolStore.isRectangle ? "auto" : "none"};`,
   });
   rectDiv.dataset.id = rect.id;
 
@@ -362,6 +380,7 @@ function enterEditingMode(rect) {
   );
   if (!rectDiv) return;
   rectDiv.classList.add("editing");
+  rectDiv.style.pointerEvents = "auto";
 
   const textContainer = rectDiv.querySelector(".annotation-text-container");
   const textInput = rectDiv.querySelector(".annotation-text-input");
@@ -385,6 +404,7 @@ function exitEditingMode() {
     );
     if (rectDiv) {
       rectDiv.classList.remove("editing");
+      rectDiv.style.pointerEvents = toolStore.isRectangle ? "auto" : "none";
       const textContainer = rectDiv.querySelector(".annotation-text-container");
       const textInput = rectDiv.querySelector(".annotation-text-input");
       const tooltip = rectDiv.querySelector(".annotation-tooltip");
