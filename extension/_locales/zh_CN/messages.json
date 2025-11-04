@@ -248,5 +248,122 @@
   "loginFailed": {
     "message": "登录失败",
     "description": "登录失败提示"
+  },
+  "logoutButton": {
+    "message": "退出登录",
+    "description": "退出登录按钮"
+  },
+
+  "roomMembers": {
+    "message": "名成员",
+    "description": "房间成员数量单位"
+  },
+  "noRoomSelected": {
+    "message": "未选择房间",
+    "description": "未选择房间提示"
+  },
+  "roomListBtn": {
+    "message": "房间列表",
+    "description": "房间列表按钮"
+  },
+  "shareRoomBtn": {
+    "message": "分享",
+    "description": "分享房间按钮"
+  },
+  "myRooms": {
+    "message": "我的房间",
+    "description": "我的房间标题"
+  },
+  "createRoomBtn": {
+    "message": "创建新房间",
+    "description": "创建新房间按钮"
+  },
+  "joinRoomBtn": {
+    "message": "加入新房间",
+    "description": "加入新房间按钮"
+  },
+  "switchRoomBtn": {
+    "message": "切换",
+    "description": "切换房间按钮"
+  },
+  "currentRoom": {
+    "message": "当前",
+    "description": "当前房间标签"
+  },
+  "roomNameLabel": {
+    "message": "房间名称",
+    "description": "房间名称标签"
+  },
+  "roomDescLabel": {
+    "message": "房间描述",
+    "description": "房间描述标签"
+  },
+  "createRoomSubmit": {
+    "message": "创建房间",
+    "description": "创建房间提交按钮"
+  },
+  "cancelBtn": {
+    "message": "取消",
+    "description": "取消按钮"
+  },
+  "joinRoomTitle": {
+    "message": "加入新房间",
+    "description": "加入房间标题"
+  },
+  "roomShareCodeLabel": {
+    "message": "房间分享码",
+    "description": "房间分享码标签"
+  },
+  "joinRoomSubmit": {
+    "message": "加入房间",
+    "description": "加入房间提交按钮"
+  },
+  "shareRoomTitle": {
+    "message": "分享房间",
+    "description": "分享房间标题"
+  },
+  "shareCodePrefix": {
+    "message": "分享码: ",
+    "description": "分享码前缀"
+  },
+  "shareCodeHint": {
+    "message": "其他人可以使用此代码加入房间",
+    "description": "分享码提示"
+  },
+  "copyShareCodeBtn": {
+    "message": "复制分享码",
+    "description": "复制分享码按钮"
+  },
+  "createRoomTitle": {
+    "message": "创建新房间",
+    "description": "创建新房间标题"
+  },
+  "createRoomSuccess": {
+    "message": "房间创建成功",
+    "description": "创建房间成功提示"
+  },
+  "createRoomFailed": {
+    "message": "创建房间失败",
+    "description": "创建房间失败提示"
+  },
+  "joinRoomSuccess": {
+    "message": "加入房间成功",
+    "description": "加入房间成功提示"
+  },
+  "joinRoomFailed": {
+    "message": "加入房间失败",
+    "description": "加入房间失败提示"
+  },
+  "switchRoomSuccess": {
+    "message": "已切换到房间",
+    "description": "切换房间成功提示"
+  },
+  "generateShareCodeFailed": {
+    "message": "生成分享码失败",
+    "description": "生成分享码失败提示"
+  },
+  "shareCodeCopied": {
+    "message": "分享码已复制",
+    "description": "分享码已复制提示"
   }
 }

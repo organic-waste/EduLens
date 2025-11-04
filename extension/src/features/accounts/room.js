@@ -24,13 +24,13 @@ export async function activateRoomSelector() {
               }</span>
              <span class="room-members">${
                roomManager.getCurrentRoom().members.length
-             } 名成员</span>`
-            : '<span class="no-room">未选择房间</span>'
+             } ${chrome.i18n.getMessage("roomMembers")}</span>`
+            : `<span class="no-room">${chrome.i18n.getMessage("noRoomSelected")}</span>`
         }
       </div>
       <div class="room-actions">
-        <button class="button room-list-btn">房间列表</button>
-        <button class="button share-room-btn">分享</button>
+        <button class="button room-list-btn">${chrome.i18n.getMessage("roomListBtn")}</button>
+        <button class="button share-room-btn">${chrome.i18n.getMessage("shareRoomBtn")}</button>
       </div>
     `;
 
@@ -59,13 +59,13 @@ async function showRoomList() {
 
   container.innerHTML = `
     <div class="room-list-header">
-      <h3>我的房间</h3>
+      <h3>${chrome.i18n.getMessage("myRooms")}</h3>
       <button class="icon-btn close-btn">×</button>
     </div>
     <div class="room-list"></div>
     <dic class="room-operations">
-    <button class="button create-room-btn">创建新房间</button>
-    <button class="button join-room-btn">加入新房间</button>
+    <button class="button create-room-btn">${chrome.i18n.getMessage("createRoomBtn")}</button>
+    <button class="button join-room-btn">${chrome.i18n.getMessage("joinRoomBtn")}</button>
     </div>
   `;
 
@@ -78,15 +78,15 @@ async function showRoomList() {
       innerHTML: `
         <div class="room-info">
           <div class="room-name">${room.name}</div>
-          <div class="room-meta">${room.members.length} 名成员 · ${new Date(
+          <div class="room-meta">${room.members.length} ${chrome.i18n.getMessage("roomMembers")} · ${new Date(
         room.updatedAt
       ).toLocaleDateString()}</div>
         </div>
         <div class="room-actions">
           ${
             roomManager.getCurrentRoom()?._id !== room._id
-              ? `<button class="button switch-room-btn" data-id="${room._id}">切换</button>`
-              : '<span class="current-label">当前</span>'
+              ? `<button class="button switch-room-btn" data-id="${room._id}">${chrome.i18n.getMessage("switchRoomBtn")}</button>`
+              : `<span class="current-label">${chrome.i18n.getMessage("currentRoom")}</span>`
           }
         </div>
       `,
@@ -132,21 +132,21 @@ function showCreateRoomForm() {
 
   container.innerHTML = `
     <div class="room-form-header">
-      <h3>创建新房间</h3>
+      <h3>${chrome.i18n.getMessage("createRoomTitle")}</h3>
       <button class="icon-btn close-btn">×</button>
     </div>
     <form class="room-form">
       <div class="input-group">
-        <label for="room-name">房间名称</label>
+        <label for="room-name">${chrome.i18n.getMessage("roomNameLabel")}</label>
         <input type="text" id="room-name" required>
       </div>
       <div class="input-group">
-        <label for="room-description">房间描述</label>
+        <label for="room-description">${chrome.i18n.getMessage("roomDescLabel")}</label>
         <textarea id="room-description"></textarea>
       </div>
       <div class="form-actions">
-        <button type="submit" class="button submit-btn">创建房间</button>
-        <button type="button" class="button cancel-btn">取消</button>
+        <button type="submit" class="button submit-btn">${chrome.i18n.getMessage("createRoomSubmit")}</button>
+        <button type="button" class="button cancel-btn">${chrome.i18n.getMessage("cancelBtn")}</button>
       </div>
     </form>
   `;
@@ -189,17 +189,17 @@ function showJoinRoomForm() {
 
   container.innerHTML = `
     <div class="room-form-header">
-      <h3>加入新房间</h3>
+      <h3>${chrome.i18n.getMessage("joinRoomTitle")}</h3>
       <button class="icon-btn close-btn">×</button>
     </div>
     <form class="room-form">
       <div class="input-group">
-        <label for="room-name">房间分享码</label>
+        <label for="room-name">${chrome.i18n.getMessage("roomShareCodeLabel")}</label>
         <input type="text" id="room-sharecode" required>
       </div>
       <div class="form-actions">
-        <button type="submit" class="button submit-btn">加入房间</button>
-        <button type="button" class="button cancel-btn">取消</button>
+        <button type="submit" class="button submit-btn">${chrome.i18n.getMessage("joinRoomSubmit")}</button>
+        <button type="button" class="button cancel-btn">${chrome.i18n.getMessage("cancelBtn")}</button>
       </div>
     </form>
   `;
@@ -219,7 +219,7 @@ function showJoinRoomForm() {
       console.log("房间创建成功");
     } else {
       console.error("创建房间失败");
-      window.alert("创建房间失败");
+      window.alert(chrome.i18n.getMessage("joinRoomFailed"));
     }
   });
   eventStore.on(container.querySelector(".close-btn"), "click", () =>
@@ -244,13 +244,13 @@ async function shareRoom() {
 
   container.innerHTML = `
     <div class="share-header">
-      <h3>分享房间</h3>
+      <h3>${chrome.i18n.getMessage("shareRoomTitle")}</h3>
       <button class="icon-btn close-btn">×</button>
     </div>
     <div class="share-content">
-      <p>分享码: <strong>${code}</strong></p>
-      <p class="share-hint">其他人可以使用此代码加入房间</p>
-      <button class="button copy-btn">复制分享码</button>
+      <p>${chrome.i18n.getMessage("shareCodePrefix")}<strong>${code}</strong></p>
+      <p class="share-hint">${chrome.i18n.getMessage("shareCodeHint")}</p>
+      <button class="button copy-btn">${chrome.i18n.getMessage("copyShareCodeBtn")}</button>
     </div>
   `;
 

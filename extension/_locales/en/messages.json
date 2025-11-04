@@ -191,5 +191,90 @@
   },
   "logoutButton": {
     "message": "Logout"
+  },
+
+  "roomMembers": {
+    "message": " members"
+  },
+  "noRoomSelected": {
+    "message": "No room selected"
+  },
+  "roomListBtn": {
+    "message": "Room List"
+  },
+  "shareRoomBtn": {
+    "message": "Share"
+  },
+  "myRooms": {
+    "message": "My Rooms"
+  },
+  "createRoomBtn": {
+    "message": "Create New Room"
+  },
+  "joinRoomBtn": {
+    "message": "Join New Room"
+  },
+  "switchRoomBtn": {
+    "message": "Switch"
+  },
+  "currentRoom": {
+    "message": "Current"
+  },
+  "roomNameLabel": {
+    "message": "Room Name"
+  },
+  "roomDescLabel": {
+    "message": "Room Description"
+  },
+  "createRoomSubmit": {
+    "message": "Create Room"
+  },
+  "cancelBtn": {
+    "message": "Cancel"
+  },
+  "joinRoomTitle": {
+    "message": "Join New Room"
+  },
+  "roomShareCodeLabel": {
+    "message": "Room Share Code"
+  },
+  "joinRoomSubmit": {
+    "message": "Join Room"
+  },
+  "shareRoomTitle": {
+    "message": "Share Room"
+  },
+  "shareCodePrefix": {
+    "message": "Share Code: "
+  },
+  "shareCodeHint": {
+    "message": "Others can use this code to join the room"
+  },
+  "copyShareCodeBtn": {
+    "message": "Copy Share Code"
+  },
+  "createRoomTitle": {
+    "message": "Create New Room"
+  },
+  "createRoomSuccess": {
+    "message": "Room created successfully"
+  },
+  "createRoomFailed": {
+    "message": "Failed to create room"
+  },
+  "joinRoomSuccess": {
+    "message": "Joined room successfully"
+  },
+  "joinRoomFailed": {
+    "message": "Failed to join room"
+  },
+  "switchRoomSuccess": {
+    "message": "Switched to room"
+  },
+  "generateShareCodeFailed": {
+    "message": "Failed to generate share code"
+  },
+  "shareCodeCopied": {
+    "message": "Share code copied"
   }
 }
