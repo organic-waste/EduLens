@@ -174,7 +174,7 @@ function createControls() {
     let value = parseInt(e.target.value, 10);
     //限制输入的笔刷大小
     if (value < 1) value = 1;
-    if (value > 50) value = 50;
+    if (value > 25) value = 25;
     e.target.value = value;
     toolStore.isEraser
       ? (toolStore.eraserBrushSize = value)

@@ -3,7 +3,10 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const WebsocketServer = require("./webSocketServer");
-require("dotenv").config();
+
+// 根据 NODE_ENV 决定加载哪份配置
+const path = `.env.${process.env.NODE_ENV || 'development'}`;
+require('dotenv').config({ path });
 
 const app = express();
 app.use(cors());
