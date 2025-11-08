@@ -1,16 +1,25 @@
 {
-  "name": "server",
+  "name": "edulens-server",
   "version": "1.0.0",
-  "description": "",
+  "description": "EduLens backend server with WebSocket support",
   "main": "app.js",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "edulens",
+    "education",
+    "annotation",
+    "websocket"
+  ],
+  "author": "organic-waste",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -18,6 +27,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mongodb": "^7.0.0",
     "mongoose": "^8.19.1",
     "uuid": "^13.0.0",
     "ws": "^8.18.3"

@@ -1,13 +1,21 @@
 {
-  "name": "edulens",
+  "name": "edulens-extension",
   "private": true,
   "version": "1.0.0",
+  "description": "EduLens Chrome Extension - Web annotation and collaboration tool",
   "type": "module",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
+  "keywords": ["chrome-extension", "education", "annotation", "collaboration"],
+  "author": "organic-waste",
+  "license": "MIT",
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.2.0",
     "vite": "^7.1.2",
