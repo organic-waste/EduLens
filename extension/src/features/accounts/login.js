@@ -7,7 +7,6 @@ import {
 } from "../../services/index.js";
 import { activateRoomSelector } from "./room.js";
 import eventStore from "../../stores/eventStore.js";
-import { getPageKey } from "../../utils/index.js";
 
 function showForm() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;

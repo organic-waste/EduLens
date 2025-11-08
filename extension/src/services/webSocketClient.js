@@ -2,7 +2,6 @@
 import { webSocket } from "./webSocket.js";
 import { authManager } from "./authManager.js";
 import { getPageKey } from "../utils/index.js";
-import { roomManager } from "./roomManager.js";
 
 class WebSocketClient {
   constructor() {
@@ -39,7 +38,8 @@ class WebSocketClient {
 
         // 如果已有房间信息，先设置好（认证成功后会自动加入）
         if (!this.currentRoomId) {
-
+          // 使用动态导入避免循环依赖
+          const { roomManager } = await import("./roomManager.js");
           const currentRoom = roomManager.getCurrentRoom();
           if (currentRoom) {
             this.currentRoomId = currentRoom._id;
@@ -127,6 +127,8 @@ class WebSocketClient {
         );
       } else {
         // 如果没有，尝试从 roomManager 获取当前房间并加入
+        // 使用动态导入避免循环依赖
+        const { roomManager } = await import("./roomManager.js");
         const currentRoom = roomManager.getCurrentRoom();
         if (currentRoom) {
           const pageUrl = getPageKey();

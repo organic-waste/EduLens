@@ -103,9 +103,6 @@ function setupEventListeners() {
 function listenerMouseDown(e) {
   if (e.button !== 0) return;
   const { x, y } = getOffsetPos(e, drawingContainer);
-  console.log('mousedown');
-  console.log(toolStore.isRectangle);
-  console.log(isEditing);
 
   //创建新矩阵时
   if (toolStore.isRectangle && !isEditing) {
