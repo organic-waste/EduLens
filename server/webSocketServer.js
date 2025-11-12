@@ -136,19 +136,25 @@ class WebsocketServer {
 
     // 验证客户端是否加入了该房间
     if (!ws.roomId || ws.roomId !== roomId) {
-      console.warn(`客户端 ${ws.userId} 未加入房间 ${roomId}，当前房间: ${ws.roomId}`);
+      console.warn(
+        `客户端 ${ws.userId} 未加入房间 ${roomId}，当前房间: ${ws.roomId}`
+      );
       this.sendError(ws, "未加入该房间");
       return;
     }
 
     // 验证客户端是否在正确的页面
     if (ws.pageUrl !== pageUrl) {
-      console.warn(`客户端 ${ws.userId} 页面不匹配，期望: ${pageUrl}, 实际: ${ws.pageUrl}`);
+      console.warn(
+        `客户端 ${ws.userId} 页面不匹配，期望: ${pageUrl}, 实际: ${ws.pageUrl}`
+      );
       this.sendError(ws, "页面不匹配");
       return;
     }
 
-    console.log(`处理操作: userId=${ws.userId}, roomId=${roomId}, pageUrl=${pageUrl}, operationType=${operation.type}`);
+    console.log(
+      `处理操作: userId=${ws.userId}, roomId=${roomId}, pageUrl=${pageUrl}, operationType=${operation.type}`
+    );
 
     const pageOperations = this.operations.get(roomId)?.get(pageUrl) || [];
     const serverVersion = pageOperations.length;
@@ -241,11 +247,11 @@ class WebsocketServer {
         }
         break;
       case "rectangle-update":
-        // 如果 data 是数组，则替换整个矩形数组
+        // 如果 data 是数组，则替换整个框选数组
         if (Array.isArray(operation.data)) {
           newData.rectangles = operation.data;
         } else {
-          // 如果是单个对象，则更新单个矩形
+          // 如果是单个对象，则更新单个框选
           if (!newData.rectangles) newData.rectangles = [];
           const rectIndex = newData.rectangles.findIndex(
             (r) => r.id === operation.data.id
@@ -355,25 +361,25 @@ class WebsocketServer {
       roomId: excludeClient.roomId,
       pageUrl: excludeClient.pageUrl,
       readyState: excludeClient.readyState,
-      id: excludeClient.id
+      id: excludeClient.id,
     });
-    
+
     const room = this.rooms.get(roomId);
     if (!room) {
       console.warn(`房间 ${roomId} 不存在于房间映射中`);
       console.log("当前所有房间: ", Array.from(this.rooms.keys()));
       return;
     }
-    
+
     console.log(`房间 ${roomId} 中的客户端数量: ${room.size}`);
-    
+
     let broadcastCount = 0;
     let skippedCount = 0;
     room.forEach((client) => {
       const isSelf = client === excludeClient;
       const isOpen = client.readyState === WebSocket.OPEN;
       const isSamePage = client.pageUrl === excludeClient.pageUrl;
-      
+
       console.log(`检查客户端 ${client.userId}:`, {
         isSelf,
         isOpen,
@@ -381,9 +387,9 @@ class WebsocketServer {
         clientPageUrl: client.pageUrl,
         excludePageUrl: excludeClient.pageUrl,
         clientRoomId: client.roomId,
-        readyState: client.readyState
+        readyState: client.readyState,
       });
-      
+
       //只发送给开启ws且为同一页面的其他客户端
       if (!isSelf && isOpen && isSamePage) {
         console.log(`✓ 广播到客户端: ${client.userId}`);
@@ -394,14 +400,20 @@ class WebsocketServer {
         if (isSelf) {
           console.log(`  ✗ 跳过：是发送者自己`);
         } else if (!isOpen) {
-          console.log(`  ✗ 跳过：WebSocket未打开 (readyState=${client.readyState})`);
+          console.log(
+            `  ✗ 跳过：WebSocket未打开 (readyState=${client.readyState})`
+          );
         } else if (!isSamePage) {
-          console.log(`  ✗ 跳过：页面不匹配 (${client.pageUrl} !== ${excludeClient.pageUrl})`);
+          console.log(
+            `  ✗ 跳过：页面不匹配 (${client.pageUrl} !== ${excludeClient.pageUrl})`
+          );
         }
       }
     });
-    
-    console.log(`=== 广播完成: 成功 ${broadcastCount} 个，跳过 ${skippedCount} 个 ===`);
+
+    console.log(
+      `=== 广播完成: 成功 ${broadcastCount} 个，跳过 ${skippedCount} 个 ===`
+    );
   }
 
   //发送房间状态到客户端

@@ -151,7 +151,7 @@ function compressImage(file, quality = 0.7) {
     };
 
     img.src = URL.createObjectURL(file);
-    console.log("图片压缩成功");
+    // console.log("图片压缩成功");
   });
 }
 

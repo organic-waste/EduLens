@@ -22,7 +22,7 @@ class WS {
         this.ws = new WebSocket(url);
 
         this.ws.onopen = () => {
-          console.log("WebSocket连接成功");
+          console.info("WebSocket连接成功");
           this.isConnected = true;
           this.reconnectAttempts = 0;
           resolve();
@@ -39,14 +39,14 @@ class WS {
         };
 
         this.ws.onclose = (event) => {
-          console.log("WebSocket连接关闭");
+          console.warn("[EduLens] WebSocket连接关闭");
           this.isConnected = false;
           // 只有非正常关闭才重连
           if (
             event.code !== 1000 &&
             this.reconnectAttempts < this.maxReconnectAttempts
           ) {
-            console.log("event.code: ", event.code);
+            // console.log("event.code: ", event.code);
             // this.handleReconnect();
           }
         };
@@ -87,7 +87,7 @@ class WS {
       this.ws.send(JSON.stringify(message));
       return true;
     }
-    console.warn("WebSocket未连接，消息丢弃:", message);
+    console.warn("[EduLens] WebSocket未连接，消息丢弃:", message);
     return false;
   }
 
@@ -110,7 +110,7 @@ class WS {
       return false;
     this.reconnectAttempts++;
     const delay = Math.min(1000 * this.reconnectAttempts, 10000);
-    console.log(
+    console.info(
       `尝试重新连接... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`
     );
     setTimeout(() => this.connect(this.url), delay);

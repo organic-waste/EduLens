@@ -120,7 +120,7 @@ async function showRoomList() {
       }
       overlay.remove();
       activateRoomSelector();
-      console.log(`已切换到房间: ${roomManager.getCurrentRoom().name}`);
+      // console.log(`已切换到房间: ${roomManager.getCurrentRoom().name}`);
     })
   );
 }
@@ -162,9 +162,9 @@ function showCreateRoomForm() {
       description: form.querySelector("#room-description").value.trim(),
     });
     overlay.remove();
-    if (room) {
-      activateRoomSelector();
-      console.log("房间创建成功");
+      if (room) {
+        activateRoomSelector();
+        // console.log("房间创建成功");
     } else {
       console.error("创建房间失败");
     }
@@ -216,7 +216,7 @@ function showJoinRoomForm() {
     overlay.remove();
     if (room) {
       activateRoomSelector();
-      console.log("房间创建成功");
+      // console.log("房间创建成功");
     } else {
       console.error("创建房间失败");
       window.alert(chrome.i18n.getMessage("joinRoomFailed"));
@@ -263,7 +263,7 @@ async function shareRoom() {
   eventStore.on(container.querySelector(".copy-btn"), "click", () => {
     //将分享码写入剪贴板
     navigator.clipboard.writeText(code);
-    console.log("分享码已复制");
+    // console.log("分享码已复制");
     overlay.remove();
   });
 }

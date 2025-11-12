@@ -1,4 +1,4 @@
-/* 创建矩形注释 */
+/* 创建框选注释 */
 import eventStore from "../../stores/eventStore.js";
 import toolStore from "../../stores/toolStore.js";
 import { getOffsetPos, createEl, getId } from "../../utils/index.js";
@@ -22,7 +22,7 @@ let currentRect = null;
 
 let rectangles = [];
 
-// 矩形操作相关变量
+// 框选操作相关变量
 let isResizing = false;
 let isMoving = false;
 let resizeHandle = null;
@@ -79,16 +79,16 @@ function toggleRectangleMode() {
   }
 }
 
-//控制矩形的悬停鼠标样式
-function updateRectanglesPointerEvents(enable){
+//控制框选的悬停鼠标样式
+function updateRectanglesPointerEvents(enable) {
   const allRects = drawingContainer.querySelectorAll(".annotation-rect");
-  allRects.forEach(rect => {
-    if(enable || isEditing){
+  allRects.forEach((rect) => {
+    if (enable || isEditing) {
       rect.style.pointerEvents = "auto";
-    }else{
+    } else {
       rect.style.pointerEvents = "none";
     }
-  })
+  });
 }
 
 function setupEventListeners() {
@@ -305,7 +305,11 @@ function renderRectangles(rect) {
   const rectDiv = createEl("div", {
     class: "annotation-rect",
     "data-id": rect.id,
-    style: `left:${rect.x}px;top:${rect.y}px;width:${rect.width}px;height:${rect.height}px;border-color:${rect.color};pointer-events:${toolStore.isRectangle ? "auto" : "none"};`,
+    style: `left:${rect.x}px;top:${rect.y}px;width:${rect.width}px;height:${
+      rect.height
+    }px;border-color:${rect.color};pointer-events:${
+      toolStore.isRectangle ? "auto" : "none"
+    };`,
   });
   rectDiv.dataset.id = rect.id;
 
@@ -354,7 +358,7 @@ function removeRectangle(id) {
   rectangles = rectangles.filter((r) => r.id !== id);
   const rectDiv = shadowRoot.querySelector(`.annotation-rect[data-id="${id}"]`);
   if (rectDiv) rectDiv.remove();
-  // 如果删除的是当前编辑的矩形，则退出编辑模式
+  // 如果删除的是当前编辑的框选，则退出编辑模式
   if (editingRect && currentRect && currentRect.id === id) {
     exitEditingMode();
   }
@@ -697,7 +701,7 @@ async function saveRectangles() {
   try {
     await storageManager.savePageData("rectangles", rectangles);
 
-    // 发送实时同步操作 - 同步所有矩形数据
+    // 发送实时同步操作 - 同步所有框选数据
     syncManager.sendOperation({
       type: "rectangle-update",
       data: rectangles,

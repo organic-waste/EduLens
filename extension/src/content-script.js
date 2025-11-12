@@ -29,8 +29,8 @@ eventStore.on(window, "keydown", (e) => {
   //测试是否能连接到后端云服务
   const connected = await apiClient.testConnection();
   if (connected) {
-    console.log("[EduLens] 云服务已连接");
+    // console.log("[EduLens] 云服务已连接");
   } else {
-    console.log("[EduLens] 使用本地模式");
+    // console.log("[EduLens] 使用本地模式");
   }
 })();

@@ -32,6 +32,25 @@
       ]  
     }
   ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "styles/draggable-panel.css",
+        "styles/base.css",
+        "styles/tools/scroll-progress.css",
+        "styles/tools/bookmark.css",
+        "styles/tools/countdown.css",
+        "styles/filters/mouse-enhance.css",
+        "styles/tools/graffiti.css",
+        "styles/tools/rectangle-annotation.css",
+        "styles/tools/screenshot.css",
+        "styles/tools/upload-image.css",
+        "styles/accounts/login.css",
+        "styles/accounts/room.css"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "action": {
     "default_popup": "src/popup.html"
   },
@@ -41,4 +60,3 @@
     "128": "icons/icon.png"
   }
 }
-

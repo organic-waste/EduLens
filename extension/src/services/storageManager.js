@@ -204,7 +204,7 @@ class StorageManager {
 
       if (expiredKeys.length > 0) {
         await chrome.storage.local.remove(expiredKeys);
-        console.log(`清理了 ${expiredKeys.length} 个过期页面数据`);
+        // console.log(`清理了 ${expiredKeys.length} 个过期页面数据`);
       }
 
       return expiredKeys.length;

@@ -34,7 +34,7 @@ class WebSocketClient {
         );
 
         this.wsConnected = true;
-        console.log("[EduLens] WebSocket 连接成功");
+        // console.log("[EduLens] WebSocket 连接成功");
 
         // 如果已有房间信息，先设置好（认证成功后会自动加入）
         if (!this.currentRoomId) {
@@ -108,13 +108,13 @@ class WebSocketClient {
   }
 
   handleClose(message) {
-    console.log("WebSocket 连接关闭:", message);
+    console.warn("WebSocket 连接关闭:", message);
     this.wsConnected = false;
     this.emit("close", message);
   }
 
   async handleAuthSuccess(message) {
-    console.log("WebSocket 认证成功:", message);
+    // console.log("WebSocket 认证成功:", message);
     this.emit("authenticated", message);
     
     // 认证成功后，自动加入当前房间

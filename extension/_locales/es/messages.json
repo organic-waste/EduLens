@@ -1,0 +1,269 @@
+{
+  "pluginName": {
+    "message": "EduLens"
+  },
+  "pluginDesc": {
+    "message": "Extensión del navegador para apoyar la enseñanza y el aprendizaje en línea."
+  },
+  "browserActionTitle": {
+    "message": "Abrir el panel de EduLens"
+  },
+  "panelHeader": {
+    "message": "Tarjetas de funciones"
+  },
+  "scrollProgressTitle": {
+    "message": "Progreso de desplazamiento"
+  },
+  "bookmarkAddBtn": {
+    "message": "Agregar marcador"
+  },
+  "bookmarkPlaceholder": {
+    "message": "Introduce el título del marcador"
+  },
+  "bookmarkTooltip": {
+    "message": "Haz clic para ir, × para eliminar"
+  },
+  "countdownStartBtn": {
+    "message": "Iniciar cuenta regresiva"
+  },
+  "countdownPlaceholder": {
+    "message": "Introduce minutos"
+  },
+  "countdownRemain": {
+    "message": "Quedan $1 min $2 s"
+  },
+  "countdownEnd": {
+    "message": "La cuenta regresiva terminó"
+  },
+  "countdownCancel": {
+    "message": "La cuenta regresiva se detuvo"
+  },
+  "graffitiColor": {
+    "message": "Elige un color"
+  },
+  "graffitiBrushSize": {
+    "message": "Tamaño del pincel"
+  },
+  "graffitiPen": {
+    "message": "Dibujar"
+  },
+  "graffitiEraser": {
+    "message": "Borrar"
+  },
+  "graffitiLine": {
+    "message": "Línea recta"
+  },
+  "graffitiClear": {
+    "message": "Borrar todos los trazos"
+  },
+  "graffitiRectangle": {
+    "message": "Anotación con marco"
+  },
+  "rectangleInput": {
+    "message": "Contenido de la anotación"
+  },
+  "rectangleDelete": {
+    "message": "Eliminar anotación"
+  },
+  "screenshotDOMBtn": {
+    "message": "Captura DOM"
+  },
+  "screenshotRegionBtn": {
+    "message": "Captura de región"
+  },
+  "screenshotScrollBtn": {
+    "message": "Captura con desplazamiento"
+  },
+  "screenshotTooltip": {
+    "message": "Haz clic en cualquier lugar para finalizar la captura"
+  },
+  "imageBtn": {
+    "message": "Fijar imagen"
+  },
+  "imageDelete": {
+    "message": "Eliminar imagen"
+  },
+  "imagePinToggle": {
+    "message": "Alternar fijar/seguir desplazamiento"
+  },
+  "popupTitle": {
+    "message": "Configuración de EduLens"
+  },
+  "popupEnable": {
+    "message": "Activar EduLens"
+  },
+  "loginTitle": {
+    "message": "Inicia sesión en EduLens"
+  },
+  "registerTitle": {
+    "message": "Crea una cuenta de EduLens"
+  },
+  "emailLabel": {
+    "message": "Correo electrónico"
+  },
+  "emailPlaceholder": {
+    "message": "Introduce el correo electrónico"
+  },
+  "passwordLabel": {
+    "message": "Contraseña"
+  },
+  "passwordPlaceholder": {
+    "message": "Introduce la contraseña"
+  },
+  "usernameLabel": {
+    "message": "Nombre de usuario"
+  },
+  "usernamePlaceholder": {
+    "message": "Introduce el nombre de usuario"
+  },
+  "confirmPasswordLabel": {
+    "message": "Confirmar contraseña"
+  },
+  "confirmPasswordPlaceholder": {
+    "message": "Vuelve a introducir la contraseña"
+  },
+  "loginButton": {
+    "message": "Iniciar sesión"
+  },
+  "registerButton": {
+    "message": "Registrarse"
+  },
+  "noAccount": {
+    "message": "¿Aún no tienes cuenta?"
+  },
+  "hasAccount": {
+    "message": "¿Ya tienes cuenta?"
+  },
+  "registerLink": {
+    "message": "Ir a registro"
+  },
+  "loginLink": {
+    "message": "Ir a inicio de sesión"
+  },
+  "loggingIn": {
+    "message": "Iniciando sesión..."
+  },
+  "registering": {
+    "message": "Registrando..."
+  },
+  "loginSuccess": {
+    "message": "Sesión iniciada correctamente"
+  },
+  "registerSuccess": {
+    "message": "Registro completado"
+  },
+  "logoutSuccess": {
+    "message": "Sesión cerrada correctamente"
+  },
+  "fillEmailPassword": {
+    "message": "Introduce correo y contraseña"
+  },
+  "validEmail": {
+    "message": "Introduce un correo válido"
+  },
+  "fillAllFields": {
+    "message": "Completa todos los campos"
+  },
+  "usernameMinLength": {
+    "message": "El nombre de usuario debe tener al menos 3 caracteres"
+  },
+  "passwordMinLength": {
+    "message": "La contraseña debe tener al menos 6 caracteres"
+  },
+  "passwordMismatch": {
+    "message": "Las contraseñas no coinciden"
+  },
+  "networkError": {
+    "message": "Error de red, inténtalo de nuevo más tarde"
+  },
+  "loginFailed": {
+    "message": "Error al iniciar sesión"
+  },
+  "logoutButton": {
+    "message": "Cerrar sesión"
+  },
+  "roomMembers": {
+    "message": " miembros"
+  },
+  "noRoomSelected": {
+    "message": "Ninguna sala seleccionada"
+  },
+  "roomListBtn": {
+    "message": "Lista de salas"
+  },
+  "shareRoomBtn": {
+    "message": "Compartir"
+  },
+  "myRooms": {
+    "message": "Mis salas"
+  },
+  "createRoomBtn": {
+    "message": "Crear nueva sala"
+  },
+  "joinRoomBtn": {
+    "message": "Unirse a nueva sala"
+  },
+  "switchRoomBtn": {
+    "message": "Cambiar"
+  },
+  "currentRoom": {
+    "message": "Actual"
+  },
+  "roomNameLabel": {
+    "message": "Nombre de la sala"
+  },
+  "roomDescLabel": {
+    "message": "Descripción de la sala"
+  },
+  "createRoomSubmit": {
+    "message": "Crear sala"
+  },
+  "cancelBtn": {
+    "message": "Cancelar"
+  },
+  "joinRoomTitle": {
+    "message": "Unirse a nueva sala"
+  },
+  "roomShareCodeLabel": {
+    "message": "Código para compartir"
+  },
+  "joinRoomSubmit": {
+    "message": "Unirse a la sala"
+  },
+  "shareRoomTitle": {
+    "message": "Compartir sala"
+  },
+  "shareCodePrefix": {
+    "message": "Código: "
+  },
+  "shareCodeHint": {
+    "message": "Otros pueden usar este código para unirse"
+  },
+  "copyShareCodeBtn": {
+    "message": "Copiar código"
+  },
+  "createRoomTitle": {
+    "message": "Crear nueva sala"
+  },
+  "createRoomSuccess": {
+    "message": "Sala creada correctamente"
+  },
+  "createRoomFailed": {
+    "message": "No se pudo crear la sala"
+  },
+  "joinRoomSuccess": {
+    "message": "Te uniste a la sala"
+  },
+  "joinRoomFailed": {
+    "message": "No se pudo unir a la sala"
+  },
+  "switchRoomSuccess": {
+    "message": "Sala cambiada"
+  },
+  "generateShareCodeFailed": {
+    "message": "No se pudo generar el código"
+  },
+  "shareCodeCopied": {
+    "message": "Código copiado"
+  }
+}
