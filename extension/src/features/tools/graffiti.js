@@ -141,7 +141,7 @@ function createControls() {
     id: "brush-slider",
     type: "range",
     min: "1",
-    max: "15",
+    max: "25",
     value: String(toolStore.penBrushSize),
     style: "width:12vh;",
   });
@@ -163,7 +163,7 @@ function createControls() {
     id: "brush-input",
     type: "number",
     min: "1",
-    max: "15",
+    max: "25",
     value: toolStore.penBrushSize,
   });
   eventStore.on(brushSizeValueDisplay, "mousedown", (e) => {
@@ -353,7 +353,6 @@ async function saveDrawing() {
   if (!drawingCanvas) return;
   try {
     const dataURL = drawingCanvas.toDataURL("image/png"); //指定以png的形式保存
-    const data = await storageManager.savePageData("canvas", dataURL);
 
     // 发送实时同步操作
     syncManager.sendOperation({

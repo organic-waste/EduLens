@@ -4,7 +4,7 @@
   "description": "__MSG_pluginDesc__", 
   "version": "1.0.0",
   "default_locale": "en",
-  "permissions": ["storage", "activeTab","tabs","ws://localhost:3000/*"],
+  "permissions": ["storage", "activeTab","tabs"],
   "host_permissions": [
     "<all_urls>"
   ],
