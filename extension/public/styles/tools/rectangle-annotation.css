@@ -46,7 +46,7 @@
   top: 0;
   left: 0;
   width: 100%;
-  background: rgba(0, 0, 0, 0.2);
+  /* background: rgba(0, 0, 0, 0.2); */
   font-size: var(--bolder-font-size);
   padding: 0.5vh;
   box-sizing: border-box;
