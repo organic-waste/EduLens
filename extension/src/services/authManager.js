@@ -63,7 +63,7 @@ class AuthManager {
         if (result.status === "success") {
           this.user = result.data.user;
           this.isOnline = true;
-          console.log("[EduLens] 登录成功：", this.user.username);
+          // console.log("[EduLens] 登录成功：", this.user.username);
           return true;
         }
       }
@@ -98,7 +98,10 @@ class AuthManager {
       }
       return data;
     } catch (error) {
-      return { status: "error", message: "网络错误，请稍后重试" };
+      return {
+        status: "error",
+        message: chrome.i18n.getMessage("networkError"),
+      };
     }
   }
 
@@ -115,7 +118,10 @@ class AuthManager {
       }
       return data;
     } catch (error) {
-      return { status: "error", message: "网络错误，请稍后重试" };
+      return {
+        status: "error",
+        message: chrome.i18n.getMessage("networkError"),
+      };
     }
   }
 

@@ -3,48 +3,43 @@
     "message": "EduLens"
   },
   "pluginDesc": {
-    "message": "A helper browser extension for online teaching and learning."
+    "message": "An assistive browser extension for online teaching and learning."
   },
   "browserActionTitle": {
-    "message": "Open EduLens panel"
+    "message": "Open the EduLens panel"
   },
-
   "panelHeader": {
-    "message": "Function Card"
+    "message": "Function Cards"
   },
-
   "scrollProgressTitle": {
     "message": "Scroll Progress"
   },
-
   "bookmarkAddBtn": {
     "message": "Add Bookmark"
   },
   "bookmarkPlaceholder": {
-    "message": "Title"
+    "message": "Enter bookmark title"
   },
   "bookmarkTooltip": {
-    "message": "Click to scroll; × to delete"
+    "message": "Click to jump, × to delete"
   },
-
   "countdownStartBtn": {
     "message": "Start Countdown"
   },
   "countdownPlaceholder": {
-    "message": "Minutes"
+    "message": "Enter minutes"
   },
   "countdownRemain": {
-    "message": "Remaining $1 m $2 s"
+    "message": "Remaining $1 min $2 s"
   },
   "countdownEnd": {
     "message": "Countdown finished"
   },
   "countdownCancel": {
-    "message": "Timer stopped"
+    "message": "Countdown stopped"
   },
-
   "graffitiColor": {
-    "message": "Pick color"
+    "message": "Pick a color"
   },
   "graffitiBrushSize": {
     "message": "Brush size"
@@ -59,66 +54,61 @@
     "message": "Straight line"
   },
   "graffitiClear": {
-    "message": "Clear all graffiti"
+    "message": "Clear all drawings"
   },
   "graffitiRectangle": {
-    "message": "Rectangle annotation"
+    "message": "Box annotation"
   },
-
   "rectangleInput": {
-    "message": "annotation content"
+    "message": "Annotation content"
   },
   "rectangleDelete": {
     "message": "Delete annotation"
   },
-  
   "screenshotDOMBtn": {
-    "message": "DOM Screenshot"
+    "message": "DOM capture"
   },
   "screenshotRegionBtn": {
-    "message": "Region Screenshot"
+    "message": "Region capture"
   },
   "screenshotScrollBtn": {
-    "message": "Scrolling Screenshot"
+    "message": "Scrolling capture"
   },
   "screenshotTooltip": {
-    "message": "Click anywhere to end the screenshot"
+    "message": "Click anywhere to finish the screenshot"
   },
-
   "imageBtn": {
-    "message": "Suspend Images"
+    "message": "Pin image"
   },
   "imageDelete": {
-    "message": "Delete Images"
+    "message": "Delete image"
   },
   "imagePinToggle": {
-    "message": "Toggle Fixed/Scroll"
+    "message": "Toggle pin/follow scroll"
   },
-
   "popupTitle": {
     "message": "EduLens Settings"
   },
   "popupEnable": {
     "message": "Enable EduLens"
   },
-
   "loginTitle": {
-    "message": "Login to EduLens"
+    "message": "Sign in to EduLens"
   },
   "registerTitle": {
-    "message": "Register EduLens Account"
+    "message": "Create an EduLens account"
   },
   "emailLabel": {
     "message": "Email"
   },
   "emailPlaceholder": {
-    "message": "Enter your email"
+    "message": "Enter email"
   },
   "passwordLabel": {
     "message": "Password"
   },
   "passwordPlaceholder": {
-    "message": "Enter your password"
+    "message": "Enter password"
   },
   "usernameLabel": {
     "message": "Username"
@@ -127,16 +117,16 @@
     "message": "Enter username"
   },
   "confirmPasswordLabel": {
-    "message": "Confirm Password"
+    "message": "Confirm password"
   },
   "confirmPasswordPlaceholder": {
-    "message": "Confirm your password"
+    "message": "Re-enter password"
   },
   "loginButton": {
-    "message": "Login"
+    "message": "Sign in"
   },
   "registerButton": {
-    "message": "Register"
+    "message": "Sign up"
   },
   "noAccount": {
     "message": "Don't have an account?"
@@ -145,25 +135,25 @@
     "message": "Already have an account?"
   },
   "registerLink": {
-    "message": "Sign up now"
+    "message": "Sign up"
   },
   "loginLink": {
-    "message": "Sign in now"
+    "message": "Sign in"
   },
   "loggingIn": {
-    "message": "Logging in..."
+    "message": "Signing in..."
   },
   "registering": {
     "message": "Registering..."
   },
   "loginSuccess": {
-    "message": "Login successful"
+    "message": "Signed in successfully"
   },
   "registerSuccess": {
     "message": "Registration successful"
   },
   "logoutSuccess": {
-    "message": "Logged out successfully"
+    "message": "Signed out successfully"
   },
   "fillEmailPassword": {
     "message": "Please enter email and password"
@@ -181,18 +171,17 @@
     "message": "Password must be at least 6 characters"
   },
   "passwordMismatch": {
-    "message": "Passwords do not match"
+    "message": "Passwords don't match"
   },
   "networkError": {
     "message": "Network error, please try again later"
   },
   "loginFailed": {
-    "message": "Login failed"
+    "message": "Sign-in failed"
   },
   "logoutButton": {
-    "message": "Logout"
+    "message": "Sign out"
   },
-
   "roomMembers": {
     "message": " members"
   },
@@ -200,19 +189,19 @@
     "message": "No room selected"
   },
   "roomListBtn": {
-    "message": "Room List"
+    "message": "Room list"
   },
   "shareRoomBtn": {
     "message": "Share"
   },
   "myRooms": {
-    "message": "My Rooms"
+    "message": "My rooms"
   },
   "createRoomBtn": {
-    "message": "Create New Room"
+    "message": "Create new room"
   },
   "joinRoomBtn": {
-    "message": "Join New Room"
+    "message": "Join new room"
   },
   "switchRoomBtn": {
     "message": "Switch"
@@ -221,40 +210,40 @@
     "message": "Current"
   },
   "roomNameLabel": {
-    "message": "Room Name"
+    "message": "Room name"
   },
   "roomDescLabel": {
-    "message": "Room Description"
+    "message": "Room description"
   },
   "createRoomSubmit": {
-    "message": "Create Room"
+    "message": "Create room"
   },
   "cancelBtn": {
     "message": "Cancel"
   },
   "joinRoomTitle": {
-    "message": "Join New Room"
+    "message": "Join new room"
   },
   "roomShareCodeLabel": {
-    "message": "Room Share Code"
+    "message": "Room share code"
   },
   "joinRoomSubmit": {
-    "message": "Join Room"
+    "message": "Join room"
   },
   "shareRoomTitle": {
-    "message": "Share Room"
+    "message": "Share room"
   },
   "shareCodePrefix": {
-    "message": "Share Code: "
+    "message": "Share code: "
   },
   "shareCodeHint": {
     "message": "Others can use this code to join the room"
   },
   "copyShareCodeBtn": {
-    "message": "Copy Share Code"
+    "message": "Copy share code"
   },
   "createRoomTitle": {
-    "message": "Create New Room"
+    "message": "Create new room"
   },
   "createRoomSuccess": {
     "message": "Room created successfully"

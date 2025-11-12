@@ -360,7 +360,7 @@ async function saveDrawing() {
       data: dataURL,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 }
 
@@ -377,12 +377,12 @@ async function loadDrawing() {
         drawingCtx.drawImage(img, 0, 0);
       };
       img.onerror = (error) => {
-        console.log(error);
+        console.error(error);
       };
       img.src = dataURL;
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 }
 
@@ -404,7 +404,7 @@ export function activateGraffiti() {
   MonitorSPARoutes(handlePageChange);
 
   window.__edulens_reloadCanvas = () => {
-    console.log("收到画布更新消息");
+    // console.log("收到画布更新消息");
     loadDrawing();
   };
 }

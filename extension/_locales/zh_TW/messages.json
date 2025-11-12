@@ -1,0 +1,269 @@
+{
+  "pluginName": {
+    "message": "EduLens"
+  },
+  "pluginDesc": {
+    "message": "線上教學輔助瀏覽器擴充功能。"
+  },
+  "browserActionTitle": {
+    "message": "開啟 EduLens 面板"
+  },
+  "panelHeader": {
+    "message": "功能卡片"
+  },
+  "scrollProgressTitle": {
+    "message": "捲動進度"
+  },
+  "bookmarkAddBtn": {
+    "message": "新增書籤"
+  },
+  "bookmarkPlaceholder": {
+    "message": "請輸入書籤標題"
+  },
+  "bookmarkTooltip": {
+    "message": "點擊跳轉，× 刪除"
+  },
+  "countdownStartBtn": {
+    "message": "開始倒數"
+  },
+  "countdownPlaceholder": {
+    "message": "請輸入分鐘數"
+  },
+  "countdownRemain": {
+    "message": "還剩下 $1 分 $2 秒"
+  },
+  "countdownEnd": {
+    "message": "倒數結束"
+  },
+  "countdownCancel": {
+    "message": "倒數已停止"
+  },
+  "graffitiColor": {
+    "message": "選擇顏色"
+  },
+  "graffitiBrushSize": {
+    "message": "筆刷大小"
+  },
+  "graffitiPen": {
+    "message": "繪製"
+  },
+  "graffitiEraser": {
+    "message": "擦除"
+  },
+  "graffitiLine": {
+    "message": "直線"
+  },
+  "graffitiClear": {
+    "message": "清除所有塗鴉"
+  },
+  "graffitiRectangle": {
+    "message": "框選批註"
+  },
+  "rectangleInput": {
+    "message": "批註內容"
+  },
+  "rectangleDelete": {
+    "message": "刪除批註"
+  },
+  "screenshotDOMBtn": {
+    "message": "DOM 截圖"
+  },
+  "screenshotRegionBtn": {
+    "message": "區域截圖"
+  },
+  "screenshotScrollBtn": {
+    "message": "長頁截圖"
+  },
+  "screenshotTooltip": {
+    "message": "點擊任意位置結束截圖"
+  },
+  "imageBtn": {
+    "message": "掛起圖片"
+  },
+  "imageDelete": {
+    "message": "刪除圖片"
+  },
+  "imagePinToggle": {
+    "message": "切換固定／跟隨捲動"
+  },
+  "popupTitle": {
+    "message": "EduLens 設定"
+  },
+  "popupEnable": {
+    "message": "啟用 EduLens"
+  },
+  "loginTitle": {
+    "message": "登入 EduLens"
+  },
+  "registerTitle": {
+    "message": "註冊 EduLens 帳號"
+  },
+  "emailLabel": {
+    "message": "電子郵件"
+  },
+  "emailPlaceholder": {
+    "message": "請輸入電子郵件"
+  },
+  "passwordLabel": {
+    "message": "密碼"
+  },
+  "passwordPlaceholder": {
+    "message": "請輸入密碼"
+  },
+  "usernameLabel": {
+    "message": "使用者名稱"
+  },
+  "usernamePlaceholder": {
+    "message": "請輸入使用者名稱"
+  },
+  "confirmPasswordLabel": {
+    "message": "確認密碼"
+  },
+  "confirmPasswordPlaceholder": {
+    "message": "再次輸入密碼"
+  },
+  "loginButton": {
+    "message": "登入"
+  },
+  "registerButton": {
+    "message": "註冊"
+  },
+  "noAccount": {
+    "message": "還沒有帳號？"
+  },
+  "hasAccount": {
+    "message": "已經有帳號？"
+  },
+  "registerLink": {
+    "message": "前往註冊"
+  },
+  "loginLink": {
+    "message": "前往登入"
+  },
+  "loggingIn": {
+    "message": "登入中…"
+  },
+  "registering": {
+    "message": "註冊中…"
+  },
+  "loginSuccess": {
+    "message": "登入成功"
+  },
+  "registerSuccess": {
+    "message": "註冊成功"
+  },
+  "logoutSuccess": {
+    "message": "已成功登出"
+  },
+  "fillEmailPassword": {
+    "message": "請輸入電子郵件與密碼"
+  },
+  "validEmail": {
+    "message": "請輸入有效的電子郵件地址"
+  },
+  "fillAllFields": {
+    "message": "請填寫所有欄位"
+  },
+  "usernameMinLength": {
+    "message": "使用者名稱至少 3 個字元"
+  },
+  "passwordMinLength": {
+    "message": "密碼至少 6 個字元"
+  },
+  "passwordMismatch": {
+    "message": "兩次輸入的密碼不一致"
+  },
+  "networkError": {
+    "message": "網路錯誤，請稍後再試"
+  },
+  "loginFailed": {
+    "message": "登入失敗"
+  },
+  "logoutButton": {
+    "message": "登出"
+  },
+  "roomMembers": {
+    "message": " 位成員"
+  },
+  "noRoomSelected": {
+    "message": "尚未選擇房間"
+  },
+  "roomListBtn": {
+    "message": "房間列表"
+  },
+  "shareRoomBtn": {
+    "message": "分享"
+  },
+  "myRooms": {
+    "message": "我的房間"
+  },
+  "createRoomBtn": {
+    "message": "建立新房間"
+  },
+  "joinRoomBtn": {
+    "message": "加入新房間"
+  },
+  "switchRoomBtn": {
+    "message": "切換"
+  },
+  "currentRoom": {
+    "message": "目前"
+  },
+  "roomNameLabel": {
+    "message": "房間名稱"
+  },
+  "roomDescLabel": {
+    "message": "房間描述"
+  },
+  "createRoomSubmit": {
+    "message": "建立房間"
+  },
+  "cancelBtn": {
+    "message": "取消"
+  },
+  "joinRoomTitle": {
+    "message": "加入新房間"
+  },
+  "roomShareCodeLabel": {
+    "message": "房間分享碼"
+  },
+  "joinRoomSubmit": {
+    "message": "加入房間"
+  },
+  "shareRoomTitle": {
+    "message": "分享房間"
+  },
+  "shareCodePrefix": {
+    "message": "分享碼："
+  },
+  "shareCodeHint": {
+    "message": "其他人可使用此代碼加入房間"
+  },
+  "copyShareCodeBtn": {
+    "message": "複製分享碼"
+  },
+  "createRoomTitle": {
+    "message": "建立新房間"
+  },
+  "createRoomSuccess": {
+    "message": "房間建立成功"
+  },
+  "createRoomFailed": {
+    "message": "房間建立失敗"
+  },
+  "joinRoomSuccess": {
+    "message": "加入房間成功"
+  },
+  "joinRoomFailed": {
+    "message": "加入房間失敗"
+  },
+  "switchRoomSuccess": {
+    "message": "已切換到房間"
+  },
+  "generateShareCodeFailed": {
+    "message": "產生分享碼失敗"
+  },
+  "shareCodeCopied": {
+    "message": "分享碼已複製"
+  }
+}

@@ -67,7 +67,7 @@ class RoomManager {
     // 尝试加入WebSocket房间
     if (webSocketClient.isConnected()) {
       const pageUrl = getPageKey();
-      console.log(`[EduLens] 切换到房间 ${roomId}, 页面 ${pageUrl}`);
+      // console.log(`[EduLens] 切换到房间 ${roomId}, 页面 ${pageUrl}`);
       const result = await webSocketClient.joinRoom(roomId, pageUrl);
       if (!result) {
         console.warn(`[EduLens] 加入房间 ${roomId} 失败`);

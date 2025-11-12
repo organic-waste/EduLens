@@ -276,9 +276,9 @@ async function handleLogin(form, errorEl) {
       hideError(errorEl);
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);
-      console.log(
-        res.data.user.username + ":" + chrome.i18n.getMessage("loginSuccess")
-      );
+      // console.log(
+      //   res.data.user.username + ":" + chrome.i18n.getMessage("loginSuccess")
+      // );
 
       await activateRoomSelector();
     } else {
@@ -322,7 +322,7 @@ async function handleRegister(form, errorEl) {
       hideError(errorEl);
       form.closest(".login-overlay").remove();
       updateLoginStatus(res.data.user);
-      console.log(username + ":" + chrome.i18n.getMessage("loginSuccess"));
+      // console.log(username + ":" + chrome.i18n.getMessage("loginSuccess"));
 
       await activateRoomSelector();
     } else {
@@ -375,7 +375,7 @@ export async function updateLoginStatus(user) {
 }
 
 async function handleLogout() {
-  console.log(`[EduLens]${chrome.i18n.getMessage("logoutSuccess")}`);
+  // console.log(`[EduLens]${chrome.i18n.getMessage("logoutSuccess")}`);
   await authManager.clearAuth();
   webSocketClient.disconnect();
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
@@ -389,7 +389,7 @@ export async function activateLogin() {
   authManager.setAuthFailureCallback(showForm);
 
   const authInitialized = await authManager.init();
-  console.log("[EduLens] 认证初始化结果:", authInitialized);
+  // console.log("[EduLens] 认证初始化结果:", authInitialized);
 
   // 如果本地有token，就验证有效性
   if (authManager.getToken()) {

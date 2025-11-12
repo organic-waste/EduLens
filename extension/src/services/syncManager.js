@@ -100,7 +100,7 @@ class SyncManager {
 
   async syncCurrentPage() {
     if (this.isSyncing) {
-      console.log("同步正在进行中，跳过");
+      // console.log("同步正在进行中，跳过");
       return null;
     }
     if (!authManager.isAuthenticated() || !roomManager.getCurrentRoom()) {
@@ -184,7 +184,7 @@ class SyncManager {
       return webSocketClient.sendOperation(operation, this.currentVersion);
     } else {
       // WebSocket不可用时回退
-      console.log("WebSocket 不可用，操作将通过HTTP同步");
+      console.warn("WebSocket 不可用，操作将通过HTTP同步");
       this.pendingOperations.push(operation);
       return false;
     }
@@ -226,7 +226,7 @@ class SyncManager {
           await storageManager.savePageData("canvas", operation.data);
 
           if (typeof window.__edulens_reloadCanvas === "function") {
-            console.log("调用画布更新函数");
+            // console.log("调用画布更新函数");
             window.__edulens_reloadCanvas();
           }
           break;
@@ -237,7 +237,7 @@ class SyncManager {
           ]);
           break;
         case "rectangle-update":
-          // 如果 data 是数组，则替换整个矩形数组
+          // 如果 data 是数组，则替换整个框选数组
           if (Array.isArray(operation.data)) {
             await storageManager.savePageData("rectangles", operation.data);
 
@@ -245,7 +245,7 @@ class SyncManager {
               window.__edulens_reloadRectangles();
             }
           } else {
-            // 如果是单个对象，则更新单个矩形
+            // 如果是单个对象，则更新单个框选
             await this.mergeData("rectangles", (rectangles) =>
               rectangles.map((r) =>
                 r.id === operation.data.id ? operation.data : r

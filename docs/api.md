@@ -361,7 +361,7 @@ Authorization: Bearer <token>
   "annotations": {            // 标注数据对象
     "bookmarks": [],          // 书签数组
     "canvas": "",             // 画布数据（Base64）
-    "rectangles": [],         // 矩形标注数组
+    "rectangles": [],         // 框选标注数组
     "images": []              // 图片数组
   },
   "version": 0                // 版本号
@@ -689,9 +689,9 @@ ws.onopen = () => {
 | `bookmark-update` | 更新书签 | `{ id, text, position, timestamp }` |
 | `bookmark-delete` | 删除书签 | `{ id }` |
 | `canvas-update` | 更新画布 | `Base64 字符串` |
-| `rectangle-add` | 添加矩形 | `{ id, x, y, width, height, color }` |
-| `rectangle-update` | 更新矩形 | `{ id, ... }` 或 `[矩形数组]` |
-| `rectangle-delete` | 删除矩形 | `{ id }` |
+| `rectangle-add` | 添加框选 | `{ id, x, y, width, height, color }` |
+| `rectangle-update` | 更新框选 | `{ id, ... }` 或 `[框选数组]` |
+| `rectangle-delete` | 删除框选 | `{ id }` |
 | `image-add` | 添加图片 | `{ id, url, x, y, width, height }` |
 | `image-update` | 更新图片 | `{ id, ... }` |
 | `image-delete` | 删除图片 | `{ id }` |
@@ -844,7 +844,7 @@ interface Annotation {
   annotations: {            // 标注数据
     bookmarks: Bookmark[];  // 书签数组
     canvas: string;         // 画布数据（Base64）
-    rectangles: Rectangle[]; // 矩形标注数组
+    rectangles: Rectangle[]; // 框选标注数组
     images: Image[];        // 图片数组
   };
   version: number;          // 版本号（每次更新递增）
@@ -872,7 +872,7 @@ interface Bookmark {
 
 ---
 
-### 矩形标注 (Rectangle)
+### 框选标注 (Rectangle)
 
 ```typescript
 interface Rectangle {

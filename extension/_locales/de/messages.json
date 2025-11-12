@@ -1,0 +1,269 @@
+{
+  "pluginName": {
+    "message": "EduLens"
+  },
+  "pluginDesc": {
+    "message": "Browser-Erweiterung zur Unterstützung von Online-Unterricht und -Lernen."
+  },
+  "browserActionTitle": {
+    "message": "EduLens-Panel öffnen"
+  },
+  "panelHeader": {
+    "message": "Funktionskarten"
+  },
+  "scrollProgressTitle": {
+    "message": "Scrollfortschritt"
+  },
+  "bookmarkAddBtn": {
+    "message": "Lesezeichen hinzufügen"
+  },
+  "bookmarkPlaceholder": {
+    "message": "Titel des Lesezeichens eingeben"
+  },
+  "bookmarkTooltip": {
+    "message": "Zum Abschnitt springen, × zum Löschen"
+  },
+  "countdownStartBtn": {
+    "message": "Countdown starten"
+  },
+  "countdownPlaceholder": {
+    "message": "Minuten eingeben"
+  },
+  "countdownRemain": {
+    "message": "Verbleibende $1 Min $2 s"
+  },
+  "countdownEnd": {
+    "message": "Countdown beendet"
+  },
+  "countdownCancel": {
+    "message": "Countdown gestoppt"
+  },
+  "graffitiColor": {
+    "message": "Farbe wählen"
+  },
+  "graffitiBrushSize": {
+    "message": "Pinselgröße"
+  },
+  "graffitiPen": {
+    "message": "Zeichnen"
+  },
+  "graffitiEraser": {
+    "message": "Radieren"
+  },
+  "graffitiLine": {
+    "message": "Gerade Linie"
+  },
+  "graffitiClear": {
+    "message": "Alle Zeichnungen löschen"
+  },
+  "graffitiRectangle": {
+    "message": "Rahmenanmerkung"
+  },
+  "rectangleInput": {
+    "message": "Anmerkungstext"
+  },
+  "rectangleDelete": {
+    "message": "Anmerkung löschen"
+  },
+  "screenshotDOMBtn": {
+    "message": "DOM-Screenshot"
+  },
+  "screenshotRegionBtn": {
+    "message": "Bereichs-Screenshot"
+  },
+  "screenshotScrollBtn": {
+    "message": "Scrolling-Screenshot"
+  },
+  "screenshotTooltip": {
+    "message": "Zum Beenden irgendwo klicken"
+  },
+  "imageBtn": {
+    "message": "Bild anheften"
+  },
+  "imageDelete": {
+    "message": "Bild löschen"
+  },
+  "imagePinToggle": {
+    "message": "Fixiert / scrollend umschalten"
+  },
+  "popupTitle": {
+    "message": "EduLens-Einstellungen"
+  },
+  "popupEnable": {
+    "message": "EduLens aktivieren"
+  },
+  "loginTitle": {
+    "message": "Bei EduLens anmelden"
+  },
+  "registerTitle": {
+    "message": "EduLens-Konto erstellen"
+  },
+  "emailLabel": {
+    "message": "E-Mail"
+  },
+  "emailPlaceholder": {
+    "message": "E-Mail eingeben"
+  },
+  "passwordLabel": {
+    "message": "Passwort"
+  },
+  "passwordPlaceholder": {
+    "message": "Passwort eingeben"
+  },
+  "usernameLabel": {
+    "message": "Benutzername"
+  },
+  "usernamePlaceholder": {
+    "message": "Benutzernamen eingeben"
+  },
+  "confirmPasswordLabel": {
+    "message": "Passwort bestätigen"
+  },
+  "confirmPasswordPlaceholder": {
+    "message": "Passwort erneut eingeben"
+  },
+  "loginButton": {
+    "message": "Anmelden"
+  },
+  "registerButton": {
+    "message": "Registrieren"
+  },
+  "noAccount": {
+    "message": "Noch kein Konto?"
+  },
+  "hasAccount": {
+    "message": "Schon ein Konto?"
+  },
+  "registerLink": {
+    "message": "Jetzt registrieren"
+  },
+  "loginLink": {
+    "message": "Jetzt anmelden"
+  },
+  "loggingIn": {
+    "message": "Anmeldung läuft..."
+  },
+  "registering": {
+    "message": "Registrierung läuft..."
+  },
+  "loginSuccess": {
+    "message": "Erfolgreich angemeldet"
+  },
+  "registerSuccess": {
+    "message": "Registrierung erfolgreich"
+  },
+  "logoutSuccess": {
+    "message": "Erfolgreich abgemeldet"
+  },
+  "fillEmailPassword": {
+    "message": "Bitte E-Mail und Passwort eingeben"
+  },
+  "validEmail": {
+    "message": "Bitte eine gültige E-Mail-Adresse eingeben"
+  },
+  "fillAllFields": {
+    "message": "Bitte alle Felder ausfüllen"
+  },
+  "usernameMinLength": {
+    "message": "Benutzername muss mindestens 3 Zeichen haben"
+  },
+  "passwordMinLength": {
+    "message": "Passwort muss mindestens 6 Zeichen haben"
+  },
+  "passwordMismatch": {
+    "message": "Passwörter stimmen nicht überein"
+  },
+  "networkError": {
+    "message": "Netzwerkfehler, bitte später erneut versuchen"
+  },
+  "loginFailed": {
+    "message": "Anmeldung fehlgeschlagen"
+  },
+  "logoutButton": {
+    "message": "Abmelden"
+  },
+  "roomMembers": {
+    "message": " Mitglieder"
+  },
+  "noRoomSelected": {
+    "message": "Kein Raum ausgewählt"
+  },
+  "roomListBtn": {
+    "message": "Raumliste"
+  },
+  "shareRoomBtn": {
+    "message": "Teilen"
+  },
+  "myRooms": {
+    "message": "Meine Räume"
+  },
+  "createRoomBtn": {
+    "message": "Neuen Raum erstellen"
+  },
+  "joinRoomBtn": {
+    "message": "Neuem Raum beitreten"
+  },
+  "switchRoomBtn": {
+    "message": "Wechseln"
+  },
+  "currentRoom": {
+    "message": "Aktueller"
+  },
+  "roomNameLabel": {
+    "message": "Raumname"
+  },
+  "roomDescLabel": {
+    "message": "Raumbeschreibung"
+  },
+  "createRoomSubmit": {
+    "message": "Raum erstellen"
+  },
+  "cancelBtn": {
+    "message": "Abbrechen"
+  },
+  "joinRoomTitle": {
+    "message": "Neuem Raum beitreten"
+  },
+  "roomShareCodeLabel": {
+    "message": "Raumcode"
+  },
+  "joinRoomSubmit": {
+    "message": "Raum beitreten"
+  },
+  "shareRoomTitle": {
+    "message": "Raum teilen"
+  },
+  "shareCodePrefix": {
+    "message": "Code: "
+  },
+  "shareCodeHint": {
+    "message": "Mit diesem Code können andere beitreten"
+  },
+  "copyShareCodeBtn": {
+    "message": "Code kopieren"
+  },
+  "createRoomTitle": {
+    "message": "Neuen Raum erstellen"
+  },
+  "createRoomSuccess": {
+    "message": "Raum erfolgreich erstellt"
+  },
+  "createRoomFailed": {
+    "message": "Raum konnte nicht erstellt werden"
+  },
+  "joinRoomSuccess": {
+    "message": "Erfolgreich beigetreten"
+  },
+  "joinRoomFailed": {
+    "message": "Beitritt fehlgeschlagen"
+  },
+  "switchRoomSuccess": {
+    "message": "Raum gewechselt"
+  },
+  "generateShareCodeFailed": {
+    "message": "Code konnte nicht erzeugt werden"
+  },
+  "shareCodeCopied": {
+    "message": "Code kopiert"
+  }
+}

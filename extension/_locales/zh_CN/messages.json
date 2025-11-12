@@ -4,7 +4,7 @@
     "description": "扩展名称，显示在商店与工具栏。"
   },
   "pluginDesc": {
-    "message": "网课辅助教学浏览器插件。",
+    "message": "一体化网页标注、协作与专注辅助工具",
     "description": "在商店与扩展管理页的简短描述。"
   },
   "browserActionTitle": {
@@ -31,7 +31,7 @@
     "description": "书签输入框的占位符。"
   },
   "bookmarkTooltip": {
-    "message": "点击跳转；× 删除",
+    "message": "点击跳转",
     "description": "悬停在书签标记上的提示。"
   },
 
@@ -52,7 +52,7 @@
     "description": "计时器归零时的文字。"
   },
   "countdownCancel": {
-    "message": "倒计时已终止",
+    "message": "倒计时取消",
     "description": "用户手动停止计时器时的文字。"
   },
 
@@ -77,12 +77,12 @@
     "description": "直线工具提示。"
   },
   "graffitiClear": {
-    "message": "清除所有涂鸦",
+    "message": "清空画布",
     "description": "清空画布按钮提示。"
   },
   "graffitiRectangle": {
-    "message": "矩形批注",
-    "description": "矩形工具提示。"
+    "message": "框选批注",
+    "description": "框选批注工具提示。"
   },
 
   "rectangleInput": {
@@ -90,7 +90,7 @@
     "description": "矩形注释的输入框的占位符。"
   },
   "rectangleDelete": {
-    "message": "删除注释",
+    "message": "删除批注",
     "description": "矩形右上角 × 按钮的提示。"
   },
 
@@ -120,7 +120,7 @@
     "description": "删除挂起的图片"
   },
   "imagePinToggle": {
-    "message": "是否跟随页面滚动",
+    "message": "切换固定/跟随滚动",
     "description": "切换图片是否跟随页面滚动"
   },
 
@@ -275,11 +275,11 @@
     "description": "我的房间标题"
   },
   "createRoomBtn": {
-    "message": "创建新房间",
+    "message": "创建房间",
     "description": "创建新房间按钮"
   },
   "joinRoomBtn": {
-    "message": "加入新房间",
+    "message": "加入房间",
     "description": "加入新房间按钮"
   },
   "switchRoomBtn": {
@@ -307,7 +307,7 @@
     "description": "取消按钮"
   },
   "joinRoomTitle": {
-    "message": "加入新房间",
+    "message": "加入房间",
     "description": "加入房间标题"
   },
   "roomShareCodeLabel": {
@@ -335,7 +335,7 @@
     "description": "复制分享码按钮"
   },
   "createRoomTitle": {
-    "message": "创建新房间",
+    "message": "创建房间",
     "description": "创建新房间标题"
   },
   "createRoomSuccess": {

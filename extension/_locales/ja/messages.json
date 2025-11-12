@@ -1,0 +1,269 @@
+{
+  "pluginName": {
+    "message": "EduLens"
+  },
+  "pluginDesc": {
+    "message": "オンライン授業を支援するブラウザー拡張機能です。"
+  },
+  "browserActionTitle": {
+    "message": "EduLens パネルを開く"
+  },
+  "panelHeader": {
+    "message": "機能カード"
+  },
+  "scrollProgressTitle": {
+    "message": "スクロール進捗"
+  },
+  "bookmarkAddBtn": {
+    "message": "ブックマークを追加"
+  },
+  "bookmarkPlaceholder": {
+    "message": "ブックマーク名を入力"
+  },
+  "bookmarkTooltip": {
+    "message": "クリックで移動、× で削除"
+  },
+  "countdownStartBtn": {
+    "message": "カウントダウン開始"
+  },
+  "countdownPlaceholder": {
+    "message": "分を入力"
+  },
+  "countdownRemain": {
+    "message": "残り $1 分 $2 秒"
+  },
+  "countdownEnd": {
+    "message": "カウントダウンが終了しました"
+  },
+  "countdownCancel": {
+    "message": "カウントダウンを停止しました"
+  },
+  "graffitiColor": {
+    "message": "色を選択"
+  },
+  "graffitiBrushSize": {
+    "message": "ブラシサイズ"
+  },
+  "graffitiPen": {
+    "message": "描画"
+  },
+  "graffitiEraser": {
+    "message": "消しゴム"
+  },
+  "graffitiLine": {
+    "message": "直線"
+  },
+  "graffitiClear": {
+    "message": "すべての落書きを消去"
+  },
+  "graffitiRectangle": {
+    "message": "範囲注釈"
+  },
+  "rectangleInput": {
+    "message": "注釈内容"
+  },
+  "rectangleDelete": {
+    "message": "注釈を削除"
+  },
+  "screenshotDOMBtn": {
+    "message": "DOM キャプチャ"
+  },
+  "screenshotRegionBtn": {
+    "message": "範囲キャプチャ"
+  },
+  "screenshotScrollBtn": {
+    "message": "スクロールキャプチャ"
+  },
+  "screenshotTooltip": {
+    "message": "クリックするとキャプチャを終了します"
+  },
+  "imageBtn": {
+    "message": "画像を固定表示"
+  },
+  "imageDelete": {
+    "message": "画像を削除"
+  },
+  "imagePinToggle": {
+    "message": "固定 / スクロール切替"
+  },
+  "popupTitle": {
+    "message": "EduLens 設定"
+  },
+  "popupEnable": {
+    "message": "EduLens を有効にする"
+  },
+  "loginTitle": {
+    "message": "EduLens にサインイン"
+  },
+  "registerTitle": {
+    "message": "EduLens アカウントを作成"
+  },
+  "emailLabel": {
+    "message": "メールアドレス"
+  },
+  "emailPlaceholder": {
+    "message": "メールアドレスを入力"
+  },
+  "passwordLabel": {
+    "message": "パスワード"
+  },
+  "passwordPlaceholder": {
+    "message": "パスワードを入力"
+  },
+  "usernameLabel": {
+    "message": "ユーザー名"
+  },
+  "usernamePlaceholder": {
+    "message": "ユーザー名を入力"
+  },
+  "confirmPasswordLabel": {
+    "message": "パスワード確認"
+  },
+  "confirmPasswordPlaceholder": {
+    "message": "もう一度入力"
+  },
+  "loginButton": {
+    "message": "サインイン"
+  },
+  "registerButton": {
+    "message": "登録"
+  },
+  "noAccount": {
+    "message": "アカウントをお持ちではありませんか？"
+  },
+  "hasAccount": {
+    "message": "すでにアカウントがありますか？"
+  },
+  "registerLink": {
+    "message": "登録する"
+  },
+  "loginLink": {
+    "message": "サインインする"
+  },
+  "loggingIn": {
+    "message": "サインイン中..."
+  },
+  "registering": {
+    "message": "登録中..."
+  },
+  "loginSuccess": {
+    "message": "サインインしました"
+  },
+  "registerSuccess": {
+    "message": "登録が完了しました"
+  },
+  "logoutSuccess": {
+    "message": "サインアウトしました"
+  },
+  "fillEmailPassword": {
+    "message": "メールアドレスとパスワードを入力してください"
+  },
+  "validEmail": {
+    "message": "有効なメールアドレスを入力してください"
+  },
+  "fillAllFields": {
+    "message": "すべての項目を入力してください"
+  },
+  "usernameMinLength": {
+    "message": "ユーザー名は3文字以上で入力してください"
+  },
+  "passwordMinLength": {
+    "message": "パスワードは6文字以上で入力してください"
+  },
+  "passwordMismatch": {
+    "message": "パスワードが一致しません"
+  },
+  "networkError": {
+    "message": "ネットワークエラーです。時間をおいて再試行してください"
+  },
+  "loginFailed": {
+    "message": "サインインに失敗しました"
+  },
+  "logoutButton": {
+    "message": "サインアウト"
+  },
+  "roomMembers": {
+    "message": " 名のメンバー"
+  },
+  "noRoomSelected": {
+    "message": "部屋が選択されていません"
+  },
+  "roomListBtn": {
+    "message": "部屋一覧"
+  },
+  "shareRoomBtn": {
+    "message": "共有"
+  },
+  "myRooms": {
+    "message": "マイルーム"
+  },
+  "createRoomBtn": {
+    "message": "新しい部屋を作成"
+  },
+  "joinRoomBtn": {
+    "message": "新しい部屋に参加"
+  },
+  "switchRoomBtn": {
+    "message": "切り替え"
+  },
+  "currentRoom": {
+    "message": "現在"
+  },
+  "roomNameLabel": {
+    "message": "部屋名"
+  },
+  "roomDescLabel": {
+    "message": "部屋の説明"
+  },
+  "createRoomSubmit": {
+    "message": "部屋を作成"
+  },
+  "cancelBtn": {
+    "message": "キャンセル"
+  },
+  "joinRoomTitle": {
+    "message": "新しい部屋に参加"
+  },
+  "roomShareCodeLabel": {
+    "message": "部屋の招待コード"
+  },
+  "joinRoomSubmit": {
+    "message": "部屋に参加"
+  },
+  "shareRoomTitle": {
+    "message": "部屋を共有"
+  },
+  "shareCodePrefix": {
+    "message": "招待コード："
+  },
+  "shareCodeHint": {
+    "message": "このコードで他のユーザーが参加できます"
+  },
+  "copyShareCodeBtn": {
+    "message": "招待コードをコピー"
+  },
+  "createRoomTitle": {
+    "message": "新しい部屋を作成"
+  },
+  "createRoomSuccess": {
+    "message": "部屋を作成しました"
+  },
+  "createRoomFailed": {
+    "message": "部屋の作成に失敗しました"
+  },
+  "joinRoomSuccess": {
+    "message": "部屋に参加しました"
+  },
+  "joinRoomFailed": {
+    "message": "部屋への参加に失敗しました"
+  },
+  "switchRoomSuccess": {
+    "message": "部屋を切り替えました"
+  },
+  "generateShareCodeFailed": {
+    "message": "招待コードの生成に失敗しました"
+  },
+  "shareCodeCopied": {
+    "message": "招待コードをコピーしました"
+  }
+}
