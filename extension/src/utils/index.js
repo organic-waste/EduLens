@@ -1,10 +1,12 @@
 // 统一导出所有工具函数
-export { 
-  preventPageInteraction, 
-  restorePageInteraction, 
-  disableUserScroll, 
-  enableUserScroll 
-} from './controlInteraction.js';
+export {
+  preventPageInteraction,
+  restorePageInteraction,
+  disableUserScroll,
+  enableUserScroll,
+  enableElementPointerEvents,
+  restoreElementPointerEvents,
+} from "./controlInteraction.js";
 
 export { getId, getPageKey } from './getIdentity.js';
 

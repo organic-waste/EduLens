@@ -11,6 +11,8 @@ import { storageManager, syncManager } from "../../services/index.js";
 import {
   preventPageInteraction,
   restorePageInteraction,
+  enableElementPointerEvents,
+  restoreElementPointerEvents,
 } from "../../utils/index.js";
 
 let shadowRoot = null;
@@ -34,7 +36,6 @@ let originalRectPos = null;
 export function activateImageAnnotation() {
   shadowRoot = window.__EDULENS_SHADOW_ROOT__;
   drawingContainer = shadowRoot.getElementById("graffiti-container");
-  drawingContainer.style.pointerEvents = "auto";
 
   // 上传图片
   const toolGroupDiv = shadowRoot.querySelector(
@@ -242,6 +243,7 @@ function enterEditingMode(imgData) {
     return;
 
   exitEditingMode();
+  enableElementPointerEvents(drawingContainer);
   isEditing = true;
   editingImg = imgData;
   currentImg = imgData;
@@ -282,6 +284,7 @@ function exitEditingMode() {
   });
 
   drawingContainer.style.cursor = "default";
+  restoreElementPointerEvents(drawingContainer);
 }
 
 function setupEventListeners() {
