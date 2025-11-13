@@ -3,7 +3,7 @@
 </div>
 <p align="center" style="display: flex; align-items: center; justify-content: center; gap: 12px;margin-right:40px;">
   <img src="../extension/public/icons/icon.png" alt="EduLens Logo" width="128" height="128">
-  <img src="../extension/public/icons/title.png" alt="EduLens Title" height="60">
+  <img src="../extension/public/icons/title.png" alt="EduLens Title" height="128">
 </p>
 
 ## 📖 Overview
