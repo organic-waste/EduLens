@@ -3,11 +3,12 @@
 </div>
 <p align="center" style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-right:40px;">
   <img src="extension/public/icons/icon.png" alt="EduLens Logo" width="128" height="128">
-  <img src="extension/public/icons/title.png" alt="EduLens Title" height="60">
+  <img src="extension/public/icons/title.png" alt="EduLens Title" height="128">
 </p>
+
 ## 📖 项目简介
 
-EduLens 是一款专为 个人学习 和 在线教学 设计的浏览器扩展插件。
+EduLens 是一款专为个人学习和在线教学设计的浏览器扩展插件。
 
 提供实时协作标注、丰富笔记工具及阅读辅助功能，既可用于学习者高效整理知识，也可助力教学课堂互动体验。
 
