@@ -8,6 +8,20 @@ import {
 import { activateRoomSelector } from "./room.js";
 import eventStore from "../../stores/eventStore.js";
 
+const authListeners = new Set();
+let cachedUser = null;
+
+function notifyAuthListeners() {
+  const status = getLoginStatus();
+  authListeners.forEach((cb) => {
+    try {
+      cb(status);
+    } catch (error) {
+      console.error("[EduLens] auth listener error", error);
+    }
+  });
+}
+
 function showForm() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
 
@@ -350,59 +364,67 @@ function hideError(el) {
 }
 
 // 在面板上显示账号信息
-export async function updateLoginStatus(user) {
-  //初始化 WebSocket
-  if (!serviceInitializer.isInitialized) {
-    await serviceInitializer.initialize();
-  }
-
-  const shadow = window.__EDULENS_SHADOW_ROOT__;
-  shadow.querySelector(".user-status-area")?.remove();
-  const area = createEl("div", { class: "user-status-area" });
-  area.innerHTML = `
-    <div class="user-info">
-      <span class="user-name">${user.username}</span>
-    </div>
-    <button class="logout-btn">${chrome.i18n.getMessage(
-      "logoutButton"
-    )}</button>
-  `;
-
-  eventStore.on(area.querySelector(".logout-btn"), "click", handleLogout);
-  shadow.querySelector(".functions")?.append(area);
-
-  await activateRoomSelector();
-}
-
-async function handleLogout() {
-  // console.log(`[EduLens]${chrome.i18n.getMessage("logoutSuccess")}`);
-  await authManager.clearAuth();
-  webSocketClient.disconnect();
-  const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
-  shadowRoot.querySelector(".user-status-area")?.remove();
-  shadowRoot.querySelector(".room-selector")?.remove();
-  showForm();
-}
-
-export async function activateLogin() {
-  // 设置认证失败回调
-  authManager.setAuthFailureCallback(showForm);
-
-  const authInitialized = await authManager.init();
-  // console.log("[EduLens] 认证初始化结果:", authInitialized);
-
-  // 如果本地有token，就验证有效性
-  if (authManager.getToken()) {
-    const isValid = await authManager.validateToken();
-    // console.log("Token验证结果: ", isValid);
-    const user = authManager.getUser();
-    // console.log("用户信息: ", user);
-    if (isValid && user) {
-      updateLoginStatus(user);
-    } else {
-      showForm();
-    }
-  } else {
-    showForm();
-  }
-}
+export async function updateLoginStatus(user) {
+  if (!serviceInitializer.isInitialized) {
+    await serviceInitializer.initialize();
+  }
+
+  cachedUser = user;
+  notifyAuthListeners();
+  await activateRoomSelector();
+}
+
+async function handleLogout() {
+  await authManager.clearAuth();
+  webSocketClient.disconnect();
+  cachedUser = null;
+  notifyAuthListeners();
+}
+
+export async function activateLogin(options = {}) {
+  const { autoPrompt = false } = options;
+  authManager.setAuthFailureCallback(showForm);
+
+  await authManager.init();
+
+  if (authManager.getToken()) {
+    const isValid = await authManager.validateToken();
+    const user = authManager.getUser();
+    if (isValid && user) {
+      updateLoginStatus(user);
+      return;
+    }
+  }
+
+  if (autoPrompt) {
+    showForm();
+  }
+}
+
+export function openLoginPanel() {
+  showForm();
+}
+
+export function subscribeLoginStatus(callback) {
+  authListeners.add(callback);
+  callback?.(getLoginStatus());
+  return () => authListeners.delete(callback);
+}
+
+export function getLoginStatus() {
+  const user = cachedUser || authManager.getUser();
+  return {
+    isAuthenticated: Boolean(user),
+    user: user
+      ? {
+          username: user.username,
+          email: user.email,
+        }
+      : null,
+  };
+}
+
+export async function logout() {
+  await handleLogout();
+}
+

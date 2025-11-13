@@ -15,7 +15,6 @@ let startX, startY, endX, endY;
 // let hoverTimeout = null;
 // let hoverRectId = null;
 
-let rectangleButton = null;
 let drawingContainer = null;
 let previewDiv = null;
 let currentRect = null;
@@ -35,21 +34,6 @@ let shadowRoot = null;
 export function activateRectangleAnnotation() {
   shadowRoot = window.__EDULENS_SHADOW_ROOT__;
   drawingContainer = shadowRoot.getElementById("graffiti-container");
-  const toolGroupDiv = shadowRoot.querySelector(
-    "#graffiti-controls .tool-group"
-  );
-  if (toolGroupDiv && !toolGroupDiv.querySelector("#rectangle-btn")) {
-    rectangleButton = createEl("button", {
-      id: "rectangle-btn",
-      class: "icon-btn",
-      title: chrome.i18n.getMessage("graffitiRectangle"),
-      innerHTML:
-        '<svg t="1758595217758" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7344" width="200" height="200"><path d="M0 837.818182l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7345" fill="#ffffff"></path><path d="M232.727273 837.818182l558.545455 0 0 93.090909-558.545455 0 0-93.090909Z" p-id="7346" fill="#ffffff"></path><path d="M93.090909 232.727273l93.090909 0 0 558.545455-93.090909 0 0-558.545455Z" p-id="7347" fill="#ffffff"></path><path d="M0 0l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7348" fill="#ffffff"></path><path d="M232.727273 93.090909l558.545455 0 0 93.090909-558.545455 0 0-93.090909Z" p-id="7349" fill="#ffffff"></path><path d="M837.818182 837.818182l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7350" fill="#ffffff"></path><path d="M837.818182 0l186.181818 0 0 186.181818-186.181818 0 0-186.181818Z" p-id="7351" fill="#ffffff"></path><path d="M837.818182 232.727273l93.090909 0 0 558.545455-93.090909 0 0-558.545455Z" p-id="7352" fill="#ffffff"></path></svg>',
-    });
-    eventStore.on(rectangleButton, "click", toggleRectangleMode);
-    eventStore.on(rectangleButton, "mousedown", (e) => e.stopPropagation());
-    toolGroupDiv.appendChild(rectangleButton);
-  }
   loadRectangles().then(() => {
     renderAllRectangles();
   });
@@ -64,7 +48,7 @@ export function activateRectangleAnnotation() {
 }
 
 //转换矩阵模式（编辑模式/查看模式）
-function toggleRectangleMode() {
+export function toggleRectangleMode() {
   toolStore.updateState("isRectangle");
   if (toolStore.isRectangle) {
     drawingContainer.style.pointerEvents = "auto";

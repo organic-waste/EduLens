@@ -4,52 +4,38 @@ import eventStore from "../../stores/eventStore.js";
 import { roomManager, webSocketClient } from "../../services/index.js";
 import { getPageKey } from "../../utils/index.js";
 
-let selector = null;
 let shadowRoot = null;
 
-//初始化房间选择条
+//初始化房间数据
 export async function activateRoomSelector() {
   shadowRoot = window.__EDULENS_SHADOW_ROOT__;
-
   await roomManager.loadUserRooms();
-  selector = shadowRoot.querySelector(".room-selector");
-  if (selector) selector.remove();
-  selector = createEl("div", { class: "room-selector" });
-  selector.innerHTML = `
-      <div class="current-room-info">
-        ${
-          roomManager.getCurrentRoom()
-            ? `<span class="room-name">${
-                roomManager.getCurrentRoom().name
-              }</span>
-             <span class="room-members">${
-               roomManager.getCurrentRoom().members.length
-             } ${chrome.i18n.getMessage("roomMembers")}</span>`
-            : `<span class="no-room">${chrome.i18n.getMessage("noRoomSelected")}</span>`
-        }
-      </div>
-      <div class="room-actions">
-        <button class="button room-list-btn">${chrome.i18n.getMessage("roomListBtn")}</button>
-        <button class="button share-room-btn">${chrome.i18n.getMessage("shareRoomBtn")}</button>
-      </div>
-    `;
+}
 
-  const functions = shadowRoot.querySelector(".functions");
-  if (functions) {
-    functions.appendChild(selector);
-  }
-  eventStore.on(
-    selector.querySelector(".room-list-btn"),
-    "click",
-    showRoomList
-  );
-  // eventStore.on(
-  //   selector.querySelector(".create-room-btn"),
-  //   "click",
-  //   showCreateRoomForm
-  // );
-  const shareBtn = selector.querySelector(".share-room-btn");
-  if (shareBtn) eventStore.on(shareBtn, "click", shareRoom);
+export function getRoomState() {
+  const currentRoom = roomManager.getCurrentRoom();
+  return {
+    currentRoom: currentRoom
+      ? {
+          id: currentRoom._id,
+          name: currentRoom.name,
+          members: currentRoom.members.length,
+        }
+      : null,
+    totalRooms: roomManager.getUserRooms().length,
+  };
+}
+
+export async function openRoomListOverlay() {
+  if (!shadowRoot) shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+  await roomManager.loadUserRooms();
+  showRoomList();
+}
+
+export async function openShareRoomDialog() {
+  if (!shadowRoot) shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+  await roomManager.loadUserRooms();
+  shareRoom();
 }
 
 //展示房间列表

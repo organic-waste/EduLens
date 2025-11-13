@@ -1,6 +1,6 @@
 import { injectStyles, injectIcon } from "./utils/index.js";
 import filterStore from "./stores/filterStore.js";
-import { activateDraggablePanel } from "./features/draggablePanel.js";
+import { initializePanelBridge } from "./features/draggablePanel.js";
 import eventStore from "./stores/eventStore.js";
 import { apiClient } from "./services/index.js";
 
@@ -24,7 +24,7 @@ eventStore.on(window, "keydown", (e) => {
 (async function activatePlugin() {
   await injectStyles();
   // injectIcon();
-  activateDraggablePanel();
+  initializePanelBridge();
 
   //测试是否能连接到后端云服务
   const connected = await apiClient.testConnection();

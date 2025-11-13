@@ -1,176 +1,163 @@
-/* 可拖动卡片面板 */
-import eventStore from "../stores/eventStore.js";
-import filterStore from "../stores/filterStore.js";
-import { getOffsetPos, createEl } from "../utils/index.js";
-import MonitorSPARoutes from "../utils/monitorSPARoutes.js";
+/* Popup 桥接层 */
+import {
+  activateScrollProgress,
+  subscribeScrollProgress,
+  getScrollPercent,
+} from "./tools/scrollProgress.js";
+import {
+  activateBookmark,
+  listBookmarks,
+  addBookmark,
+  deleteBookmark,
+  scrollToBookmark,
+  subscribeBookmarks,
+} from "./tools/bookmark.js";
+import {
+  activateGraffiti,
+  setGraffitiMode,
+  setGraffitiColor,
+  setPenBrushSize,
+  setEraserBrushSize,
+  clearGraffitiCanvas,
+  getGraffitiState,
+} from "./tools/graffiti.js";
+import {
+  activateScreenshot,
+  triggerScreenshot,
+} from "./tools/screenshot.js";
+import {
+  activateLogin,
+  openLoginPanel,
+  subscribeLoginStatus,
+  getLoginStatus,
+  logout as logoutUser,
+} from "./accounts/login.js";
+import {
+  activateRoomSelector,
+  openRoomListOverlay,
+  openShareRoomDialog,
+  getRoomState,
+} from "./accounts/room.js";
+import { toggleRectangleMode } from "./tools/rectangleAnnotation.js";
+import { triggerImageUpload } from "./tools/uploadImage.js";
 
-import { activateScrollProgress } from "./tools/scrollProgress.js";
-import { activateBookmark } from "./tools/bookmark.js";
-import { activateGraffiti } from "./tools/graffiti.js";
-import { activateCountdown } from "./tools/countdownTimer.js";
-import { activateScreenshot } from "./tools/screenshot.js";
-import { activateLogin } from "./accounts/login.js";
+const POPUP_CHANNEL = "edulens_popup";
+const popupPorts = new Set();
 
-let panelDiv = null;
-let cardDiv = null;
-let isOpen = false;
-let isMoved = false;
-let offsetX = 0,
-  offsetY = 0;
-let Position = { left: 0, top: 0 };
-
-function DraggablePanel() {
-  const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
-  if (panelDiv) return;
-  panelDiv = document.createElement("div");
-  panelDiv.className = "draggable-panel";
-  panelDiv.innerHTML = `
-        <button class="toggle-btn">
-            <svg viewBox="0 0 24 24" class="icon">
-                <g class="cross">
-                <line x1="3"  y1="12" x2="21" y2="12" />
-                <line x1="12" y1="3"  x2="12" y2="21" />
-                </g>
-            </svg>
-        </button>
-        `;
-
-  shadowRoot.appendChild(panelDiv);
-  let btnDiv = panelDiv.getElementsByClassName("toggle-btn")[0];
-
-  cardDiv = createEl("div", { class: "draggable-card" });
-  const headerDiv = createEl("div", { class: "card-header" });
-  // const titleSpan = createEl("span", {
-  //   textContent: chrome.i18n.getMessage("panelHeader"),
-  // });
-  const titleSpan = createEl("span", {
-    textContent: "EduLens",
-  });
-  const contentDiv = createEl("div", { class: "card-content" });
-  headerDiv.appendChild(titleSpan);
-  cardDiv.appendChild(headerDiv);
-  cardDiv.appendChild(contentDiv);
-
-  cardDiv.style.display = "none";
-  // 初始弹窗位置跟随按钮且隐藏
-  panelDiv.appendChild(cardDiv);
-
-  function updatePosition(e) {
-    //当移动面板时
-    if (isMoved) {
-      const left = Math.max(
-        0,
-        Math.min(window.innerWidth - panelDiv.offsetWidth, e.clientX - offsetX)
-      );
-      const top = Math.max(
-        0,
-        Math.min(
-          window.innerHeight - panelDiv.offsetHeight,
-          e.clientY - offsetY
-        )
-      );
-      panelDiv.style.left = left + "px";
-      panelDiv.style.top = top + "px";
-      Position.left = left;
-      Position.top = top;
-    }
-    //保证点开面板时保持在窗口内
-    else {
-      limitPosition();
-    }
-  }
-  //将拖动范围限制在窗口内
-  function limitPosition() {
-    const panelRect = panelDiv.getBoundingClientRect();
-    let newLeft = Position.left;
-    let newTop = Position.top;
-
-    if (newLeft + panelRect.width * 6 > window.innerWidth) {
-      newLeft = window.innerWidth - panelRect.width * 6;
-    }
-    if (newLeft < 0) {
-      newLeft = 0;
-    }
-    if (newTop + panelRect.height * 8 > window.innerHeight) {
-      newTop = window.innerHeight - panelRect.height * 8;
-    }
-    if (newTop < 0) {
-      newTop = 0;
-    }
-    panelDiv.style.left = newLeft + "px";
-    panelDiv.style.top = newTop + "px";
-    Position.left = newLeft;
-    Position.top = newTop;
-  }
-
-  // 拖动逻辑
-  eventStore.on(panelDiv, "mousedown", (e) => {
-    isMoved = false;
-    filterStore.isDragging = true;
-    //e.clientX —— 鼠标相对于视口的横坐标。
-    //box.offsetLeft —— 方块相对于定位祖先的横坐标
-    //二者相减得到“鼠标点击点距离方块左边框”的距离,这样拖动时按钮不会瞬间跳到鼠标位置
-    ({ x: offsetX, y: offsetY } = getOffsetPos(e, panelDiv));
-    //防止拖动时选中文本
-    document.body.style.userSelect = "none";
-    e.stopPropagation();
-  });
-
-  eventStore.on(document, "mousemove", (e) => {
-    isMoved = true;
-    //确保在拖动状态下才能移动
-
-    if (filterStore.isDragging) {
-      updatePosition(e);
+function broadcast(message) {
+  popupPorts.forEach((port) => {
+    try {
+      port.postMessage(message);
+    } catch (error) {
+      console.warn("[EduLens] 无法发送 popup 消息", error);
     }
   });
-
-  eventStore.on(document, "mouseup", () => {
-    filterStore.isDragging = false;
-    document.body.style.userSelect = ""; // 恢复文字可选中
-  });
-
-  eventStore.on(btnDiv, "click", (e) => {
-    if (isMoved) return; // 确保拖动过后不弹窗
-
-    if (!isOpen) {
-      isOpen = true;
-      btnDiv.classList.add("open-panel");
-      cardDiv.style.display = "block";
-      panelDiv.classList.add("open-panel");
-      limitPosition();
-      //确保面板打开后在视窗内
-    } else {
-      isOpen = false;
-      btnDiv.classList.remove("open-panel");
-      cardDiv.style.display = "none";
-      panelDiv.classList.remove("open-panel");
-    }
-  });
-
-  // 初始位置右下角
-  const left = window.innerWidth - 80;
-  const top = window.innerHeight - 80;
-  panelDiv.style.left = left + "px";
-  panelDiv.style.top = top + "px";
-  Position.left = left;
-  Position.top = top;
 }
 
-export function activateDraggablePanel() {
-  DraggablePanel();
+function collectPanelState() {
+  return {
+    scrollPercent: getScrollPercent(),
+    bookmarks: listBookmarks(),
+    graffiti: getGraffitiState(),
+    auth: getLoginStatus(),
+    rooms: getRoomState(),
+  };
+}
 
+function setupConnections() {
+  chrome.runtime.onConnect.addListener((port) => {
+    if (port.name !== POPUP_CHANNEL) return;
+    popupPorts.add(port);
+    port.onDisconnect.addListener(() => popupPorts.delete(port));
+    port.postMessage({ type: "state", data: collectPanelState() });
+  });
+
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message?.channel !== POPUP_CHANNEL) return;
+    const { action, payload } = message;
+    handlePopupAction(action, payload)
+      .then((data) => sendResponse({ data }))
+      .catch((error) => {
+        console.error("[EduLens] popup action error", error);
+        sendResponse({ error: error.message || "Unexpected error" });
+      });
+    return true;
+  });
+}
+
+async function handlePopupAction(action, payload = {}) {
+  switch (action) {
+    case "GET_STATE":
+      return collectPanelState();
+    case "ADD_BOOKMARK":
+      await addBookmark(payload.text || "");
+      return listBookmarks();
+    case "DELETE_BOOKMARK":
+      await deleteBookmark(payload.id);
+      return listBookmarks();
+    case "JUMP_BOOKMARK":
+      scrollToBookmark(payload.id);
+      return true;
+    case "SCREENSHOT":
+      await triggerScreenshot(payload.type);
+      return true;
+    case "GRAFFITI_MODE":
+      setGraffitiMode(payload.mode);
+      return getGraffitiState();
+    case "GRAFFITI_COLOR":
+      setGraffitiColor(payload.color);
+      return getGraffitiState();
+    case "GRAFFITI_PEN_SIZE":
+      setPenBrushSize(payload.size);
+      return getGraffitiState();
+    case "GRAFFITI_ERASER_SIZE":
+      setEraserBrushSize(payload.size);
+      return getGraffitiState();
+    case "GRAFFITI_CLEAR":
+      clearGraffitiCanvas();
+      return true;
+    case "RECTANGLE_TOGGLE":
+      toggleRectangleMode();
+      return true;
+    case "IMAGE_UPLOAD":
+      triggerImageUpload();
+      return true;
+    case "LOGIN_OPEN":
+      openLoginPanel();
+      return true;
+    case "LOGOUT":
+      await logoutUser();
+      return getLoginStatus();
+    case "ROOM_LIST":
+      await openRoomListOverlay();
+      return true;
+    case "ROOM_SHARE":
+      await openShareRoomDialog();
+      return true;
+    default:
+      throw new Error(`Unknown action: ${action}`);
+  }
+}
+
+export function initializePanelBridge() {
   activateScrollProgress();
+  subscribeScrollProgress((percent) =>
+    broadcast({ type: "scroll", data: percent })
+  );
+
   activateBookmark();
-  activateCountdown();
+  subscribeBookmarks((items) =>
+    broadcast({ type: "bookmarks", data: items })
+  );
+
   activateGraffiti();
   activateScreenshot();
-  activateLogin();
-}
+  activateLogin({ autoPrompt: false });
+  subscribeLoginStatus((status) =>
+    broadcast({ type: "auth", data: status })
+  );
 
-export function deactivateDraggablePanel() {
-  if (cardDiv) {
-    cardDiv.remove();
-    cardDiv = null;
-  }
+  activateRoomSelector();
+
+  setupConnections();
 }

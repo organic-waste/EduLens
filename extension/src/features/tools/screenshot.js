@@ -9,14 +9,9 @@ import {
   disableUserScroll,
 } from "../../utils/index.js";
 
-let funcDiv = null;
-let screenshotDiv = null;
 let maskDiv = null;
 let regionDiv = null;
-let DOMBtn = null;
-let regionBtn = null;
-let scrollBtn = null;
-let panelDiv = null;
+let extensionHost = null;
 let stopIndicator = null;
 let stopText = null;
 let shadowRoot = null;
@@ -24,37 +19,15 @@ let imageData = null;
 const dpr = window.devicePixelRatio || 1; //设备像素比
 
 export function activateScreenshot() {
-  //创建截图按钮
   shadowRoot = window.__EDULENS_SHADOW_ROOT__;
-  panelDiv = shadowRoot.querySelector(".draggable-panel");
-  funcDiv = panelDiv.querySelector(".functions");
-  screenshotDiv = createEl("div", { class: "function" });
-
-  DOMBtn = createEl("button", {
-    class: "button",
-    textContent: chrome.i18n.getMessage("screenshotDOMBtn"),
-  });
-  regionBtn = createEl("button", {
-    class: "button",
-    textContent: chrome.i18n.getMessage("screenshotRegionBtn"),
-  });
-  scrollBtn = createEl("button", {
-    class: "button",
-    textContent: chrome.i18n.getMessage("screenshotScrollBtn"),
-  });
-
-  screenshotDiv.append(DOMBtn, regionBtn, scrollBtn);
-  funcDiv.appendChild(screenshotDiv);
-
-  //绑定按钮点击事件
-  eventStore.on(DOMBtn, "click", (e) => handleScreenshot("dom", e));
-  eventStore.on(regionBtn, "click", (e) => handleScreenshot("region", e));
-  eventStore.on(scrollBtn, "click", (e) => handleScreenshot("scroll", e));
+  extensionHost = window.__EDULENS_HOST__ || shadowRoot.host || shadowRoot;
 }
 
-async function handleScreenshot(type) {
+export async function triggerScreenshot(type) {
   //隐藏面板，防止影响截取原网站页面
-  panelDiv.style.visibility = "hidden";
+  if (extensionHost) {
+    extensionHost.style.visibility = "hidden";
+  }
   if (type === "dom") {
     toolStore.updateState("isDOM");
     DOMScreenshot();
@@ -153,7 +126,9 @@ function DOMScreenshot() {
         });
       }
     }
-    panelDiv.style.visibility = "visible";
+    if (extensionHost) {
+      extensionHost.style.visibility = "visible";
+    }
   }
 }
 
@@ -213,7 +188,9 @@ function regionScreenshot() {
         });
         imageData = response.image;
 
-        panelDiv.style.visibility = "visible";
+        if (extensionHost) {
+          extensionHost.style.visibility = "visible";
+        }
 
         //记得将浮点数转换为INT
         const infos = {
@@ -353,7 +330,9 @@ async function scrollScreenshot() {
     copyImg(result);
     downloadImg(result);
     toolStore.updateState();
-    panelDiv.style.visibility = "visible";
+    if (extensionHost) {
+      extensionHost.style.visibility = "visible";
+    }
     restorePageInteraction();
     enableUserScroll();
   }

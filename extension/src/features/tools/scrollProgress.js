@@ -4,53 +4,62 @@ import { createEl } from "../../utils/index.js";
 
 let scrollDiv = null;
 let fillDiv = null;
-// let h1 = null;
-let cardDiv = null;
+let isActive = false;
+let currentPercent = 0;
+const subscribers = new Set();
 
-function ScrollProgress() {
+function notifySubscribers() {
+  subscribers.forEach((cb) => {
+    try {
+      cb(currentPercent);
+    } catch (error) {
+      console.error("[EduLens] scroll subscriber error", error);
+    }
+  });
+}
+
+function updateScrollProgress() {
   if (!scrollDiv) return;
   const scrollTop = window.scrollY;
-  const docHeight = document.documentElement.scrollHeight;
-  const winHeight = window.innerHeight;
-  const progressPct = (scrollTop / (docHeight - winHeight)) * 100;
-  const percent = Math.round(progressPct);
-  // h1.textContent = percent + '%';
-  // fillDiv.style.height = (100-percent) + '%';
-  fillDiv.style.height = percent + "%";
+  const docHeight = document.documentElement.scrollHeight || 1;
+  const winHeight = window.innerHeight || 1;
+  const progressPct = (scrollTop / Math.max(docHeight - winHeight, 1)) * 100;
+  currentPercent = Math.max(0, Math.min(100, Math.round(progressPct)));
+  fillDiv.style.height = currentPercent + "%";
+  notifySubscribers();
 }
 
-export function activateScrollProgress() {
-  if (!scrollDiv) {
-    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
-    scrollDiv = createEl("div", { class: "scroll-percent" });
-    fillDiv = createEl("div", { class: "scroll-fill" });
-    scrollDiv.appendChild(fillDiv);
-
-    cardDiv = shadowRoot.querySelector(".card-content");
-
-    // const counterDiv = document.createElement('div');
-    // counterDiv.className = 'scroll-counter';
-    // h1 = document.createElement('h1');
-    // h1.textContent = '0%';
-    // counterDiv.appendChild(h1);
-    // scrollDiv.appendChild(counterDiv);
-
-    if (cardDiv) {
-      const funcDiv = createEl("div", { class: "functions" });
-      funcDiv.appendChild(scrollDiv);
-      cardDiv.appendChild(funcDiv);
-    }
-  }
-  eventStore.on(window, "scroll", ScrollProgress);
-  ScrollProgress();
+function ensureScrollBar() {
+  if (scrollDiv) return;
+  const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+  scrollDiv = createEl("div", { class: "scroll-percent" });
+  fillDiv = createEl("div", { class: "scroll-fill" });
+  scrollDiv.appendChild(fillDiv);
+  shadowRoot.appendChild(scrollDiv);
 }
 
-export function deactivateScrollProgress() {
-  eventStore.off(window, "scroll", ScrollProgress);
-  if (scrollDiv) {
-    scrollDiv.remove();
-    scrollDiv = null;
-    fillDiv = null;
-    h1 = null;
+export function activateScrollProgress(callback) {
+  if (callback) {
+    subscribers.add(callback);
   }
+
+  if (isActive) {
+    callback?.(currentPercent);
+    return;
+  }
+
+  ensureScrollBar();
+  eventStore.on(window, "scroll", updateScrollProgress);
+  isActive = true;
+  updateScrollProgress();
+}
+
+export function subscribeScrollProgress(callback) {
+  subscribers.add(callback);
+  callback?.(currentPercent);
+  return () => subscribers.delete(callback);
+}
+
+export function getScrollPercent() {
+  return currentPercent;
 }
