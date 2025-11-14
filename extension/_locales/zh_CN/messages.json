@@ -17,9 +17,39 @@
     "description": "浮动功能面板的标题。"
   },
 
+  "sidePanelStatusConnecting": {
+    "message": "正在连接...",
+    "description": "侧边面板建立连接时的默认文案"
+  },
+  "sidePanelConnected": {
+    "message": "已连接",
+    "description": "侧边面板连接成功状态文案"
+  },
+  "sidePanelDisconnected": {
+    "message": "连接已断开",
+    "description": "侧边面板连接断开时的提示"
+  },
+  "sidePanelConnectFailed": {
+    "message": "连接失败",
+    "description": "侧边面板连接失败时的错误提示"
+  },
+  "sidePanelNoActiveTab": {
+    "message": "无法获取活动标签页",
+    "description": "没有可用标签页时显示的提示"
+  },
+  "sidePanelActionFailed": {
+    "message": "操作执行失败",
+    "description": "侧边面板调用内容脚本失败时的提示"
+  },
+
   "scrollProgressTitle": {
     "message": "滚动进度",
     "description": "滚动进度功能的标题。"
+  },
+
+  "bookmarkSectionTitle": {
+    "message": "书签",
+    "description": "书签功能卡片的标题"
   },
 
   "bookmarkAddBtn": {
@@ -35,6 +65,16 @@
     "description": "悬停在书签标记上的提示。"
   },
 
+  "bookmarkEmpty": {
+    "message": "暂无书签",
+    "description": "书签列表为空时的提示"
+  },
+
+  "countdownSectionTitle": {
+    "message": "倒计时",
+    "description": "倒计时功能卡片标题"
+  },
+
   "countdownStartBtn": {
     "message": "开始倒计时",
     "description": "启动计时器的按钮。"
@@ -43,6 +83,11 @@
     "message": "请输入分钟数",
     "description": "倒计时输入框的占位符。"
   },
+  "countdownIdle": {
+    "message": "等待开始",
+    "description": "倒计时尚未启动时的显示文字"
+  },
+
   "countdownRemain": {
     "message": "还剩 $1 分 $2 秒",
     "description": "计时器显示，$1=分钟，$2=秒钟。"
@@ -56,6 +101,15 @@
     "description": "用户手动停止计时器时的文字。"
   },
 
+  "toolsSectionTitle": {
+    "message": "工具",
+    "description": "工具功能卡片标题"
+  },
+  "graffitiSectionTitle": {
+    "message": "涂鸦",
+    "description": "涂鸦子模块标题"
+  },
+
   "graffitiColor": {
     "message": "选择颜色",
     "description": "颜色选择器标题。"
@@ -64,6 +118,11 @@
     "message": "笔刷大小",
     "description": "笔刷大小滑块标题。"
   },
+  "graffitiEraserSize": {
+    "message": "橡皮大小",
+    "description": "橡皮尺寸滑块标题"
+  },
+
   "graffitiPen": {
     "message": "绘制",
     "description": "画笔工具提示。"
@@ -92,6 +151,11 @@
   "rectangleDelete": {
     "message": "删除批注",
     "description": "矩形右上角 × 按钮的提示。"
+  },
+
+  "screenshotSectionTitle": {
+    "message": "截图",
+    "description": "截图子模块标题"
   },
 
   "screenshotDOMBtn": {
@@ -131,6 +195,11 @@
   "popupEnable": {
     "message": "启用 EduLens",
     "description": "是否开启扩展的复选框。"
+  },
+
+  "accountSectionTitle": {
+    "message": "账号",
+    "description": "账号功能卡片标题"
   },
 
   "loginTitle": {
@@ -177,6 +246,10 @@
     "message": "登录",
     "description": "登录按钮文字"
   },
+  "authLoginRegister": {
+    "message": "登录 / 注册",
+    "description": "打开登录/注册界面的按钮"
+  },
   "registerButton": {
     "message": "注册",
     "description": "注册按钮文字"
@@ -205,6 +278,15 @@
     "message": "注册中...",
     "description": "注册中状态文字"
   },
+  "authStatusLoggedOut": {
+    "message": "未登录",
+    "description": "未登录时在侧边面板中显示的状态"
+  },
+  "authStatusLoggedIn": {
+    "message": "已登录：$1",
+    "description": "$1 表示当前登录用户名称"
+  },
+
   "loginSuccess": {
     "message": "登录成功",
     "description": "登录成功提示"
@@ -257,6 +339,10 @@
   "roomMembers": {
     "message": "名成员",
     "description": "房间成员数量单位"
+  },
+  "roomStatusSummary": {
+    "message": "房间：$1（$2 人）",
+    "description": "$1 为房间名称，$2 为房间人数"
   },
   "noRoomSelected": {
     "message": "未选择房间",

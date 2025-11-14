@@ -11,8 +11,29 @@
   "panelHeader": {
     "message": "Tarjetas de funciones"
   },
+  "sidePanelStatusConnecting": {
+    "message": "Conectando..."
+  },
+  "sidePanelConnected": {
+    "message": "Conectado"
+  },
+  "sidePanelDisconnected": {
+    "message": "Conexión perdida"
+  },
+  "sidePanelConnectFailed": {
+    "message": "Error de conexión"
+  },
+  "sidePanelNoActiveTab": {
+    "message": "No se encontró una pestaña activa"
+  },
+  "sidePanelActionFailed": {
+    "message": "Acción fallida"
+  },
   "scrollProgressTitle": {
     "message": "Progreso de desplazamiento"
+  },
+  "bookmarkSectionTitle": {
+    "message": "Marcadores"
   },
   "bookmarkAddBtn": {
     "message": "Agregar marcador"
@@ -23,11 +44,20 @@
   "bookmarkTooltip": {
     "message": "Haz clic para ir, × para eliminar"
   },
+  "bookmarkEmpty": {
+    "message": "Aún no hay marcadores"
+  },
+  "countdownSectionTitle": {
+    "message": "Temporizador"
+  },
   "countdownStartBtn": {
     "message": "Iniciar cuenta regresiva"
   },
   "countdownPlaceholder": {
     "message": "Introduce minutos"
+  },
+  "countdownIdle": {
+    "message": "Listo para iniciar"
   },
   "countdownRemain": {
     "message": "Quedan $1 min $2 s"
@@ -38,11 +68,20 @@
   "countdownCancel": {
     "message": "La cuenta regresiva se detuvo"
   },
+  "toolsSectionTitle": {
+    "message": "Herramientas"
+  },
+  "graffitiSectionTitle": {
+    "message": "Dibujo"
+  },
   "graffitiColor": {
     "message": "Elige un color"
   },
   "graffitiBrushSize": {
     "message": "Tamaño del pincel"
+  },
+  "graffitiEraserSize": {
+    "message": "Tamaño del borrador"
   },
   "graffitiPen": {
     "message": "Dibujar"
@@ -64,6 +103,9 @@
   },
   "rectangleDelete": {
     "message": "Eliminar anotación"
+  },
+  "screenshotSectionTitle": {
+    "message": "Captura"
   },
   "screenshotDOMBtn": {
     "message": "Captura DOM"
@@ -91,6 +133,9 @@
   },
   "popupEnable": {
     "message": "Activar EduLens"
+  },
+  "accountSectionTitle": {
+    "message": "Cuenta"
   },
   "loginTitle": {
     "message": "Inicia sesión en EduLens"
@@ -125,6 +170,9 @@
   "loginButton": {
     "message": "Iniciar sesión"
   },
+  "authLoginRegister": {
+    "message": "Iniciar sesión / Registrarse"
+  },
   "registerButton": {
     "message": "Registrarse"
   },
@@ -145,6 +193,12 @@
   },
   "registering": {
     "message": "Registrando..."
+  },
+  "authStatusLoggedOut": {
+    "message": "Sin iniciar sesión"
+  },
+  "authStatusLoggedIn": {
+    "message": "Conectado como $1"
   },
   "loginSuccess": {
     "message": "Sesión iniciada correctamente"
@@ -184,6 +238,9 @@
   },
   "roomMembers": {
     "message": " miembros"
+  },
+  "roomStatusSummary": {
+    "message": "Sala: $1 ($2 miembros)"
   },
   "noRoomSelected": {
     "message": "Ninguna sala seleccionada"

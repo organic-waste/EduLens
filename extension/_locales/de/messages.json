@@ -11,8 +11,29 @@
   "panelHeader": {
     "message": "Funktionskarten"
   },
+  "sidePanelStatusConnecting": {
+    "message": "Verbindung wird hergestellt..."
+  },
+  "sidePanelConnected": {
+    "message": "Verbunden"
+  },
+  "sidePanelDisconnected": {
+    "message": "Verbindung getrennt"
+  },
+  "sidePanelConnectFailed": {
+    "message": "Verbindung fehlgeschlagen"
+  },
+  "sidePanelNoActiveTab": {
+    "message": "Kein aktiver Tab gefunden"
+  },
+  "sidePanelActionFailed": {
+    "message": "Aktion fehlgeschlagen"
+  },
   "scrollProgressTitle": {
     "message": "Scrollfortschritt"
+  },
+  "bookmarkSectionTitle": {
+    "message": "Lesezeichen"
   },
   "bookmarkAddBtn": {
     "message": "Lesezeichen hinzufügen"
@@ -23,11 +44,20 @@
   "bookmarkTooltip": {
     "message": "Zum Abschnitt springen, × zum Löschen"
   },
+  "bookmarkEmpty": {
+    "message": "Noch keine Lesezeichen"
+  },
+  "countdownSectionTitle": {
+    "message": "Countdown"
+  },
   "countdownStartBtn": {
     "message": "Countdown starten"
   },
   "countdownPlaceholder": {
     "message": "Minuten eingeben"
+  },
+  "countdownIdle": {
+    "message": "Bereit zum Start"
   },
   "countdownRemain": {
     "message": "Verbleibende $1 Min $2 s"
@@ -38,11 +68,20 @@
   "countdownCancel": {
     "message": "Countdown gestoppt"
   },
+  "toolsSectionTitle": {
+    "message": "Werkzeuge"
+  },
+  "graffitiSectionTitle": {
+    "message": "Zeichnen"
+  },
   "graffitiColor": {
     "message": "Farbe wählen"
   },
   "graffitiBrushSize": {
     "message": "Pinselgröße"
+  },
+  "graffitiEraserSize": {
+    "message": "Radiergröße"
   },
   "graffitiPen": {
     "message": "Zeichnen"
@@ -64,6 +103,9 @@
   },
   "rectangleDelete": {
     "message": "Anmerkung löschen"
+  },
+  "screenshotSectionTitle": {
+    "message": "Screenshot"
   },
   "screenshotDOMBtn": {
     "message": "DOM-Screenshot"
@@ -91,6 +133,9 @@
   },
   "popupEnable": {
     "message": "EduLens aktivieren"
+  },
+  "accountSectionTitle": {
+    "message": "Konto"
   },
   "loginTitle": {
     "message": "Bei EduLens anmelden"
@@ -125,6 +170,9 @@
   "loginButton": {
     "message": "Anmelden"
   },
+  "authLoginRegister": {
+    "message": "Anmelden / Registrieren"
+  },
   "registerButton": {
     "message": "Registrieren"
   },
@@ -145,6 +193,12 @@
   },
   "registering": {
     "message": "Registrierung läuft..."
+  },
+  "authStatusLoggedOut": {
+    "message": "Nicht angemeldet"
+  },
+  "authStatusLoggedIn": {
+    "message": "Angemeldet als $1"
   },
   "loginSuccess": {
     "message": "Erfolgreich angemeldet"
@@ -184,6 +238,9 @@
   },
   "roomMembers": {
     "message": " Mitglieder"
+  },
+  "roomStatusSummary": {
+    "message": "Raum: $1 ($2 Mitglieder)"
   },
   "noRoomSelected": {
     "message": "Kein Raum ausgewählt"

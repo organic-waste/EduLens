@@ -17,7 +17,6 @@ export function injectIcon() {
 const CSS_FILES = [
   "styles/draggable-panel.css",
   "styles/base.css",
-  "styles/tools/scroll-progress.css",
   "styles/tools/bookmark.css",
   "styles/tools/countdown.css",
   "styles/filters/mouse-enhance.css",
@@ -46,11 +45,11 @@ export async function injectStyles() {
       const url = chrome.runtime.getURL(file); //扩展里的任何静态文件(css/png/html) 在运行时都要先过 chrome.runtime.getURL，否则浏览器会按“当前页面域名”去拼路径
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error(`Failed to load ${file}`);
+        throw new Error(`加载 ${file} 失败`);
       }
       return await response.text();
     } catch (error) {
-      console.warn(`could not load${file}`, error);
+      console.warn(`无法加载 ${file}`, error);
     }
   });
   const cssContents = await Promise.all(cssPromises);

@@ -11,8 +11,29 @@
   "panelHeader": {
     "message": "機能カード"
   },
+  "sidePanelStatusConnecting": {
+    "message": "接続中..."
+  },
+  "sidePanelConnected": {
+    "message": "接続済み"
+  },
+  "sidePanelDisconnected": {
+    "message": "接続が切断されました"
+  },
+  "sidePanelConnectFailed": {
+    "message": "接続に失敗しました"
+  },
+  "sidePanelNoActiveTab": {
+    "message": "アクティブなタブが見つかりません"
+  },
+  "sidePanelActionFailed": {
+    "message": "操作に失敗しました"
+  },
   "scrollProgressTitle": {
     "message": "スクロール進捗"
+  },
+  "bookmarkSectionTitle": {
+    "message": "ブックマーク"
   },
   "bookmarkAddBtn": {
     "message": "ブックマークを追加"
@@ -23,11 +44,20 @@
   "bookmarkTooltip": {
     "message": "クリックで移動、× で削除"
   },
+  "bookmarkEmpty": {
+    "message": "ブックマークはまだありません"
+  },
+  "countdownSectionTitle": {
+    "message": "カウントダウン"
+  },
   "countdownStartBtn": {
     "message": "カウントダウン開始"
   },
   "countdownPlaceholder": {
     "message": "分を入力"
+  },
+  "countdownIdle": {
+    "message": "開始待ち"
   },
   "countdownRemain": {
     "message": "残り $1 分 $2 秒"
@@ -38,11 +68,20 @@
   "countdownCancel": {
     "message": "カウントダウンを停止しました"
   },
+  "toolsSectionTitle": {
+    "message": "ツール"
+  },
+  "graffitiSectionTitle": {
+    "message": "落書き"
+  },
   "graffitiColor": {
     "message": "色を選択"
   },
   "graffitiBrushSize": {
     "message": "ブラシサイズ"
+  },
+  "graffitiEraserSize": {
+    "message": "消しゴムサイズ"
   },
   "graffitiPen": {
     "message": "描画"
@@ -64,6 +103,9 @@
   },
   "rectangleDelete": {
     "message": "注釈を削除"
+  },
+  "screenshotSectionTitle": {
+    "message": "スクリーンショット"
   },
   "screenshotDOMBtn": {
     "message": "DOM キャプチャ"
@@ -91,6 +133,9 @@
   },
   "popupEnable": {
     "message": "EduLens を有効にする"
+  },
+  "accountSectionTitle": {
+    "message": "アカウント"
   },
   "loginTitle": {
     "message": "EduLens にサインイン"
@@ -125,6 +170,9 @@
   "loginButton": {
     "message": "サインイン"
   },
+  "authLoginRegister": {
+    "message": "ログイン / 登録"
+  },
   "registerButton": {
     "message": "登録"
   },
@@ -145,6 +193,12 @@
   },
   "registering": {
     "message": "登録中..."
+  },
+  "authStatusLoggedOut": {
+    "message": "未ログイン"
+  },
+  "authStatusLoggedIn": {
+    "message": "$1 としてログイン中"
   },
   "loginSuccess": {
     "message": "サインインしました"
@@ -184,6 +238,9 @@
   },
   "roomMembers": {
     "message": " 名のメンバー"
+  },
+  "roomStatusSummary": {
+    "message": "ルーム：$1（$2 人）"
   },
   "noRoomSelected": {
     "message": "部屋が選択されていません"

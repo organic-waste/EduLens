@@ -70,7 +70,7 @@ router.post("/register", async (req, res) => {
       });
     }
     const newUser = await User.create({ username, email, password });
-    console.log("newUser: ", newUser);
+    console.log("新建用户:", newUser);
     const token = signToken(newUser._id);
     res.status(201).json({
       status: "success",
@@ -102,7 +102,7 @@ router.post("/login", async (req, res) => {
       });
     }
     const user = await User.findOne({ email }).select("+password");
-    console.log("user: ", user);
+    console.log("登录用户:", user);
     if (!user || !(await user.correctPassword(password))) {
       return res.status(401).json({
         status: "error",

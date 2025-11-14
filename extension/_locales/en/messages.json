@@ -11,8 +11,29 @@
   "panelHeader": {
     "message": "Function Cards"
   },
+  "sidePanelStatusConnecting": {
+    "message": "Connecting..."
+  },
+  "sidePanelConnected": {
+    "message": "Connected"
+  },
+  "sidePanelDisconnected": {
+    "message": "Disconnected"
+  },
+  "sidePanelConnectFailed": {
+    "message": "Connection failed"
+  },
+  "sidePanelNoActiveTab": {
+    "message": "No active tab found"
+  },
+  "sidePanelActionFailed": {
+    "message": "Action failed"
+  },
   "scrollProgressTitle": {
     "message": "Scroll Progress"
+  },
+  "bookmarkSectionTitle": {
+    "message": "Bookmarks"
   },
   "bookmarkAddBtn": {
     "message": "Add Bookmark"
@@ -23,11 +44,20 @@
   "bookmarkTooltip": {
     "message": "Click to jump, × to delete"
   },
+  "bookmarkEmpty": {
+    "message": "No bookmarks yet"
+  },
+  "countdownSectionTitle": {
+    "message": "Countdown"
+  },
   "countdownStartBtn": {
     "message": "Start Countdown"
   },
   "countdownPlaceholder": {
     "message": "Enter minutes"
+  },
+  "countdownIdle": {
+    "message": "Ready to start"
   },
   "countdownRemain": {
     "message": "Remaining $1 min $2 s"
@@ -38,11 +68,20 @@
   "countdownCancel": {
     "message": "Countdown stopped"
   },
+  "toolsSectionTitle": {
+    "message": "Tools"
+  },
+  "graffitiSectionTitle": {
+    "message": "Graffiti"
+  },
   "graffitiColor": {
     "message": "Pick a color"
   },
   "graffitiBrushSize": {
     "message": "Brush size"
+  },
+  "graffitiEraserSize": {
+    "message": "Eraser size"
   },
   "graffitiPen": {
     "message": "Draw"
@@ -64,6 +103,9 @@
   },
   "rectangleDelete": {
     "message": "Delete annotation"
+  },
+  "screenshotSectionTitle": {
+    "message": "Screenshot"
   },
   "screenshotDOMBtn": {
     "message": "DOM capture"
@@ -91,6 +133,9 @@
   },
   "popupEnable": {
     "message": "Enable EduLens"
+  },
+  "accountSectionTitle": {
+    "message": "Account"
   },
   "loginTitle": {
     "message": "Sign in to EduLens"
@@ -125,6 +170,9 @@
   "loginButton": {
     "message": "Sign in"
   },
+  "authLoginRegister": {
+    "message": "Sign in / Register"
+  },
   "registerButton": {
     "message": "Sign up"
   },
@@ -145,6 +193,12 @@
   },
   "registering": {
     "message": "Registering..."
+  },
+  "authStatusLoggedOut": {
+    "message": "Not signed in"
+  },
+  "authStatusLoggedIn": {
+    "message": "Signed in as $1"
   },
   "loginSuccess": {
     "message": "Signed in successfully"
@@ -184,6 +238,9 @@
   },
   "roomMembers": {
     "message": " members"
+  },
+  "roomStatusSummary": {
+    "message": "Room: $1 ($2 members)"
   },
   "noRoomSelected": {
     "message": "No room selected"

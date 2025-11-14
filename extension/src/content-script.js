@@ -1,6 +1,6 @@
-import { injectStyles, injectIcon } from "./utils/index.js";
+import { injectStyles } from "./utils/index.js";
 import filterStore from "./stores/filterStore.js";
-import { initializePanelBridge } from "./features/draggablePanel.js";
+import { initializePanelBridge } from "./features/panelBridge.js";
 import eventStore from "./stores/eventStore.js";
 import { apiClient } from "./services/index.js";
 

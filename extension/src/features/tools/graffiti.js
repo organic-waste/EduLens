@@ -117,6 +117,7 @@ function setupEventListeners() {
   eventStore.on(document, "mouseup", stopDrawing);
   eventStore.on(document, "mouseleave", stopDrawing);
 
+  //监听窗口大小变化并调整画布
   let resizeTimeout = null;
   const handleResize = () => {
     clearTimeout(resizeTimeout);
@@ -134,6 +135,7 @@ function startDrawing(e) {
   ({ x: startX, y: startY } = getOffsetPos(e, drawingCanvas));
 
   if (toolStore.isLine) {
+    // 保存当前画布状态（包含之前的所有绘制内容）
     imageData = drawingCtx.getImageData(
       0,
       0,
@@ -143,7 +145,7 @@ function startDrawing(e) {
   }
   drawingCtx.beginPath();
   drawingCtx.moveTo(startX, startY);
-  draw(e);
+  draw(e);  //确保点击时能画点
 }
 
 function draw(e) {
@@ -191,6 +193,7 @@ function clearCanvas() {
   saveDrawing();
 }
 
+/* 持久化 */
 async function saveDrawing() {
   if (!drawingCanvas) return;
   try {
@@ -210,6 +213,7 @@ async function loadDrawing() {
     const dataURL = await storageManager.getPageDataByType("canvas");
     if (!dataURL) return;
     const img = new Image();
+    //保证在图像加载后再绘制到canvas中
     img.onload = () => {
       drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
       drawingCtx.drawImage(img, 0, 0);

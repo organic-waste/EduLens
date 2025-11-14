@@ -11,8 +11,29 @@
   "panelHeader": {
     "message": "功能卡片"
   },
+  "sidePanelStatusConnecting": {
+    "message": "連線中..."
+  },
+  "sidePanelConnected": {
+    "message": "已連線"
+  },
+  "sidePanelDisconnected": {
+    "message": "連線已中斷"
+  },
+  "sidePanelConnectFailed": {
+    "message": "連線失敗"
+  },
+  "sidePanelNoActiveTab": {
+    "message": "找不到作用中的分頁"
+  },
+  "sidePanelActionFailed": {
+    "message": "操作失敗"
+  },
   "scrollProgressTitle": {
     "message": "捲動進度"
+  },
+  "bookmarkSectionTitle": {
+    "message": "書籤"
   },
   "bookmarkAddBtn": {
     "message": "新增書籤"
@@ -23,11 +44,20 @@
   "bookmarkTooltip": {
     "message": "點擊跳轉，× 刪除"
   },
+  "bookmarkEmpty": {
+    "message": "尚無書籤"
+  },
+  "countdownSectionTitle": {
+    "message": "倒數計時"
+  },
   "countdownStartBtn": {
     "message": "開始倒數"
   },
   "countdownPlaceholder": {
     "message": "請輸入分鐘數"
+  },
+  "countdownIdle": {
+    "message": "待命中"
   },
   "countdownRemain": {
     "message": "還剩下 $1 分 $2 秒"
@@ -38,11 +68,20 @@
   "countdownCancel": {
     "message": "倒數已停止"
   },
+  "toolsSectionTitle": {
+    "message": "工具"
+  },
+  "graffitiSectionTitle": {
+    "message": "塗鴉"
+  },
   "graffitiColor": {
     "message": "選擇顏色"
   },
   "graffitiBrushSize": {
     "message": "筆刷大小"
+  },
+  "graffitiEraserSize": {
+    "message": "橡皮大小"
   },
   "graffitiPen": {
     "message": "繪製"
@@ -64,6 +103,9 @@
   },
   "rectangleDelete": {
     "message": "刪除批註"
+  },
+  "screenshotSectionTitle": {
+    "message": "螢幕截圖"
   },
   "screenshotDOMBtn": {
     "message": "DOM 截圖"
@@ -91,6 +133,9 @@
   },
   "popupEnable": {
     "message": "啟用 EduLens"
+  },
+  "accountSectionTitle": {
+    "message": "帳號"
   },
   "loginTitle": {
     "message": "登入 EduLens"
@@ -125,6 +170,9 @@
   "loginButton": {
     "message": "登入"
   },
+  "authLoginRegister": {
+    "message": "登入 / 註冊"
+  },
   "registerButton": {
     "message": "註冊"
   },
@@ -145,6 +193,12 @@
   },
   "registering": {
     "message": "註冊中…"
+  },
+  "authStatusLoggedOut": {
+    "message": "未登入"
+  },
+  "authStatusLoggedIn": {
+    "message": "已登入：$1"
   },
   "loginSuccess": {
     "message": "登入成功"
@@ -184,6 +238,9 @@
   },
   "roomMembers": {
     "message": " 位成員"
+  },
+  "roomStatusSummary": {
+    "message": "房間：$1（$2 人）"
   },
   "noRoomSelected": {
     "message": "尚未選擇房間"

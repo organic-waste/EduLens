@@ -89,7 +89,7 @@ class WebsocketServer {
       return;
     }
     const { roomId, pageUrl } = message;
-    console.log("message: ", message);
+    console.log("收到消息内容:", message);
     try {
       const room = await Room.findOne({
         _id: roomId,

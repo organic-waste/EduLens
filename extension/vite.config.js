@@ -20,7 +20,7 @@ export default defineConfig({
       input: {
         content: 'src/content-script.js',
         background: 'src/background.js',
-        popup: 'src/popup.html',
+        sidePanel: 'src/sidePanel.html',
       },
     }
   }
