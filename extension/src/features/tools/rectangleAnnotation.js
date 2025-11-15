@@ -54,6 +54,7 @@ export function activateRectangleAnnotation() {
     renderAllRectangles();
   });
   setupEventListeners();
+  updateDrawingContainerInteraction();
 
   window.__edulens_reloadRectangles = () => {
     loadRectangles().then(() => {
@@ -67,16 +68,13 @@ export function activateRectangleAnnotation() {
 function toggleRectangleMode() {
   toolStore.updateState("isRectangle");
   if (toolStore.isRectangle) {
-    drawingContainer.style.pointerEvents = "auto";
-    drawingContainer.style.cursor = "crosshair";
     exitEditingMode();
     updateRectanglesPointerEvents(true);
   } else {
-    drawingContainer.style.pointerEvents = "none";
-    drawingContainer.style.cursor = "";
     restorePageInteraction();
     updateRectanglesPointerEvents(false);
   }
+  updateDrawingContainerInteraction();
 }
 
 //控制框选的悬停鼠标样式
@@ -91,13 +89,28 @@ function updateRectanglesPointerEvents(enable) {
   });
 }
 
+function updateDrawingContainerInteraction() {
+  if (!drawingContainer) return;
+  if (toolStore.isRectangle || isEditing) {
+    drawingContainer.style.pointerEvents = "auto";
+    drawingContainer.style.cursor = toolStore.isRectangle
+      ? "crosshair"
+      : "default";
+  } else {
+    drawingContainer.style.pointerEvents = "none";
+    drawingContainer.style.cursor = "";
+  }
+}
+
 function setupEventListeners() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
   eventStore.on(shadowRoot, "mousedown", listenerMouseDown);
-  eventStore.on(shadowRoot, "mousemove", listenerMouseMove);
-  eventStore.on(shadowRoot, "mouseup", listenerMouseUp);
+  eventStore.on(window, "mousemove", listenerMouseMove, true);
+  eventStore.on(window, "mouseup", listenerMouseUp, true);
   eventStore.on(shadowRoot, "mouseleave", listenerMouseUp);
-  eventStore.on(shadowRoot, "dblclick", handleDblClick);
+  // 捕获阶段监听，确保 pointer-events: none 时也能记录到双击和点击
+  eventStore.on(window, "dblclick", handleDblClick, true);
+  eventStore.on(window, "mousedown", handleGlobalMouseDown, true);
 }
 
 function listenerMouseDown(e) {
@@ -157,6 +170,7 @@ function listenerMouseDown(e) {
 }
 
 function listenerMouseMove(e) {
+  if (!drawingContainer) return;
   const { x, y } = getOffsetPos(e, drawingContainer);
   //创建矩阵元素时
   if (isCreating) {
@@ -223,6 +237,7 @@ function listenerMouseMove(e) {
 }
 
 function listenerMouseUp() {
+  if (!drawingContainer) return;
   if (isCreating) {
     isCreating = false;
     const newRect = {
@@ -248,14 +263,22 @@ function listenerMouseUp() {
   //恢复其他操作
   isResizing = false;
   isMoving = false;
-  drawingContainer.style.cursor = toolStore.isRectangle
-    ? "crosshair"
-    : "default";
+  updateDrawingContainerInteraction();
   restorePageInteraction();
 }
 
 function handleDblClick(e) {
   if (toolStore.isRectangle || isEditing) return;
+  if (!drawingContainer) return;
+
+  const containerRect = drawingContainer.getBoundingClientRect();
+  const insideContainer =
+    e.clientX >= containerRect.left &&
+    e.clientX <= containerRect.right &&
+    e.clientY >= containerRect.top &&
+    e.clientY <= containerRect.bottom;
+  if (!insideContainer) return;
+
   const { x, y } = getOffsetPos(e, drawingContainer);
 
   const clickedRect = findTopmostRectangleAt(x, y);
@@ -263,6 +286,42 @@ function handleDblClick(e) {
     enterEditingMode(clickedRect);
     e.preventDefault();
     e.stopPropagation();
+  }
+}
+
+function handleGlobalMouseDown(e) {
+  if (!isEditing || toolStore.isRectangle || !drawingContainer || !currentRect)
+    return;
+
+  const rectDiv = shadowRoot.querySelector(
+    `.annotation-rect[data-id="${currentRect.id}"]`
+  );
+  if (rectDiv && rectDiv.contains(e.target)) return;
+
+  const containerRect = drawingContainer.getBoundingClientRect();
+  const insideContainer =
+    e.clientX >= containerRect.left &&
+    e.clientX <= containerRect.right &&
+    e.clientY >= containerRect.top &&
+    e.clientY <= containerRect.bottom;
+
+  if (!insideContainer) {
+    exitEditingMode();
+    return;
+  }
+
+  const { x, y } = getOffsetPos(e, drawingContainer);
+  if (
+    !isPointInRect(
+      x,
+      y,
+      currentRect.x,
+      currentRect.y,
+      currentRect.width,
+      currentRect.height
+    )
+  ) {
+    exitEditingMode();
   }
 }
 
@@ -375,6 +434,7 @@ function enterEditingMode(rect) {
   isEditing = true;
   editingRect = rect;
   currentRect = rect;
+  updateDrawingContainerInteraction();
 
   const rectDiv = shadowRoot.querySelector(
     `.annotation-rect[data-id="${rect.id}"]`
@@ -426,19 +486,19 @@ function exitEditingMode() {
   }
   editingRect = null;
   currentRect = null;
-  drawingContainer.style.cursor = "default";
+  updateDrawingContainerInteraction();
 }
 
 function createHandles(rectDiv, rect) {
   const handles = [
     { type: "nw", x: -5, y: -5 },
     { type: "n", x: rect.width / 2 - 5, y: -5 },
-    { type: "ne", x: rect.width - 5, y: -5 },
-    { type: "e", x: rect.width - 5, y: rect.height / 2 - 5 },
-    { type: "se", x: rect.width - 5, y: rect.height - 5 },
+    { type: "ne", x: rect.width - 10, y: -5 },
+    { type: "e", x: rect.width - 10, y: rect.height / 2 - 5 },
+    { type: "se", x: rect.width - 10, y: rect.height - 5 },
     { type: "s", x: rect.width / 2 - 5, y: rect.height - 5 },
-    { type: "sw", x: -5, y: rect.height - 5 },
-    { type: "w", x: -5, y: rect.height / 2 - 5 },
+    { type: "sw", x: -5, y: rect.height - 10 },
+    { type: "w", x: -5, y: rect.height / 2 - 10 },
   ];
   handles.forEach((h) => {
     const handle = document.createElement("div");

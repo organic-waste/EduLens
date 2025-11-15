@@ -2,9 +2,10 @@
   <a href="README.md">中文</a> | <a href="docs/README.en.md">English</a>
 </div>
 <p align="center" style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-right:40px;">
-  <img src="extension/public/icons/icon.png" alt="EduLens Logo" width="128" height="128">
-  <img src="extension/public/icons/title.png" alt="EduLens Title" height="128">
+  <img src="assets/icon.png" alt="EduLens Logo" width="128" height="128">
+  <img src="assets/title.png" alt="EduLens Title" height="128">
 </p>
+
 
 ## 📖 项目简介
 
@@ -27,6 +28,10 @@ EduLens 是一款专为个人学习和在线教学设计的浏览器扩展插件
 - **在线教学** - 在线远程授课时进行实时多人标注、演示和互动
 - **视频制作** - 录制教学视频时添加可视化标注
 
+### 使用示例
+
+![使用示例](G:\EduLens\edulens\assets\example.png)
+
 ---
 
 ## 📝 使用指南
@@ -42,7 +47,7 @@ EduLens 是一款专为个人学习和在线教学设计的浏览器扩展插件
 #### 标注工具
 
 - **涂鸦绘制** - 点击“涂鸦”功能，选择颜色和笔刷大小即可绘制，支持直线、橡皮擦和一键清除
-- **框选批注** - 选择“框选批注”后在页面拖拽矩形框并输入内容，悬停可查看完整批注
+- **框选批注** - 选择“框选批注”后在页面拖拽矩形框，双击可输入批注内容，悬停可查看完整批注
 - **图片挂起** - 点击“图片”上传本地图片，可拖拽调整位置、大小和旋转，支持固定或随页面滚动
 
 #### 截图工具
@@ -74,3 +79,8 @@ EduLens 是一款专为个人学习和在线教学设计的浏览器扩展插件
 
 - **邮箱**: 1473980832@qq.com / o.organic.waste.o@gmail.com
 - **问题反馈**: [https://github.com/organic-waste/edulens/issues](https://github.com/organic-waste/edulens/issues)
+
+
+
+
+

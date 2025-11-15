@@ -2,9 +2,10 @@
   <a href="../README.md">中文</a> | <a href="README.en.md">English</a>
 </div>
 <p align="center" style="display: flex; align-items: center; justify-content: center; gap: 12px;margin-right:40px;">
-  <img src="../extension/public/icons/icon.png" alt="EduLens Logo" width="128" height="128">
-  <img src="../extension/public/icons/title.png" alt="EduLens Title" height="128">
+  <img src="../assets/icon.png" alt="EduLens Logo" width="128" height="128">
+  <img src="../assets/title.png" alt="EduLens Title" height="128">
 </p>
+
 
 ## 📖 Overview
 
@@ -27,6 +28,10 @@ EduLens is a browser extension designed for both personal learning and online te
 - **Online Teaching** - Enable real-time multi-user annotation and interaction during remote lessons to enhance engagement
 - **Video Production** - Add visual annotations when recording educational videos for clearer and more intuitive content
 
+### Usage example
+
+![使用示例](G:\EduLens\edulens\assets\example.png)
+
 ---
 
 ## 📝 Usage Guide
@@ -42,7 +47,7 @@ After activation, a floating bubble appears in the bottom-right corner of any pa
 #### Annotation Tools
 
 - **Freehand drawing** - Choose "Doodle," pick colors and brush size, draw freely, or switch to straight lines, eraser, and clear-all
-- **Boxed notes** - Select "Box Annotation," drag a rectangle, and type the note; hover to preview the full text
+- **Boxed notes** - Select "Box Annotation," drag a rectangle, and double-click to type the note; hover to preview the full text
 - **Pinned images** - Upload local images, drag to reposition, resize, or rotate; lock them in place or let them scroll
 
 #### Screenshot Tools
