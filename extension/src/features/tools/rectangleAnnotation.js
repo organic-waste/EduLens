@@ -1,7 +1,7 @@
 /* 创建框选注释 */
 import eventStore from "../../stores/eventStore.js";
 import toolStore from "../../stores/toolStore.js";
-import { getOffsetPos, createEl, getId } from "../../utils/index.js";
+import { createEl, getId } from "../../utils/index.js";
 import { storageManager, syncManager } from "../../services/index.js";
 import {
   preventPageInteraction,
@@ -31,6 +31,81 @@ let moveStartY = 0;
 let originalRect = null;
 let originalRectPos = null;
 let shadowRoot = null;
+let positionUpdateRaf = null;
+
+function getScrollOffsets() {
+  return {
+    x:
+      typeof window.scrollX === "number"
+        ? window.scrollX
+        : window.pageXOffset || document.documentElement.scrollLeft || 0,
+    y:
+      typeof window.scrollY === "number"
+        ? window.scrollY
+        : window.pageYOffset || document.documentElement.scrollTop || 0,
+  };
+}
+
+function getDocumentPosition(event) {
+  if (event.touches && event.touches.length) {
+    const touch = event.touches[0];
+    return {
+      x: touch.pageX,
+      y: touch.pageY,
+    };
+  }
+  const { x: scrollX, y: scrollY } = getScrollOffsets();
+  return {
+    x:
+      typeof event.pageX === "number"
+        ? event.pageX
+        : event.clientX + scrollX,
+    y:
+      typeof event.pageY === "number"
+        ? event.pageY
+        : event.clientY + scrollY,
+  };
+}
+
+function applyRectPosition(rectDiv, rect) {
+  rectDiv.style.left = `${rect.x}px`;
+  rectDiv.style.top = `${rect.y}px`;
+}
+
+function updatePreviewPosition() {
+  if (!previewDiv) return;
+  const left = Math.min(startX, endX);
+  const top = Math.min(startY, endY);
+  const width = Math.abs(endX - startX);
+  const height = Math.abs(endY - startY);
+  previewDiv.style.left = `${left}px`;
+  previewDiv.style.top = `${top}px`;
+  previewDiv.style.width = `${width}px`;
+  previewDiv.style.height = `${height}px`;
+}
+
+function updateRectanglesPosition() {
+  if (!shadowRoot) return;
+  rectangles.forEach((rect) => {
+    const rectDiv = shadowRoot.querySelector(
+      `.annotation-rect[data-id="${rect.id}"]`
+    );
+    if (rectDiv) {
+      applyRectPosition(rectDiv, rect);
+    }
+  });
+  updatePreviewPosition();
+}
+
+function scheduleRectanglesPositionUpdate() {
+  if (positionUpdateRaf) {
+    cancelAnimationFrame(positionUpdateRaf);
+  }
+  positionUpdateRaf = requestAnimationFrame(() => {
+    positionUpdateRaf = null;
+    updateRectanglesPosition();
+  });
+}
 
 export function activateRectangleAnnotation() {
   shadowRoot = window.__EDULENS_SHADOW_ROOT__;
@@ -52,6 +127,7 @@ export function activateRectangleAnnotation() {
   }
   loadRectangles().then(() => {
     renderAllRectangles();
+    scheduleRectanglesPositionUpdate();
   });
   setupEventListeners();
   updateDrawingContainerInteraction();
@@ -60,6 +136,7 @@ export function activateRectangleAnnotation() {
     loadRectangles().then(() => {
       //加载后记得重新渲染
       renderAllRectangles();
+      scheduleRectanglesPositionUpdate();
     });
   };
 }
@@ -111,11 +188,14 @@ function setupEventListeners() {
   // 捕获阶段监听，确保 pointer-events: none 时也能记录到双击和点击
   eventStore.on(window, "dblclick", handleDblClick, true);
   eventStore.on(window, "mousedown", handleGlobalMouseDown, true);
+  const syncPositions = () => scheduleRectanglesPositionUpdate();
+  eventStore.on(window, "scroll", syncPositions, { passive: true });
+  eventStore.on(window, "resize", syncPositions);
 }
 
 function listenerMouseDown(e) {
   if (e.button !== 0) return;
-  const { x, y } = getOffsetPos(e, drawingContainer);
+  const { x, y } = getDocumentPosition(e);
 
   //创建新矩阵时
   if (toolStore.isRectangle && !isEditing) {
@@ -171,7 +251,7 @@ function listenerMouseDown(e) {
 
 function listenerMouseMove(e) {
   if (!drawingContainer) return;
-  const { x, y } = getOffsetPos(e, drawingContainer);
+  const { x, y } = getDocumentPosition(e);
   //创建矩阵元素时
   if (isCreating) {
     endX = x;
@@ -279,7 +359,7 @@ function handleDblClick(e) {
     e.clientY <= containerRect.bottom;
   if (!insideContainer) return;
 
-  const { x, y } = getOffsetPos(e, drawingContainer);
+  const { x, y } = getDocumentPosition(e);
 
   const clickedRect = findTopmostRectangleAt(x, y);
   if (clickedRect) {
@@ -310,7 +390,7 @@ function handleGlobalMouseDown(e) {
     return;
   }
 
-  const { x, y } = getOffsetPos(e, drawingContainer);
+  const { x, y } = getDocumentPosition(e);
   if (
     !isPointInRect(
       x,
@@ -358,19 +438,19 @@ function renderAllRectangles() {
     .querySelectorAll(".annotation-rect")
     .forEach((e) => e.remove());
   rectangles.forEach((r) => renderRectangles(r));
+  scheduleRectanglesPositionUpdate();
 }
 
 function renderRectangles(rect) {
   const rectDiv = createEl("div", {
     class: "annotation-rect",
     "data-id": rect.id,
-    style: `left:${rect.x}px;top:${rect.y}px;width:${rect.width}px;height:${
-      rect.height
-    }px;border-color:${rect.color};pointer-events:${
-      toolStore.isRectangle ? "auto" : "none"
-    };`,
+    style: `width:${rect.width}px;height:${rect.height}px;border-color:${
+      rect.color
+    };pointer-events:${toolStore.isRectangle ? "auto" : "none"};`,
   });
   rectDiv.dataset.id = rect.id;
+  applyRectPosition(rectDiv, rect);
 
   const textContainer = createEl("div", { class: "annotation-text-container" });
   const textInput = createEl("input", {
@@ -416,6 +496,7 @@ function renderRectangles(rect) {
   });
   eventStore.on(deleteBtn, "mousedown", (e) => e.stopPropagation());
   drawingContainer.appendChild(rectDiv);
+  scheduleRectanglesPositionUpdate();
 }
 
 function removeRectangle(id) {
@@ -514,8 +595,7 @@ function createHandles(rectDiv, rect) {
     eventStore.on(handle, "mousedown", (e) => {
       e.stopPropagation();
       e.preventDefault();
-      //获取container位置转为获取canvas的位置
-      const { x, y } = getOffsetPos(e, drawingContainer);
+      const { x, y } = getDocumentPosition(e);
       startResizing({ element: handle, type: handle.dataset.type }, x, y);
     });
     rectDiv.appendChild(handle);
@@ -528,11 +608,11 @@ function getHandleAt(x, y, rect) {
   );
   if (!rectDiv) return null;
   const handles = rectDiv.getElementsByClassName("resize-handle");
+  const { x: scrollX, y: scrollY } = getScrollOffsets();
   for (let handle of handles) {
     const handleRect = handle.getBoundingClientRect();
-    const containerRect = drawingContainer.getBoundingClientRect();
-    const handleX = handleRect.left - containerRect.left;
-    const handleY = handleRect.top - containerRect.top;
+    const handleX = handleRect.left + scrollX;
+    const handleY = handleRect.top + scrollY;
     const handleW = handleRect.width;
     const handleH = handleRect.height;
     if (isPointInRect(x, y, handleX, handleY, handleW, handleH)) {
@@ -644,8 +724,7 @@ function doResize(currentX, currentY) {
     `.annotation-rect[data-id="${currentRect.id}"]`
   );
   if (rectDiv) {
-    rectDiv.style.left = `${newX}px`;
-    rectDiv.style.top = `${newY}px`;
+    applyRectPosition(rectDiv, currentRect);
     rectDiv.style.width = `${newW}px`;
     rectDiv.style.height = `${newH}px`;
 
@@ -714,8 +793,7 @@ function doMove(currentX, currentY) {
     `.annotation-rect[data-id="${currentRect.id}"]`
   );
   if (rectDiv) {
-    rectDiv.style.left = `${newX}px`;
-    rectDiv.style.top = `${newY}px`;
+    applyRectPosition(rectDiv, currentRect);
   }
 }
 
