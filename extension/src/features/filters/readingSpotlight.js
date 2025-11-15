@@ -2,37 +2,91 @@
 import eventStore from "../../stores/eventStore.js";
 import { createEl } from "../../utils/index.js";
 
+const pointerState = {
+  y: window.innerHeight / 2,
+};
+const MIN_HEIGHT = 20;
+const HEIGHT_STEP = 12;
+
 let readingSpotlightDiv = null;
+let isActive = false;
+let spotlightHeight = 120;
+let rafId = null;
 
-function ReadingSpotlight(e) {
+function ensureReadingSpotlight() {
+  if (readingSpotlightDiv) return;
+  const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+  readingSpotlightDiv = createEl("div", { class: "reading-spotlight" });
+  Object.assign(readingSpotlightDiv.style, { left: "0px", top: "0px" });
+  shadowRoot.appendChild(readingSpotlightDiv);
+  updateSpotlightHeight(spotlightHeight);
+}
+
+function updateSpotlightHeight(nextHeight) {
+  const maxHeight = Math.max(MIN_HEIGHT, window.innerHeight - 40);
+  spotlightHeight = Math.min(maxHeight, Math.max(MIN_HEIGHT, nextHeight));
+  if (readingSpotlightDiv) {
+    readingSpotlightDiv.style.height = `${spotlightHeight}px`;
+  }
+  scheduleRender();
+}
+
+function renderSpotlight() {
   if (!readingSpotlightDiv) return;
+  const maxTop = window.innerHeight - spotlightHeight;
+  const top = Math.min(
+    Math.max(pointerState.y - spotlightHeight / 2, 0),
+    maxTop
+  );
+  readingSpotlightDiv.style.transform = `translateY(${top}px)`;
+  rafId = null;
+}
 
-  // 计算聚光灯位置
-  const spotlightHeight = 6; // 6vh
-  const vh = window.innerHeight / 100;
-  const topPosition = e.clientY - (spotlightHeight * vh) / 2;
+function scheduleRender() {
+  if (rafId) return;
+  rafId = requestAnimationFrame(renderSpotlight);
+}
 
-  readingSpotlightDiv.style.transform = `translateY(${topPosition}px)`;
+function handlePointerMove(e) {
+  pointerState.y = e.clientY;
+  scheduleRender();
+}
+
+function handleWheel(e) {
+  if (!isActive || !e.altKey) return;
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? HEIGHT_STEP : -HEIGHT_STEP;
+  updateSpotlightHeight(spotlightHeight + delta);
+}
+
+function handleResize() {
+  scheduleRender();
 }
 
 export function activateReadingSpotlight() {
-  if (!readingSpotlightDiv) {
-    const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
-    readingSpotlightDiv = createEl("div", { class: "reading-spotlight" });
-    shadowRoot.appendChild(readingSpotlightDiv);
-
-    const vh = window.innerHeight / 100;
-    const initialTop = window.innerHeight / 2 - (6 * vh) / 2;
-    readingSpotlightDiv.style.transform = `translateY(${initialTop}px)`;
-  }
-
+  if (isActive) return;
+  isActive = true;
+  ensureReadingSpotlight();
   readingSpotlightDiv.style.display = "block";
-  eventStore.on(document, "mousemove", ReadingSpotlight);
+  scheduleRender();
+  eventStore.on(document, "pointermove", handlePointerMove);
+  eventStore.on(document, "wheel", handleWheel, { passive: false });
+  eventStore.on(window, "resize", handleResize);
 }
 
 export function deactivateReadingSpotlight() {
-  eventStore.off(window, "mousemove", ReadingSpotlight);
-  if (readingSpotlightDiv) {
-    readingSpotlightDiv.style.display = "none";
+  if (!isActive) return;
+  isActive = false;
+  eventStore.off(document, "pointermove", handlePointerMove);
+  eventStore.off(document, "wheel", handleWheel);
+  eventStore.off(window, "resize", handleResize);
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
   }
+  if (readingSpotlightDiv) {
+    readingSpotlightDiv.remove();
+    readingSpotlightDiv = null;
+  }
+  spotlightHeight = 120;
 }
