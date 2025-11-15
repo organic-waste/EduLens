@@ -354,6 +354,8 @@ async function saveDrawing() {
   try {
     const dataURL = drawingCanvas.toDataURL("image/png"); //指定以png的形式保存
 
+    await storageManager.savePageData("canvas", dataURL);
+
     // 发送实时同步操作
     syncManager.sendOperation({
       type: "canvas-update",
