@@ -1,6 +1,7 @@
 .annotation-rect {
   position: absolute;
   box-sizing: border-box;
+  margin: 5px;
   pointer-events: auto;
   border: 3px solid var(--main-color);
   border-radius: 4px;
@@ -62,8 +63,10 @@
 
 .annotation-preview {
   position: absolute;
+  box-sizing: border-box;
   border: 3px dashed var(--main-color);
   border-radius: 4px;
+  margin: 5px;
   pointer-events: none;
   z-index: 9998;
   user-select: none;

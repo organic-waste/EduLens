@@ -30,10 +30,10 @@
     "mongodb": "^7.0.0",
     "mongoose": "^8.19.1",
     "uuid": "^13.0.0",
-    "ws": "^8.18.3"
+    "ws": "^8.18.3",
+    "cross-env": "^10.1.0"
   },
   "devDependencies": {
-    "cross-env": "^10.1.0",
     "nodemon": "^3.1.10"
   }
 }
