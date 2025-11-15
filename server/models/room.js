@@ -26,7 +26,7 @@ const roomSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true,
-    default: "",
+    default: undefined,
   },
   isPublic: {
     type: Boolean,

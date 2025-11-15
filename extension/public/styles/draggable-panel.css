@@ -14,7 +14,7 @@
 }
 .draggable-panel.open-panel {
   width: 30vh;
-  height: 40vh;
+  height: 44vh;
   border-radius: 10px;
 }
 
@@ -52,7 +52,7 @@
   border-radius: 10px;
   position: relative;
   width: 30vh;
-  height: 50vh;
+  height: 44vh;
   background: #fff;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
   transition: width 0.3s ease-in-out, height 0.3s ease-in-out;
@@ -75,7 +75,7 @@
 
 .card-content {
   position: relative;
-  height: 45vh;
+  height: 39vh;
   border-radius: 0 0 10px 10px;
 }
 
