@@ -395,6 +395,11 @@ function renderRectangles(rect) {
     textContent: rect.text,
     style: `color:${toolStore.currentColor};`,
   });
+  if (rect.text.trim() !== "") {
+    tooltip.style.display = "block";
+  } else {
+    tooltip.style.display = "none";
+  }
   rectDiv.append(textContainer, tooltip);
 
   eventStore.on(textInput, "input", (e) => {
@@ -738,21 +743,15 @@ function showTooltip(rectId) {
     const tooltip = rectDiv.querySelector(".annotation-tooltip");
     if (tooltip) {
       tooltip.textContent = rect.text;
+      tooltip.style.display = "block";
       tooltip.style.opacity = 1;
     }
   }
 }
 
 function hideTooltip(rectId) {
-  const rectDiv = shadowRoot.querySelector(
-    `.annotation-rect[data-id="${rectId}"]`
-  );
-  if (rectDiv) {
-    const tooltip = rectDiv.querySelector(".annotation-tooltip");
-    if (tooltip) {
-      tooltip.style.opacity = 0;
-    }
-  }
+  // 保持提示文本常驻显示，不再隐藏
+  showTooltip(rectId);
 }
 
 /* 持久化 */

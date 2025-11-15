@@ -1,15 +1,15 @@
 /* 颜色变量 */
 :root {
-  --main-color: #76859a;
+  --main-color: #677b97;
   --secondary-color: #c1cbce;
-  --hover-color: #5484c9;
+  --hover-color: #60abda;
   --lighter-color: #e3eef3;
   --background-color: #f3f7f9;
-  --emphasis-color: #0f3b8b;
+  --emphasis-color: #2b53a8;
   --mask-color: rgba(12, 44, 104, 0.2);
   --error-color: #b26464;
   --emphasis-error-color: #d44343;
-  --lighter-font-size: 1.4vh;
+  --lighter-font-size: 1.5vh;
   --normal-font-size: 1.8vh;
   --bolder-font-size: 2.2vh;
 }
