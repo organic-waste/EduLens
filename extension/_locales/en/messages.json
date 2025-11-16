@@ -155,6 +155,9 @@
   "loginLink": {
     "message": "Sign in"
   },
+  "loginPanelButton": {
+    "message": "Sign in"
+  },
   "loggingIn": {
     "message": "Signing in..."
   },

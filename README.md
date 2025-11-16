@@ -29,7 +29,7 @@ EduLens 是一款专为个人学习和在线教学设计的浏览器扩展插件
 
 ### 使用示例
 
-![使用示例](assets\example.png)
+![使用示例](assets/example.png)
 
 ---
 

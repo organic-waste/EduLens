@@ -29,7 +29,7 @@ It offers real-time collaborative annotation, a variety of note-taking tools, an
 
 ### Usage example
 
-![使用示例](..\assets\example.png)
+![使用示例](../assets/example.png)
 
 ---
 

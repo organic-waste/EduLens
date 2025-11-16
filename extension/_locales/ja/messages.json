@@ -155,6 +155,9 @@
   "loginLink": {
     "message": "サインインする"
   },
+  "loginPanelButton": {
+    "message": "ログイン"
+  },
   "loggingIn": {
     "message": "サインイン中..."
   },

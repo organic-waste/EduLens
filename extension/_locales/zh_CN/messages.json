@@ -217,6 +217,10 @@
     "message": "立即登录",
     "description": "登录链接文字"
   },
+  "loginPanelButton": {
+    "message": "登录账号",
+    "description": "面板中的登录按钮"
+  },
   "loggingIn": {
     "message": "登录中...",
     "description": "登录中状态文字"

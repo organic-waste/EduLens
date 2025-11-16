@@ -70,6 +70,29 @@ function showForm() {
   });
 }
 
+function showLoginEntryButton() {
+  const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+  if (!shadowRoot) return;
+
+  const functions = shadowRoot.querySelector(".functions");
+  if (!functions) return;
+
+  shadowRoot.querySelector(".user-status-area")?.remove();
+  shadowRoot.querySelector(".room-selector")?.remove();
+  shadowRoot.querySelector(".login-entry-area")?.remove();
+
+  const loginArea = createEl("div", { class: "login-entry-area" });
+  const loginBtn = createEl("button", {
+    class: "button login-entry-btn",
+    textContent: chrome.i18n.getMessage("loginPanelButton"),
+  });
+
+  loginArea.appendChild(loginBtn);
+  functions.appendChild(loginArea);
+
+  eventStore.on(loginBtn, "click", showForm);
+}
+
 // 登录表单
 function createLoginFormContent() {
   const container = createEl("div", { class: "login-form-container" });
@@ -358,6 +381,7 @@ export async function updateLoginStatus(user) {
 
   const shadow = window.__EDULENS_SHADOW_ROOT__;
   shadow.querySelector(".user-status-area")?.remove();
+  shadow.querySelector(".login-entry-area")?.remove();
   const area = createEl("div", { class: "user-status-area" });
   area.innerHTML = `
     <div class="user-info">
@@ -381,12 +405,12 @@ async function handleLogout() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
   shadowRoot.querySelector(".user-status-area")?.remove();
   shadowRoot.querySelector(".room-selector")?.remove();
-  showForm();
+  showLoginEntryButton();
 }
 
 export async function activateLogin() {
   // 设置认证失败回调
-  authManager.setAuthFailureCallback(showForm);
+  authManager.setAuthFailureCallback(showLoginEntryButton);
 
   const authInitialized = await authManager.init();
   // console.log("[EduLens] 认证初始化结果:", authInitialized);
@@ -400,9 +424,9 @@ export async function activateLogin() {
     if (isValid && user) {
       updateLoginStatus(user);
     } else {
-      showForm();
+      showLoginEntryButton();
     }
   } else {
-    showForm();
+    showLoginEntryButton();
   }
 }
