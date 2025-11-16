@@ -155,6 +155,9 @@
   "loginLink": {
     "message": "Ir a inicio de sesión"
   },
+  "loginPanelButton": {
+    "message": "Iniciar sesión"
+  },
   "loggingIn": {
     "message": "Iniciando sesión..."
   },

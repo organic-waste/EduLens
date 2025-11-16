@@ -84,3 +84,11 @@
   height: 100%;
   overflow: hidden;
 }
+
+.login-entry-area {
+  padding: 1vh 1vh 0;
+}
+
+.login-entry-btn {
+  width: 100%;
+}

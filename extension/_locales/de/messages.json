@@ -155,6 +155,9 @@
   "loginLink": {
     "message": "Jetzt anmelden"
   },
+  "loginPanelButton": {
+    "message": "Anmelden"
+  },
   "loggingIn": {
     "message": "Anmeldung läuft..."
   },
