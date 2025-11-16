@@ -140,8 +140,8 @@ class SyncManager {
           rectangles: cloudData.rectangles || [],
           images: cloudData.images || [],
         });
-        // 通知所有组件刷新
 
+        // 通知所有组件刷新
         if (typeof window.__edulens_reloadCanvas === "function") {
           window.__edulens_reloadCanvas();
         }

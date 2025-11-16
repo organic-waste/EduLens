@@ -32,7 +32,7 @@
 
 .login-close-btn {
   position: absolute;
-  right: 4vh;
+  right: 2vh;
   top: 1vh;
   z-index: 10001;
   display: flex;
@@ -77,11 +77,10 @@
 .input-group {
   display: flex;
   flex-direction: column;
-  gap: 0.8vh;
 }
 
 .input-group label {
-  font-size: var(--lighter-font-size);
+  font-size: var(--normal-font-size);
   color: var(--main-color);
   font-weight: 500;
 }
@@ -103,6 +102,7 @@
 
 .login-submit-btn,
 .register-submit-btn {
+  font-size: var(--bolder-font-size);
   margin-top: 1vh;
 }
 

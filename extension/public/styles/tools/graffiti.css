@@ -72,9 +72,9 @@
   width: 6vh;
   color: var(--main-color);
   text-align: center;
-  line-height: 3vh;
+  line-height: var(--boldest-font-size);
   margin-left: 0.5vh;
-  height: 3vh;
+  height: var(--boldest-font-size);
   padding: 0.5vh;
   background-color: #f3f3f3;
   border: 1px solid var(--main-color);
@@ -92,8 +92,8 @@
   min-width: 3vh;
   color: var(--main-color);
   text-align: center;
-  line-height: 3vh;
-  height: 3vh;
+  line-height: var(--boldest-font-size);
+  height: var(--boldest-font-size);
   padding: 0.5vh;
   background-color: #f3f3f3;
 }

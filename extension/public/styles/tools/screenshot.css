@@ -23,7 +23,7 @@
   width: 100vw;
   color: var(--emphasis-color);
   padding: 2vh;
-  font-size: 3vh;
+  font-size: var(--boldest-font-size);
   text-align: center;
   background-color: var(--mask-color);
   z-index: 9999999;

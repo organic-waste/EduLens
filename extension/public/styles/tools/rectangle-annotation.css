@@ -17,14 +17,18 @@
   background: rgba(255, 255, 255, 0.9);
   border-bottom: 1px solid #ccc;
   display: none;
+  align-items: center;
+  gap: 0.6vh;
   pointer-events: auto;
   z-index: 10000;
-  padding: 2px 3vh 2px 2px;
+  padding: 2px 0.6vh 2px 2px;
   box-sizing: border-box;
 }
 
 .annotation-text-input {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
+  width: auto;
   border: none;
   background: transparent;
   font-size: var(--bolder-font-size);
@@ -33,13 +37,14 @@
   outline: none;
 }
 
-.annotation-delete-btn {
-  position: absolute;
-  font-size: 2vh;
-  top: 50%;
-  right: 2px;
-  transform: translateY(-50%);
-  pointer-events: auto;
+.annotation-text-container .annotation-pin-btn,
+.annotation-text-container .annotation-delete-btn {
+  width: 3.2vh;
+  height: 3.2vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .annotation-tooltip {
