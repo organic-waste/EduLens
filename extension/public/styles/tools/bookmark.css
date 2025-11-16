@@ -34,13 +34,6 @@
   z-index: 10002;
 }
 
-.bookmark-delete {
-  margin-left: 6px;
-  color: var(--error-color);
-  font-weight: bold;
-  cursor: pointer;
-}
-
 .bookmark-tooltip {
   display: flex;
   align-items: center;

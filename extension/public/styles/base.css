@@ -1,6 +1,7 @@
 /* 颜色变量 */
 :root {
-  --main-color: #677b97;
+  --main-color: #6f829d;
+  --panel-color: #6a88b7;
   --secondary-color: #c1cbce;
   --hover-color: #60abda;
   --lighter-color: #e3eef3;
@@ -12,6 +13,7 @@
   --lighter-font-size: 1.5vh;
   --normal-font-size: 1.8vh;
   --bolder-font-size: 2.2vh;
+  --boldest-font-size: 3vh;
 }
 
 html {
@@ -36,13 +38,14 @@ html {
 
 /* 通用样式 */
 .delete-button {
+  width: 3.2vh;
+  height: 3.2vh;
   margin-left: 6px;
-  padding: 2px 6px;
   background: var(--error-color);
   color: white;
   border: none;
   border-radius: 3px;
-  font-size: var(--bolder-font-size);
+  font-size: var(--boldest-font-size);
   cursor: pointer;
   transition: background 0.2s ease;
 }
@@ -106,6 +109,7 @@ html {
   justify-content: center;
   align-items: center;
   flex-shrink: 0;
+  font-size: var(--boldest-font-size);
   padding: 0.3vh;
 }
 

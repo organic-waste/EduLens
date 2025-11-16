@@ -4,7 +4,7 @@
   width: 5vh;
   height: 5vh;
   border-radius: 50%;
-  background: var(--main-color);
+  background: var(--panel-color);
   color: #fff;
   z-index: 9998;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -27,7 +27,7 @@
   width: 5vh;
   height: 5vh;
   border: none;
-  background: var(--main-color);
+  background: var(--panel-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -64,11 +64,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--main-color);
+  background: var(--panel-color);
   color: #fff;
   height: 5vh;
   padding-left: 3vh;
-  font-size: var(--bolder-font-size);
+  font-size: 2.8vh;
   border-radius: 10px 10px 0 0;
   white-space: nowrap;
 }

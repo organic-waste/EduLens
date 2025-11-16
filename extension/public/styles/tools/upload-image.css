@@ -24,11 +24,18 @@
   right: 4px;
   top: 3px;
   display: flex;
+  align-items: center;
+  gap: 0.4vh;
   visibility: hidden;
 }
-.image-delete-btn {
-  width: 4vh;
-  font-size: 3vh;
+
+.annotation-image .image-controls button {
+  width: 3.2vh;
+  height: 3.2vh;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* .annotation-image .image-controls button {

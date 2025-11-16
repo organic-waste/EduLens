@@ -67,9 +67,35 @@ function getDocumentPosition(event) {
   };
 }
 
+function getViewportPosition(event) {
+  if (event.touches && event.touches.length) {
+    const touch = event.touches[0];
+    return {
+      x: touch.clientX,
+      y: touch.clientY,
+    };
+  }
+  return {
+    x: event.clientX,
+    y: event.clientY,
+  };
+}
+
+function getEventPositions(event) {
+  return {
+    document: getDocumentPosition(event),
+    viewport: getViewportPosition(event),
+  };
+}
+
+function getPositionForRect(rect, positions) {
+  return rect && rect.fixed ? positions.viewport : positions.document;
+}
+
 function applyRectPosition(rectDiv, rect) {
   rectDiv.style.left = `${rect.x}px`;
   rectDiv.style.top = `${rect.y}px`;
+  rectDiv.style.position = rect.fixed ? "fixed" : "absolute";
 }
 
 function updatePreviewPosition() {
@@ -195,19 +221,22 @@ function setupEventListeners() {
 
 function listenerMouseDown(e) {
   if (e.button !== 0) return;
-  const { x, y } = getDocumentPosition(e);
+  const positions = getEventPositions(e);
+  const creationPos = positions.document;
 
   //创建新矩阵时
   if (toolStore.isRectangle && !isEditing) {
     isCreating = true;
-    startX = endX = x;
-    startY = endY = y;
+    startX = endX = creationPos.x;
+    startY = endY = creationPos.y;
     createPreviewRectangle();
     e.preventDefault();
     e.stopPropagation();
   }
   //矩阵处于编辑态时
   else if (isEditing && currentRect) {
+    const pointer = getPositionForRect(currentRect, positions);
+    const { x, y } = pointer;
     //点击到矩阵内部
     if (
       isPointInRect(
@@ -240,7 +269,7 @@ function listenerMouseDown(e) {
   }
   //矩阵处于浏览态
   else if (!isEditing) {
-    const clickedRect = findTopmostRectangleAt(x, y);
+    const clickedRect = findTopmostRectangleAt(positions);
     if (clickedRect) {
       exitEditingMode();
       e.preventDefault();
@@ -251,15 +280,18 @@ function listenerMouseDown(e) {
 
 function listenerMouseMove(e) {
   if (!drawingContainer) return;
-  const { x, y } = getDocumentPosition(e);
+  const positions = getEventPositions(e);
+  const creationPos = positions.document;
   //创建矩阵元素时
   if (isCreating) {
-    endX = x;
-    endY = y;
+    endX = creationPos.x;
+    endY = creationPos.y;
     updatePreviewRectangle();
   }
   //编辑矩阵时
   else if (isEditing && currentRect) {
+    const pointer = getPositionForRect(currentRect, positions);
+    const { x, y } = pointer;
     if (isResizing) {
       doResize(x, y);
       e.preventDefault();
@@ -289,7 +321,7 @@ function listenerMouseMove(e) {
   }
   //查看元素时
   else if (!toolStore.isRectangle && !isEditing) {
-    const hoveredRect = findTopmostRectangleAt(x, y);
+    const hoveredRect = findTopmostRectangleAt(positions);
     const hoveredRectId = hoveredRect?.id;
     // 当鼠标下方没有有效矩阵时
     if (!hoveredRect) {
@@ -328,6 +360,7 @@ function listenerMouseUp() {
       height: Math.abs(endY - startY),
       text: "",
       color: toolStore.currentColor,
+      fixed: false,
     };
     //排除太小的矩阵
     if (newRect.width > 5 && newRect.height > 5) {
@@ -359,9 +392,8 @@ function handleDblClick(e) {
     e.clientY <= containerRect.bottom;
   if (!insideContainer) return;
 
-  const { x, y } = getDocumentPosition(e);
-
-  const clickedRect = findTopmostRectangleAt(x, y);
+  const positions = getEventPositions(e);
+  const clickedRect = findTopmostRectangleAt(positions);
   if (clickedRect) {
     enterEditingMode(clickedRect);
     e.preventDefault();
@@ -390,7 +422,9 @@ function handleGlobalMouseDown(e) {
     return;
   }
 
-  const { x, y } = getDocumentPosition(e);
+  const positions = getEventPositions(e);
+  const pointer = getPositionForRect(currentRect, positions);
+  const { x, y } = pointer;
   if (
     !isPointInRect(
       x,
@@ -442,6 +476,7 @@ function renderAllRectangles() {
 }
 
 function renderRectangles(rect) {
+  rect.fixed = Boolean(rect.fixed);
   const rectDiv = createEl("div", {
     class: "annotation-rect",
     "data-id": rect.id,
@@ -467,8 +502,13 @@ function renderRectangles(rect) {
     textContent: "×",
     title: chrome.i18n.getMessage("rectangleDelete"),
   });
+  const pinBtn = createEl("button", {
+    class: "annotation-pin-btn icon-btn",
+    title: chrome.i18n.getMessage("imagePinToggle"),
+    innerHTML: getPinIcon(rect.fixed),
+  });
 
-  textContainer.append(textInput, deleteBtn);
+  textContainer.append(textInput, pinBtn, deleteBtn);
 
   const tooltip = createEl("div", {
     class: "annotation-tooltip",
@@ -495,6 +535,12 @@ function renderRectangles(rect) {
     removeRectangle(rect.id);
   });
   eventStore.on(deleteBtn, "mousedown", (e) => e.stopPropagation());
+  eventStore.on(pinBtn, "click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleRectanglePin(rect, rectDiv, pinBtn);
+  });
+  eventStore.on(pinBtn, "mousedown", (e) => e.stopPropagation());
   drawingContainer.appendChild(rectDiv);
   scheduleRectanglesPositionUpdate();
 }
@@ -533,7 +579,7 @@ function enterEditingMode(rect) {
   const textInput = rectDiv.querySelector(".annotation-text-input");
   const tooltip = rectDiv.querySelector(".annotation-tooltip");
 
-  textContainer.style.display = "block";
+  textContainer.style.display = "flex";
   textInput.style.display = "block";
   tooltip.style.display = "none";
   textInput.focus();
@@ -595,7 +641,9 @@ function createHandles(rectDiv, rect) {
     eventStore.on(handle, "mousedown", (e) => {
       e.stopPropagation();
       e.preventDefault();
-      const { x, y } = getDocumentPosition(e);
+      const positions = getEventPositions(e);
+      const pointer = getPositionForRect(rect, positions);
+      const { x, y } = pointer;
       startResizing({ element: handle, type: handle.dataset.type }, x, y);
     });
     rectDiv.appendChild(handle);
@@ -611,8 +659,8 @@ function getHandleAt(x, y, rect) {
   const { x: scrollX, y: scrollY } = getScrollOffsets();
   for (let handle of handles) {
     const handleRect = handle.getBoundingClientRect();
-    const handleX = handleRect.left + scrollX;
-    const handleY = handleRect.top + scrollY;
+    const handleX = handleRect.left + (rect.fixed ? 0 : scrollX);
+    const handleY = handleRect.top + (rect.fixed ? 0 : scrollY);
     const handleW = handleRect.width;
     const handleH = handleRect.height;
     if (isPointInRect(x, y, handleX, handleY, handleW, handleH)) {
@@ -803,9 +851,11 @@ function isPointInRect(px, py, rx, ry, rw, rh) {
   return px >= rx && px <= rx + rw && py >= ry && py <= ry + rh;
 }
 
-function findTopmostRectangleAt(x, y) {
+function findTopmostRectangleAt(positions) {
   for (let i = rectangles.length - 1; i >= 0; i--) {
     const rect = rectangles[i];
+    const pointer = getPositionForRect(rect, positions);
+    const { x, y } = pointer;
     if (isPointInRect(x, y, rect.x, rect.y, rect.width, rect.height)) {
       return rect;
     }
@@ -850,9 +900,36 @@ async function saveRectangles() {
 
 async function loadRectangles() {
   try {
-    rectangles = await storageManager.getPageDataByType("rectangles");
+    const stored = await storageManager.getPageDataByType("rectangles");
+    rectangles = Array.isArray(stored)
+      ? stored.map((rect) => ({
+          ...rect,
+          fixed: Boolean(rect.fixed),
+        }))
+      : [];
   } catch (error) {
     console.error(error);
     rectangles = [];
   }
+}
+
+function getPinIcon(isFixed) {
+  return isFixed
+    ? '<svg t="1759978122492" class="icon" viewBox="0 -100 1074 1074" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1768" width="200" height="200"><path d="M697.464355 375.861272l-20.716763-208.154143h73.988439q16.770713 0 29.102119-12.331406T792.169557 126.273603V41.433526q0-16.770713-12.331407-29.102119T750.736031 0H273.263969q-16.770713 0-29.102119 12.331407T231.830443 41.433526v84.840077q0 16.770713 12.331407 29.10212T273.263969 167.707129h73.988439l-20.716763 208.154143q-68.069364 30.581888-107.529865 80.894027-43.406551 54.258189-43.406551 118.381503 0 17.757225 12.331407 30.088632T217.032755 617.55684h238.736031v181.518305q0 3.94605 1.973025 6.905587l41.433526 83.853565q3.94605 7.8921 12.824663 7.8921t12.824663-7.8921l41.433526-83.853565q1.973025-2.959538 1.973025-6.905587V617.55684h238.736031q16.770713 0 29.102119-12.331406T848.400771 575.136802q0-64.123314-43.406551-118.381503-40.447013-50.312139-107.529865-80.894027z" p-id="1769" fill="white"></path></svg>'
+    : '<svg t="1759978010518" class="icon" viewBox="-70 -100 1214 1214" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1559" width="200" height="200"><path d="M741 373.2l-11.4-85.2H784c26.4 0 48-21.6 48-48V48c0-26.4-21.6-48-48-48H240C213.6 0 192 21.6 192 48v192c0 26.4 21.6 48 48 48h54.4l-11.4 85.2C187.2 438.8 128 541.4 128 656c0 26.4 21.6 48 48 48h288v208c0 1.8 0.2 3.4 0.8 5l32 96c4.8 14.6 25.6 14.6 30.4 0l32-96c0.6-1.6 0.8-3.4 0.8-5V704h288c26.4 0 48-21.6 48-48 0-114.6-59.2-217.2-155-282.8zM229 608c16.6-77 71.2-140 143-175.6L404 192H288V96h448v96h-116l32 240.4c71.6 35.6 126.4 98.8 143 175.6z" p-id="1560" fill="white"></path></svg>';
+}
+
+function toggleRectanglePin(rect, rectDiv, pinBtn) {
+  const { x: scrollX, y: scrollY } = getScrollOffsets();
+  if (rect.fixed) {
+    rect.x += scrollX;
+    rect.y += scrollY;
+  } else {
+    rect.x -= scrollX;
+    rect.y -= scrollY;
+  }
+  rect.fixed = !rect.fixed;
+  applyRectPosition(rectDiv, rect);
+  pinBtn.innerHTML = getPinIcon(rect.fixed);
+  saveRectangles();
 }
