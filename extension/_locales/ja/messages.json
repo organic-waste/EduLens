@@ -56,6 +56,21 @@
   "graffitiClear": {
     "message": "すべての落書きを消去"
   },
+  "graffitiClearDialogTitle": {
+    "message": "落書きを消去しますか？"
+  },
+  "graffitiClearDialogDesc": {
+    "message": "削除する対象を選択してください。"
+  },
+  "graffitiClearGraffiti": {
+    "message": "落書きのみを消去"
+  },
+  "graffitiClearAll": {
+    "message": "落書きと枠注釈をすべて消去"
+  },
+  "graffitiClearCancel": {
+    "message": "キャンセル"
+  },
   "graffitiRectangle": {
     "message": "範囲注釈"
   },

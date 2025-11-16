@@ -167,6 +167,21 @@ export function activateRectangleAnnotation() {
   };
 }
 
+export function clearAllRectangles() {
+  const root = shadowRoot || window.__EDULENS_SHADOW_ROOT__;
+  if (root && !shadowRoot) {
+    shadowRoot = root;
+  }
+  exitEditingMode();
+  rectangles = [];
+  const rectEls = root
+    ? root.querySelectorAll(".annotation-rect, .annotation-preview")
+    : [];
+  rectEls.forEach((node) => node.remove());
+  scheduleRectanglesPositionUpdate();
+  saveRectangles();
+}
+
 //转换矩阵模式（编辑模式/查看模式）
 function toggleRectangleMode() {
   toolStore.updateState("isRectangle");

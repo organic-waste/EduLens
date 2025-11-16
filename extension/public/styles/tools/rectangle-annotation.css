@@ -53,8 +53,7 @@
   left: 0;
   width: 100%;
   /* background: rgba(0, 0, 0, 0.2); */
-  font-size: 2vh;
-  padding: 0.5vh;
+  font-size: var(--normal-font-size);
   box-sizing: border-box;
   text-align: center;
   opacity: 1;

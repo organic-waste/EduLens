@@ -56,6 +56,21 @@
   "graffitiClear": {
     "message": "清除所有塗鴉"
   },
+  "graffitiClearDialogTitle": {
+    "message": "清除塗鴉？"
+  },
+  "graffitiClearDialogDesc": {
+    "message": "請選擇要清除的內容"
+  },
+  "graffitiClearGraffiti": {
+    "message": "僅清除塗鴉"
+  },
+  "graffitiClearAll": {
+    "message": "清除塗鴉與框選註記"
+  },
+  "graffitiClearCancel": {
+    "message": "取消"
+  },
   "graffitiRectangle": {
     "message": "框選批註"
   },

@@ -4,7 +4,10 @@ import toolStore from "../../stores/toolStore.js";
 import { MonitorSPARoutes } from "../../utils/index.js";
 import { getOffsetPos, createEl } from "../../utils/index.js";
 import { storageManager, syncManager } from "../../services/index.js";
-import { activateRectangleAnnotation } from "./rectangleAnnotation.js";
+import {
+  activateRectangleAnnotation,
+  clearAllRectangles,
+} from "./rectangleAnnotation.js";
 import { activateImageAnnotation } from "./uploadImage.js";
 
 let drawingCanvas = null;
@@ -18,6 +21,7 @@ let lineButton = null;
 let eraserButton = null;
 let penButton = null;
 let graffitiControlsDiv = null;
+let clearDialogOverlay = null;
 let startX = 0;
 let startY = 0;
 let imageData = null;
@@ -229,7 +233,7 @@ function createControls() {
     innerHTML:
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#ffffff" d="M262.2 48C248.9 48 236.9 56.3 232.2 68.8L216 112L120 112C106.7 112 96 122.7 96 136C96 149.3 106.7 160 120 160L520 160C533.3 160 544 149.3 544 136C544 122.7 533.3 112 520 112L424 112L407.8 68.8C403.1 56.3 391.2 48 377.8 48L262.2 48zM128 208L128 512C128 547.3 156.7 576 192 576L448 576C483.3 576 512 547.3 512 512L512 208L464 208L464 512C464 520.8 456.8 528 448 528L192 528C183.2 528 176 520.8 176 512L176 208L128 208zM288 280C288 266.7 277.3 256 264 256C250.7 256 240 266.7 240 280L240 456C240 469.3 250.7 480 264 480C277.3 480 288 469.3 288 456L288 280zM400 280C400 266.7 389.3 256 376 256C362.7 256 352 266.7 352 280L352 456C352 469.3 362.7 480 376 480C389.3 480 400 469.3 400 456L400 280z"/></svg>',
   });
-  eventStore.on(clearButton, "click", clearCanvas);
+  eventStore.on(clearButton, "click", showClearConfirmDialog);
   eventStore.on(clearButton, "mousedown", (e) => {
     e.stopPropagation();
   });
@@ -345,6 +349,86 @@ function clearCanvas() {
     //在清除画布后更新存储的画布也为空
     saveDrawing();
   }
+}
+
+function showClearConfirmDialog() {
+  ensureClearDialog();
+  if (clearDialogOverlay) {
+    clearDialogOverlay.classList.add("open");
+  }
+}
+
+function closeClearConfirmDialog() {
+  if (clearDialogOverlay) {
+    clearDialogOverlay.classList.remove("open");
+  }
+}
+
+function ensureClearDialog() {
+  if (clearDialogOverlay) return;
+  const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
+  clearDialogOverlay = createEl("div", {
+    id: "clear-dialog-overlay",
+    class: "clear-dialog-overlay",
+  });
+
+  const dialog = createEl("div", { class: "clear-dialog-card" });
+  const title = createEl("h3", {
+    class: "clear-dialog-title",
+    textContent:
+      chrome.i18n.getMessage("graffitiClearDialogDesc") ||
+      chrome.i18n.getMessage("graffitiClear"),
+  });
+  // const desc = createEl("p", {
+  //   class: "clear-dialog-desc",
+  //   textContent:
+  //     chrome.i18n.getMessage("graffitiClearDialogDesc") ||
+  //     chrome.i18n.getMessage("graffitiClear"),
+  // });
+
+  const actions = createEl("div", { class: "clear-dialog-actions" });
+  const clearGraffitiBtn = createEl("button", {
+    class: "clear-dialog-btn primary",
+    textContent:
+      chrome.i18n.getMessage("graffitiClearGraffiti") ||
+      chrome.i18n.getMessage("graffitiClear"),
+  });
+  const clearAllBtn = createEl("button", {
+    class: "clear-dialog-btn danger",
+    textContent:
+      chrome.i18n.getMessage("graffitiClearAll") ||
+      chrome.i18n.getMessage("graffitiClear"),
+  });
+  const cancelBtn = createEl("button", {
+    class: "clear-dialog-btn ghost",
+    textContent:
+      chrome.i18n.getMessage("graffitiClearCancel") ||
+      chrome.i18n.getMessage("graffitiClear"),
+  });
+
+  actions.append(clearGraffitiBtn, clearAllBtn, cancelBtn);
+  // dialog.append(title, desc, actions);
+  dialog.append(title, actions);
+  clearDialogOverlay.appendChild(dialog);
+  shadowRoot.appendChild(clearDialogOverlay);
+
+  eventStore.on(clearDialogOverlay, "click", (e) => {
+    if (e.target === clearDialogOverlay) {
+      closeClearConfirmDialog();
+    }
+  });
+  eventStore.on(clearGraffitiBtn, "click", () => {
+    clearCanvas();
+    closeClearConfirmDialog();
+  });
+  eventStore.on(clearAllBtn, "click", () => {
+    clearCanvas();
+    clearAllRectangles();
+    closeClearConfirmDialog();
+  });
+  eventStore.on(cancelBtn, "click", () => {
+    closeClearConfirmDialog();
+  });
 }
 
 /* 持久化 */

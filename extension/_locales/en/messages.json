@@ -56,6 +56,21 @@
   "graffitiClear": {
     "message": "Clear all drawings"
   },
+  "graffitiClearDialogTitle": {
+    "message": "Clear drawings?"
+  },
+  "graffitiClearDialogDesc": {
+    "message": "Choose what to remove."
+  },
+  "graffitiClearGraffiti": {
+    "message": "Clear drawings only"
+  },
+  "graffitiClearAll": {
+    "message": "Clear drawings and annotations"
+  },
+  "graffitiClearCancel": {
+    "message": "Cancel"
+  },
   "graffitiRectangle": {
     "message": "Box annotation"
   },
