@@ -80,6 +80,26 @@
     "message": "清空画布",
     "description": "清空画布按钮提示。"
   },
+  "graffitiClearDialogTitle": {
+    "message": "清除涂鸦？",
+    "description": "清除涂鸦弹窗标题。"
+  },
+  "graffitiClearDialogDesc": {
+    "message": "请选择一键清除内容",
+    "description": "清除涂鸦弹窗描述。"
+  },
+  "graffitiClearGraffiti": {
+    "message": "仅清除涂鸦",
+    "description": "弹窗按钮——只清除涂鸦。"
+  },
+  "graffitiClearAll": {
+    "message": "清除涂鸦和框选批注",
+    "description": "弹窗按钮——清除涂鸦和框选。"
+  },
+  "graffitiClearCancel": {
+    "message": "取消",
+    "description": "弹窗按钮——取消操作。"
+  },
   "graffitiRectangle": {
     "message": "框选批注",
     "description": "框选批注工具提示。"

@@ -6,7 +6,6 @@
   <img src="assets/title.png" alt="EduLens Title" height="128">
 </p>
 
-
 ## 📖 项目简介
 
 EduLens 是一款专为个人学习和在线教学设计的浏览器扩展插件。
@@ -30,7 +29,7 @@ EduLens 是一款专为个人学习和在线教学设计的浏览器扩展插件
 
 ### 使用示例
 
-![使用示例](G:\EduLens\edulens\assets\example.png)
+![使用示例](assets\example.png)
 
 ---
 
@@ -79,8 +78,3 @@ EduLens 是一款专为个人学习和在线教学设计的浏览器扩展插件
 
 - **邮箱**: 1473980832@qq.com / o.organic.waste.o@gmail.com
 - **问题反馈**: [https://github.com/organic-waste/edulens/issues](https://github.com/organic-waste/edulens/issues)
-
-
-
-
-

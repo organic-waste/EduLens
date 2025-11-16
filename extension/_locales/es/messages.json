@@ -56,6 +56,21 @@
   "graffitiClear": {
     "message": "Borrar todos los trazos"
   },
+  "graffitiClearDialogTitle": {
+    "message": "¿Limpiar los trazos?"
+  },
+  "graffitiClearDialogDesc": {
+    "message": "Elige qué quieres limpiar."
+  },
+  "graffitiClearGraffiti": {
+    "message": "Limpiar solo los trazos"
+  },
+  "graffitiClearAll": {
+    "message": "Limpiar trazos y anotaciones"
+  },
+  "graffitiClearCancel": {
+    "message": "Cancelar"
+  },
   "graffitiRectangle": {
     "message": "Anotación con marco"
   },

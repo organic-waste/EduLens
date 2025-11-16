@@ -109,3 +109,92 @@
   width: 100%;
   align-items: center;
 }
+
+.clear-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--mask-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10005;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  backdrop-filter: blur(3px);
+}
+
+.clear-dialog-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.clear-dialog-card {
+  width: 32vh;
+  max-width: 90vw;
+  padding: 2.4vh;
+  border-radius: 12px;
+  background: linear-gradient(160deg, #fff, var(--background-color));
+  border: 1px solid var(--secondary-color);
+  box-shadow: 0 12px 36px rgba(12, 44, 104, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2vh;
+  transform: translateY(1vh);
+  transition: transform 0.3s ease;
+}
+
+.clear-dialog-overlay.open .clear-dialog-card {
+  transform: translateY(0);
+}
+
+.clear-dialog-title {
+  margin: auto;
+  font-size: var(--bolder-font-size);
+  color: var(--emphasis-color);
+}
+
+.clear-dialog-desc {
+  margin: 0;
+  font-size: var(--normal-font-size);
+  color: var(--main-color);
+  line-height: 1.4;
+}
+
+.clear-dialog-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+}
+
+.clear-dialog-btn {
+  width: 100%;
+  padding: 0.8vh;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: var(--normal-font-size);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.clear-dialog-btn.primary,
+.clear-dialog-btn.danger {
+  background: var(--main-color);
+  color: #fff;
+}
+
+.clear-dialog-btn.primary:hover,
+.clear-dialog-btn.danger:hover {
+  background: var(--hover-color);
+}
+
+.clear-dialog-btn.ghost {
+  background: transparent;
+  border-color: var(--secondary-color);
+  color: var(--main-color);
+}
+
+.clear-dialog-btn.ghost:hover {
+  border-color: var(--hover-color);
+  color: var(--hover-color);
+}

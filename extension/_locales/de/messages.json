@@ -56,6 +56,21 @@
   "graffitiClear": {
     "message": "Alle Zeichnungen löschen"
   },
+  "graffitiClearDialogTitle": {
+    "message": "Zeichnungen löschen?"
+  },
+  "graffitiClearDialogDesc": {
+    "message": "Wähle, was gelöscht werden soll."
+  },
+  "graffitiClearGraffiti": {
+    "message": "Nur Zeichnungen löschen"
+  },
+  "graffitiClearAll": {
+    "message": "Zeichnungen und Rahmenanmerkungen löschen"
+  },
+  "graffitiClearCancel": {
+    "message": "Abbrechen"
+  },
   "graffitiRectangle": {
     "message": "Rahmenanmerkung"
   },

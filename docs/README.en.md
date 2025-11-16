@@ -6,12 +6,11 @@
   <img src="../assets/title.png" alt="EduLens Title" height="128">
 </p>
 
-
 ## 📖 Overview
 
 EduLens is a browser extension designed for both personal learning and online teaching.
 
- It offers real-time collaborative annotation, a variety of note-taking tools, and reading aids — helping students organize knowledge efficiently while enhancing interactive classroom experiences for teachers.
+It offers real-time collaborative annotation, a variety of note-taking tools, and reading aids — helping students organize knowledge efficiently while enhancing interactive classroom experiences for teachers.
 
 ### Core Features
 
@@ -30,7 +29,7 @@ EduLens is a browser extension designed for both personal learning and online te
 
 ### Usage example
 
-![使用示例](G:\EduLens\edulens\assets\example.png)
+![使用示例](..\assets\example.png)
 
 ---
 
@@ -77,5 +76,5 @@ After activation, a floating bubble appears in the bottom-right corner of any pa
 
 ## 📮 Contact
 
-- **Email**: o.organic.waste.o@gmail.com / 1473980832@qq.com 
+- **Email**: o.organic.waste.o@gmail.com / 1473980832@qq.com
 - **Issues**: [https://github.com/organic-waste/edulens/issues](https://github.com/organic-waste/edulens/issues)
