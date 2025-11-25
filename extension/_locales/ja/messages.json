@@ -53,6 +53,7 @@
   "graffitiLine": {
     "message": "直線"
   },
+<<<<<<< HEAD
   "graffitiClear": {
     "message": "すべての落書きを消去"
   },
@@ -74,6 +75,29 @@
   "graffitiRectangle": {
     "message": "範囲注釈"
   },
+=======
+  "graffitiClear": {
+    "message": "すべての落書きを消去"
+  },
+  "graffitiClearDialogTitle": {
+    "message": "落書きを消去しますか？"
+  },
+  "graffitiClearDialogDesc": {
+    "message": "削除する対象を選択してください。"
+  },
+  "graffitiClearGraffiti": {
+    "message": "落書きのみを消去"
+  },
+  "graffitiClearAll": {
+    "message": "落書きと枠注釈をすべて消去"
+  },
+  "graffitiClearCancel": {
+    "message": "キャンセル"
+  },
+  "graffitiRectangle": {
+    "message": "範囲注釈"
+  },
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   "rectangleInput": {
     "message": "注釈内容"
   },
@@ -102,11 +126,16 @@
     "message": "固定 / スクロール切替"
   },
   "popupTitle": {
+<<<<<<< HEAD
     "message": "EduLens"
+=======
+    "message": "EduLens 設定"
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   },
   "popupEnable": {
     "message": "EduLens を有効にする"
   },
+<<<<<<< HEAD
   "bubbleStatusLoading": {
     "message": "フローティングパネルの状態を読み込み中..."
   },
@@ -122,6 +151,8 @@
   "bubbleShowButton": {
     "message": "フローティングパネルを表示する"
   },
+=======
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   "loginTitle": {
     "message": "EduLens にサインイン"
   },
@@ -167,6 +198,7 @@
   "registerLink": {
     "message": "登録する"
   },
+<<<<<<< HEAD
   "loginLink": {
     "message": "サインインする"
   },
@@ -176,6 +208,17 @@
   "loggingIn": {
     "message": "サインイン中..."
   },
+=======
+  "loginLink": {
+    "message": "サインインする"
+  },
+  "loginPanelButton": {
+    "message": "ログイン"
+  },
+  "loggingIn": {
+    "message": "サインイン中..."
+  },
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   "registering": {
     "message": "登録中..."
   },

@@ -4,6 +4,7 @@ import { activateDraggablePanel } from "./features/draggablePanel.js";
 import eventStore from "./stores/eventStore.js";
 import { apiClient } from "./services/index.js";
 
+<<<<<<< HEAD
 const PANEL_VISIBILITY_KEY = "edulensPanelVisible";
 let cachedPanelVisible = true;
 
@@ -36,6 +37,8 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 });
 
+=======
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
 //统一的键盘管理
 function keydown(e, key, name) {
   if (e.altKey && e.key === key) {
@@ -55,11 +58,16 @@ eventStore.on(window, "keydown", (e) => {
 
 (async function activatePlugin() {
   await injectStyles();
+<<<<<<< HEAD
   await initializePanelVisibility();
   // injectIcon();
   activateDraggablePanel();
   // 确保宿主节点的显隐状态与缓存保持一致
   setPanelVisibility(cachedPanelVisible);
+=======
+  // injectIcon();
+  activateDraggablePanel();
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
 
   //测试是否能连接到后端云服务
   const connected = await apiClient.testConnection();

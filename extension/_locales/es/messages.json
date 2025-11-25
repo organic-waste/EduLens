@@ -53,6 +53,7 @@
   "graffitiLine": {
     "message": "Línea recta"
   },
+<<<<<<< HEAD
   "graffitiClear": {
     "message": "Borrar todos los trazos"
   },
@@ -74,6 +75,29 @@
   "graffitiRectangle": {
     "message": "Anotación con marco"
   },
+=======
+  "graffitiClear": {
+    "message": "Borrar todos los trazos"
+  },
+  "graffitiClearDialogTitle": {
+    "message": "¿Limpiar los trazos?"
+  },
+  "graffitiClearDialogDesc": {
+    "message": "Elige qué quieres limpiar."
+  },
+  "graffitiClearGraffiti": {
+    "message": "Limpiar solo los trazos"
+  },
+  "graffitiClearAll": {
+    "message": "Limpiar trazos y anotaciones"
+  },
+  "graffitiClearCancel": {
+    "message": "Cancelar"
+  },
+  "graffitiRectangle": {
+    "message": "Anotación con marco"
+  },
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   "rectangleInput": {
     "message": "Contenido de la anotación"
   },
@@ -102,11 +126,16 @@
     "message": "Alternar fijar/seguir desplazamiento"
   },
   "popupTitle": {
+<<<<<<< HEAD
     "message": "EduLens"
+=======
+    "message": "Configuración de EduLens"
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   },
   "popupEnable": {
     "message": "Activar EduLens"
   },
+<<<<<<< HEAD
   "bubbleStatusLoading": {
     "message": "Cargando estado del panel flotante..."
   },
@@ -122,6 +151,8 @@
   "bubbleShowButton": {
     "message": "Mostrar panel flotante"
   },
+=======
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   "loginTitle": {
     "message": "Inicia sesión en EduLens"
   },
@@ -167,6 +198,7 @@
   "registerLink": {
     "message": "Ir a registro"
   },
+<<<<<<< HEAD
   "loginLink": {
     "message": "Ir a inicio de sesión"
   },
@@ -176,6 +208,17 @@
   "loggingIn": {
     "message": "Iniciando sesión..."
   },
+=======
+  "loginLink": {
+    "message": "Ir a inicio de sesión"
+  },
+  "loginPanelButton": {
+    "message": "Iniciar sesión"
+  },
+  "loggingIn": {
+    "message": "Iniciando sesión..."
+  },
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   "registering": {
     "message": "Registrando..."
   },

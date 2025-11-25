@@ -3,7 +3,11 @@
     "message": "EduLens"
   },
   "pluginDesc": {
+<<<<<<< HEAD
     "message": "All-in-one Chrome extension for annotated learning, real-time collaboration, and reading focus tools."
+=======
+    "message": "An assistive browser extension for online teaching and learning."
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   },
   "browserActionTitle": {
     "message": "Open the EduLens panel"
@@ -53,6 +57,7 @@
   "graffitiLine": {
     "message": "Straight line"
   },
+<<<<<<< HEAD
   "graffitiClear": {
     "message": "Clear all drawings"
   },
@@ -74,6 +79,29 @@
   "graffitiRectangle": {
     "message": "Box annotation"
   },
+=======
+  "graffitiClear": {
+    "message": "Clear all drawings"
+  },
+  "graffitiClearDialogTitle": {
+    "message": "Clear drawings?"
+  },
+  "graffitiClearDialogDesc": {
+    "message": "Choose what to remove."
+  },
+  "graffitiClearGraffiti": {
+    "message": "Clear drawings only"
+  },
+  "graffitiClearAll": {
+    "message": "Clear drawings and annotations"
+  },
+  "graffitiClearCancel": {
+    "message": "Cancel"
+  },
+  "graffitiRectangle": {
+    "message": "Box annotation"
+  },
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   "rectangleInput": {
     "message": "Annotation content"
   },
@@ -107,6 +135,7 @@
   "popupEnable": {
     "message": "Enable EduLens"
   },
+<<<<<<< HEAD
   "bubbleStatusLoading": {
     "message": "Loading floating panel status..."
   },
@@ -122,6 +151,8 @@
   "bubbleShowButton": {
     "message": "Show floating panel"
   },
+=======
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   "loginTitle": {
     "message": "Sign in to EduLens"
   },
@@ -167,6 +198,7 @@
   "registerLink": {
     "message": "Sign up"
   },
+<<<<<<< HEAD
   "loginLink": {
     "message": "Sign in"
   },
@@ -176,6 +208,17 @@
   "loggingIn": {
     "message": "Signing in..."
   },
+=======
+  "loginLink": {
+    "message": "Sign in"
+  },
+  "loginPanelButton": {
+    "message": "Sign in"
+  },
+  "loggingIn": {
+    "message": "Signing in..."
+  },
+>>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   "registering": {
     "message": "Registering..."
   },
