@@ -14,7 +14,7 @@ class ToolStore {
     this.isImage = false;
 
     this.currentColor = "#FF0000";
-    this.penBrushSize = 5;
+    this.penBrushSize = 2;
     this.eraserBrushSize = 10;
 
     this.currentHoveredRectId = null;

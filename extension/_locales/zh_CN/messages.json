@@ -152,7 +152,6 @@
     "message": "启用 EduLens",
     "description": "是否开启扩展的复选框。"
   },
-<<<<<<< HEAD
   "bubbleStatusLoading": {
     "message": "正在加载气泡状态...",
     "description": "切换面板状态前的加载提示。"
@@ -173,8 +172,6 @@
     "message": "显示气泡面板",
     "description": "显示面板的按钮。"
   },
-=======
->>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
 
   "loginTitle": {
     "message": "登录 EduLens 账号",
@@ -236,7 +233,6 @@
     "message": "立即注册",
     "description": "注册链接文字"
   },
-<<<<<<< HEAD
   "loginLink": {
     "message": "立即登录",
     "description": "登录链接文字"
@@ -249,20 +245,6 @@
     "message": "登录中...",
     "description": "登录中状态文字"
   },
-=======
-  "loginLink": {
-    "message": "立即登录",
-    "description": "登录链接文字"
-  },
-  "loginPanelButton": {
-    "message": "登录账号",
-    "description": "面板中的登录按钮"
-  },
-  "loggingIn": {
-    "message": "登录中...",
-    "description": "登录中状态文字"
-  },
->>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   "registering": {
     "message": "注册中...",
     "description": "注册中状态文字"

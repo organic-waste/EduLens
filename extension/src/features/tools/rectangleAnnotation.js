@@ -252,24 +252,39 @@ function listenerMouseDown(e) {
   else if (isEditing && currentRect) {
     const pointer = getPositionForRect(currentRect, positions);
     const { x, y } = pointer;
-    //点击到矩阵内部
-    if (
-      isPointInRect(
-        x,
-        y,
-        currentRect.x,
-        currentRect.y,
-        currentRect.width,
-        currentRect.height
-      )
-    ) {
-      const textContainer = e.target.closest(".annotation-text-container");
-      const deleteBtn = e.target.closest(".annotation-delete-btn");
-      if (textContainer || deleteBtn) {
-        //保证点击在文本和删除按钮上时不触发矩阵的移动
-        e.stopPropagation();
-        return;
-      }
+    
+    // 通过DOM检测优先检查是否点击在文本容器或按钮上
+    const textContainer = e.target.closest(".annotation-text-container");
+    const deleteBtn = e.target.closest(".annotation-delete-btn");
+    const pinBtn = e.target.closest(".annotation-pin-btn");
+    
+    if (textContainer || deleteBtn || pinBtn) {
+      // 这些元素有自己的事件处理，不触发移动
+      e.stopPropagation();
+      return;
+    }
+    
+    const handle = getHandleAt(x, y, currentRect);
+    if (handle) {
+      startResizing(handle, x, y);
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    
+    // 扩展检测区域
+    const expandedMargin = 10;
+    const inExpandedRect = isPointInRect(
+      x,
+      y,
+      currentRect.x - expandedMargin,
+      currentRect.y - expandedMargin,
+      currentRect.width + expandedMargin * 2,
+      currentRect.height + expandedMargin * 2
+    );
+    
+    //点击到矩阵内部或扩展区域（但不是控制点）
+    if (inExpandedRect) {
       //移动矩阵
       startMoving(x, y);
       e.preventDefault();
@@ -277,7 +292,6 @@ function listenerMouseDown(e) {
     }
     //点击矩阵外部
     else {
-      // console.log("点击到矩阵外部");
       exitEditingMode();
       e.stopPropagation();
     }
@@ -318,19 +332,23 @@ function listenerMouseMove(e) {
       //通过判断鼠标位置来获取到对应的cursor样式
       if (handle) {
         drawingContainer.style.cursor = getCursorForHandle(handle);
-      } else if (
-        isPointInRect(
+      } else {
+        // 扩展检测区域
+        const expandedMargin = 10;
+        const inExpandedRect = isPointInRect(
           x,
           y,
-          currentRect.x,
-          currentRect.y,
-          currentRect.width,
-          currentRect.height
-        )
-      ) {
-        drawingContainer.style.cursor = "move";
-      } else {
-        drawingContainer.style.cursor = "default";
+          currentRect.x - expandedMargin,
+          currentRect.y - expandedMargin,
+          currentRect.width + expandedMargin * 2,
+          currentRect.height + expandedMargin * 2
+        );
+        
+        if (inExpandedRect) {
+          drawingContainer.style.cursor = "move";
+        } else {
+          drawingContainer.style.cursor = "default";
+        }
       }
     }
   }
@@ -440,14 +458,17 @@ function handleGlobalMouseDown(e) {
   const positions = getEventPositions(e);
   const pointer = getPositionForRect(currentRect, positions);
   const { x, y } = pointer;
+  
+  // 扩展检测区域（控制点半径+margin）
+  const expandedMargin = 15;
   if (
     !isPointInRect(
       x,
       y,
-      currentRect.x,
-      currentRect.y,
-      currentRect.width,
-      currentRect.height
+      currentRect.x - expandedMargin,
+      currentRect.y - expandedMargin,
+      currentRect.width + expandedMargin * 2,
+      currentRect.height + expandedMargin * 2
     )
   ) {
     exitEditingMode();
@@ -528,7 +549,7 @@ function renderRectangles(rect) {
   const tooltip = createEl("div", {
     class: "annotation-tooltip",
     textContent: rect.text,
-    style: `color:${toolStore.currentColor};`,
+    style: `color:${rect.color};`,
   });
   if (rect.text.trim() !== "") {
     tooltip.style.display = "block";
@@ -640,12 +661,12 @@ function createHandles(rectDiv, rect) {
   const handles = [
     { type: "nw", x: -5, y: -5 },
     { type: "n", x: rect.width / 2 - 5, y: -5 },
-    { type: "ne", x: rect.width - 10, y: -5 },
-    { type: "e", x: rect.width - 10, y: rect.height / 2 - 5 },
-    { type: "se", x: rect.width - 10, y: rect.height - 5 },
+    { type: "ne", x: rect.width - 5, y: -5 },
+    { type: "e", x: rect.width - 5, y: rect.height / 2 - 5 },
+    { type: "se", x: rect.width - 5, y: rect.height - 5 },
     { type: "s", x: rect.width / 2 - 5, y: rect.height - 5 },
-    { type: "sw", x: -5, y: rect.height - 10 },
-    { type: "w", x: -5, y: rect.height / 2 - 10 },
+    { type: "sw", x: -5, y: rect.height - 5 },
+    { type: "w", x: -5, y: rect.height / 2 - 5 },
   ];
   handles.forEach((h) => {
     const handle = document.createElement("div");
@@ -653,6 +674,7 @@ function createHandles(rectDiv, rect) {
     handle.dataset.type = h.type;
     handle.style.left = `${h.x}px`;
     handle.style.top = `${h.y}px`;
+    handle.style.cursor = getCursorForHandle({ type: h.type });
     eventStore.on(handle, "mousedown", (e) => {
       e.stopPropagation();
       e.preventDefault();
@@ -672,13 +694,26 @@ function getHandleAt(x, y, rect) {
   if (!rectDiv) return null;
   const handles = rectDiv.getElementsByClassName("resize-handle");
   const { x: scrollX, y: scrollY } = getScrollOffsets();
+  
+  // 扩展控制点的检测区域，增加5px的容差
+  const handleMargin = 5;
+  
   for (let handle of handles) {
     const handleRect = handle.getBoundingClientRect();
     const handleX = handleRect.left + (rect.fixed ? 0 : scrollX);
     const handleY = handleRect.top + (rect.fixed ? 0 : scrollY);
     const handleW = handleRect.width;
     const handleH = handleRect.height;
-    if (isPointInRect(x, y, handleX, handleY, handleW, handleH)) {
+    
+    // 扩展检测区域
+    if (isPointInRect(
+      x, 
+      y, 
+      handleX - handleMargin, 
+      handleY - handleMargin, 
+      handleW + handleMargin * 2, 
+      handleH + handleMargin * 2
+    )) {
       return {
         element: handle,
         type: handle.dataset.type,

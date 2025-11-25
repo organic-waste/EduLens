@@ -53,7 +53,6 @@
   "graffitiLine": {
     "message": "直線"
   },
-<<<<<<< HEAD
   "graffitiClear": {
     "message": "清除所有塗鴉"
   },
@@ -75,29 +74,6 @@
   "graffitiRectangle": {
     "message": "框選批註"
   },
-=======
-  "graffitiClear": {
-    "message": "清除所有塗鴉"
-  },
-  "graffitiClearDialogTitle": {
-    "message": "清除塗鴉？"
-  },
-  "graffitiClearDialogDesc": {
-    "message": "請選擇要清除的內容"
-  },
-  "graffitiClearGraffiti": {
-    "message": "僅清除塗鴉"
-  },
-  "graffitiClearAll": {
-    "message": "清除塗鴉與框選註記"
-  },
-  "graffitiClearCancel": {
-    "message": "取消"
-  },
-  "graffitiRectangle": {
-    "message": "框選批註"
-  },
->>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   "rectangleInput": {
     "message": "批註內容"
   },
@@ -126,16 +102,11 @@
     "message": "切換固定／跟隨捲動"
   },
   "popupTitle": {
-<<<<<<< HEAD
     "message": "EduLens"
-=======
-    "message": "EduLens 設定"
->>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   },
   "popupEnable": {
     "message": "啟用 EduLens"
   },
-<<<<<<< HEAD
   "bubbleStatusLoading": {
     "message": "正在載入氣泡狀態..."
   },
@@ -151,8 +122,6 @@
   "bubbleShowButton": {
     "message": "顯示氣泡面板"
   },
-=======
->>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   "loginTitle": {
     "message": "登入 EduLens"
   },
@@ -198,7 +167,6 @@
   "registerLink": {
     "message": "前往註冊"
   },
-<<<<<<< HEAD
   "loginLink": {
     "message": "前往登入"
   },
@@ -208,17 +176,6 @@
   "loggingIn": {
     "message": "登入中…"
   },
-=======
-  "loginLink": {
-    "message": "前往登入"
-  },
-  "loginPanelButton": {
-    "message": "登入帳號"
-  },
-  "loggingIn": {
-    "message": "登入中…"
-  },
->>>>>>> 71142c6de6248b402483ed1f0f37724255ff0ee7
   "registering": {
     "message": "註冊中…"
   },

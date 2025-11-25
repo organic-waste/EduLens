@@ -130,9 +130,10 @@ html {
   border: 1px solid var(--main-color);
   border-radius: 50%;
   pointer-events: auto;
-  z-index: 11;
+  z-index: 10001;
   user-select: none;
   touch-action: none;
+  cursor: pointer;
 }
 
 .resize-handle :hover {

@@ -18,6 +18,36 @@ let isMoved = false;
 let offsetX = 0,
   offsetY = 0;
 let Position = { left: 0, top: 0 };
+let cachedPanelVisible = true;
+
+export function setPanelVisibility(visible) {
+  cachedPanelVisible = visible;
+  const host = window.__EDULENS_HOST__;
+  if (host) {
+    host.style.display = visible ? "contents" : "none";
+    host.dataset.visible = visible ? "true" : "false";
+  }
+}
+
+export async function initializePanelVisibility() {
+  try {
+    const result = await chrome.storage.local.get({
+      ["edulensPanelVisible"]: true,
+    });
+    setPanelVisibility(Boolean(result["edulensPanelVisible"]));
+  } catch (error) {
+    console.warn(error);
+    setPanelVisibility(true);
+  }
+}
+
+chrome.runtime.onMessage.addListener((message) => {
+  if (message?.type === "SET_PANEL_VISIBILITY") {
+    const isVisible = Boolean(message.visible);
+    setPanelVisibility(isVisible);
+    chrome.storage.local.set({ ["edulensPanelVisible"]: isVisible });
+  }
+});
 
 function DraggablePanel() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
