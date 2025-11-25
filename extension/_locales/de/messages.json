@@ -102,10 +102,25 @@
     "message": "Fixiert / scrollend umschalten"
   },
   "popupTitle": {
-    "message": "EduLens-Einstellungen"
+    "message": "EduLens"
   },
   "popupEnable": {
     "message": "EduLens aktivieren"
+  },
+  "bubbleStatusLoading": {
+    "message": "Status des Schwebe-Panels wird geladen..."
+  },
+  "bubbleStatusVisible": {
+    "message": "Das Schwebe-Panel ist sichtbar"
+  },
+  "bubbleStatusHidden": {
+    "message": "Das Schwebe-Panel ist ausgeblendet"
+  },
+  "bubbleHideButton": {
+    "message": "Panel ausblenden"
+  },
+  "bubbleShowButton": {
+    "message": "Panel einblenden"
   },
   "loginTitle": {
     "message": "Bei EduLens anmelden"

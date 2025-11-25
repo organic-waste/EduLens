@@ -102,10 +102,25 @@
     "message": "切換固定／跟隨捲動"
   },
   "popupTitle": {
-    "message": "EduLens 設定"
+    "message": "EduLens"
   },
   "popupEnable": {
     "message": "啟用 EduLens"
+  },
+  "bubbleStatusLoading": {
+    "message": "正在載入氣泡狀態..."
+  },
+  "bubbleStatusVisible": {
+    "message": "氣泡面板目前顯示中"
+  },
+  "bubbleStatusHidden": {
+    "message": "氣泡面板目前已隱藏"
+  },
+  "bubbleHideButton": {
+    "message": "隱藏氣泡面板"
+  },
+  "bubbleShowButton": {
+    "message": "顯示氣泡面板"
   },
   "loginTitle": {
     "message": "登入 EduLens"

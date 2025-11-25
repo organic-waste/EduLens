@@ -102,10 +102,25 @@
     "message": "固定 / スクロール切替"
   },
   "popupTitle": {
-    "message": "EduLens 設定"
+    "message": "EduLens"
   },
   "popupEnable": {
     "message": "EduLens を有効にする"
+  },
+  "bubbleStatusLoading": {
+    "message": "フローティングパネルの状態を読み込み中..."
+  },
+  "bubbleStatusVisible": {
+    "message": "フローティングパネルは表示中です"
+  },
+  "bubbleStatusHidden": {
+    "message": "フローティングパネルは非表示です"
+  },
+  "bubbleHideButton": {
+    "message": "フローティングパネルを隠す"
+  },
+  "bubbleShowButton": {
+    "message": "フローティングパネルを表示する"
   },
   "loginTitle": {
     "message": "EduLens にサインイン"

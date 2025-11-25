@@ -145,12 +145,32 @@
   },
 
   "popupTitle": {
-    "message": "EduLens 设置",
+    "message": "EduLens",
     "description": "弹出页面的标题。"
   },
   "popupEnable": {
     "message": "启用 EduLens",
     "description": "是否开启扩展的复选框。"
+  },
+  "bubbleStatusLoading": {
+    "message": "正在加载气泡状态...",
+    "description": "切换面板状态前的加载提示。"
+  },
+  "bubbleStatusVisible": {
+    "message": "气泡面板当前处于显示状态",
+    "description": "状态提示——面板已显示。"
+  },
+  "bubbleStatusHidden": {
+    "message": "气泡面板当前处于隐藏状态",
+    "description": "状态提示——面板已隐藏。"
+  },
+  "bubbleHideButton": {
+    "message": "隐藏气泡面板",
+    "description": "隐藏面板的按钮。"
+  },
+  "bubbleShowButton": {
+    "message": "显示气泡面板",
+    "description": "显示面板的按钮。"
   },
 
   "loginTitle": {

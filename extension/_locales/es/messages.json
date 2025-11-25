@@ -102,10 +102,25 @@
     "message": "Alternar fijar/seguir desplazamiento"
   },
   "popupTitle": {
-    "message": "Configuración de EduLens"
+    "message": "EduLens"
   },
   "popupEnable": {
     "message": "Activar EduLens"
+  },
+  "bubbleStatusLoading": {
+    "message": "Cargando estado del panel flotante..."
+  },
+  "bubbleStatusVisible": {
+    "message": "El panel flotante está visible"
+  },
+  "bubbleStatusHidden": {
+    "message": "El panel flotante está oculto"
+  },
+  "bubbleHideButton": {
+    "message": "Ocultar panel flotante"
+  },
+  "bubbleShowButton": {
+    "message": "Mostrar panel flotante"
   },
   "loginTitle": {
     "message": "Inicia sesión en EduLens"

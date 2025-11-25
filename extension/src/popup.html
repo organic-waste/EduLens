@@ -1,14 +1,56 @@
 <!DOCTYPE html>
-<html lang="zh-cn">
-<head>
-  <meta charset="UTF-8">
-  <title>EduLens Popup</title>
-  <style>
-    body { font-family: sans-serif; padding: 16px; }
-    h2 { margin-top: 0; }
-  </style>
-</head>
-<body>
-  <h2>EduLens</h2>
-</body>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>EduLens Popup</title>
+    <style>
+      :root {
+        --main-color: #6f829d;
+        --hover-color: #60abda;
+        --background-color: #f3f7f9;
+        --emphasis-color: #2b53a8;
+      }
+
+      body {
+        font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+          sans-serif;
+        margin: 0;
+        padding: 18px;
+        background: var(--background-color);
+        color: #1d262f;
+        min-width: 120px;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: 18px;
+        color: var(--emphasis-color);
+      }
+
+      button {
+        padding: 10px 12px;
+        background: var(--main-color);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+
+      button:hover {
+        background: var(--hover-color);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 id="popup-title"></h1>
+    <button id="toggle-bubble-btn"></button>
+    <script type="module" src="./popup.js"></script>
+  </body>
 </html>

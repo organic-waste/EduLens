@@ -3,7 +3,7 @@
     "message": "EduLens"
   },
   "pluginDesc": {
-    "message": "An assistive browser extension for online teaching and learning."
+    "message": "All-in-one Chrome extension for annotated learning, real-time collaboration, and reading focus tools."
   },
   "browserActionTitle": {
     "message": "Open the EduLens panel"
@@ -102,10 +102,25 @@
     "message": "Toggle pin/follow scroll"
   },
   "popupTitle": {
-    "message": "EduLens Settings"
+    "message": "EduLens"
   },
   "popupEnable": {
     "message": "Enable EduLens"
+  },
+  "bubbleStatusLoading": {
+    "message": "Loading floating panel status..."
+  },
+  "bubbleStatusVisible": {
+    "message": "Floating panel is visible"
+  },
+  "bubbleStatusHidden": {
+    "message": "Floating panel is hidden"
+  },
+  "bubbleHideButton": {
+    "message": "Hide floating panel"
+  },
+  "bubbleShowButton": {
+    "message": "Show floating panel"
   },
   "loginTitle": {
     "message": "Sign in to EduLens"
