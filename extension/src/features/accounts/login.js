@@ -8,6 +8,13 @@ import {
 import { activateRoomSelector } from "./room.js";
 import eventStore from "../../stores/eventStore.js";
 
+function setPanelLoginState(isLoggedIn) {
+  const host = window.__EDULENS_HOST__;
+  if (!host) return;
+  host.classList.toggle("edulens-logged-in", Boolean(isLoggedIn));
+  host.classList.toggle("edulens-logged-out", !isLoggedIn);
+}
+
 function showForm() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
 
@@ -80,6 +87,7 @@ function showLoginEntryButton() {
   shadowRoot.querySelector(".user-status-area")?.remove();
   shadowRoot.querySelector(".room-selector")?.remove();
   shadowRoot.querySelector(".login-entry-area")?.remove();
+  setPanelLoginState(false);
 
   const loginArea = createEl("div", { class: "login-entry-area" });
   const loginBtn = createEl("button", {
@@ -395,6 +403,7 @@ export async function updateLoginStatus(user) {
   eventStore.on(area.querySelector(".logout-btn"), "click", handleLogout);
   shadow.querySelector(".functions")?.append(area);
 
+  setPanelLoginState(true);
   await activateRoomSelector();
 }
 
@@ -405,6 +414,7 @@ async function handleLogout() {
   const shadowRoot = window.__EDULENS_SHADOW_ROOT__;
   shadowRoot.querySelector(".user-status-area")?.remove();
   shadowRoot.querySelector(".room-selector")?.remove();
+  setPanelLoginState(false);
   showLoginEntryButton();
 }
 

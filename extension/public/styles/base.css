@@ -1,15 +1,15 @@
 /* 颜色变量 */
 :root {
-  --main-color: #6f829d;
-  --panel-color: #6a88b7;
-  --secondary-color: #c1cbce;
-  --hover-color: #5e9dbd;
-  --lighter-color: #e3eef3;
-  --background-color: #f3f7f9;
-  --emphasis-color: #2b53a8;
-  --mask-color: rgba(12, 44, 104, 0.2);
-  --error-color: #b26464;
-  --emphasis-error-color: #d44343;
+  --main-color: #7090ab;
+  --panel-color: #7dbcc7;
+  --secondary-color: #9dcadb;
+  --hover-color: #5fa6c0;
+  --lighter-color: #deeaec;
+  --background-color: #f5f8fa;
+  --emphasis-color: #4275a4;
+  --mask-color: rgba(24, 94, 138, 0.18);
+  --error-color: #c17379;
+  --emphasis-error-color: #c05656;
   --lighter-font-size: 1.5vh;
   --normal-font-size: 1.8vh;
   --bolder-font-size: 2.2vh;
@@ -66,7 +66,7 @@ html {
 }
 .input:focus {
   border-color: var(--hover-color);
-  box-shadow: 0 0 0 2px rgba(84, 132, 201, 0.2);
+  box-shadow: 0 0 0 2px rgba(111, 183, 207, 0.22);
 }
 
 .button {

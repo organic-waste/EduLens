@@ -32,7 +32,7 @@
   height: 4vh;
   padding: 0;
   margin-left: 1vh;
-  border: 1px solid var(--main-color);
+  border: 1px solid var(--secondary-color);
   border-radius: 4px;
   background: #fff;
   cursor: pointer;
@@ -43,6 +43,7 @@
   width: 8vh;
   height: 1.5vh;
   -webkit-appearance: none;
+  border: 1px solid var(--secondary-color);
   appearance: none;
   background: var(--background-color);
   border-radius: 5px;
@@ -77,7 +78,7 @@
   height: var(--boldest-font-size);
   padding: 0.5vh;
   background-color: #f3f3f3;
-  border: 1px solid var(--main-color);
+  border: 1px solid var(--secondary-color);
   border-radius: 4px;
   box-sizing: border-box;
 }

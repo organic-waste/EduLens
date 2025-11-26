@@ -56,14 +56,8 @@ function getDocumentPosition(event) {
   }
   const { x: scrollX, y: scrollY } = getScrollOffsets();
   return {
-    x:
-      typeof event.pageX === "number"
-        ? event.pageX
-        : event.clientX + scrollX,
-    y:
-      typeof event.pageY === "number"
-        ? event.pageY
-        : event.clientY + scrollY,
+    x: typeof event.pageX === "number" ? event.pageX : event.clientX + scrollX,
+    y: typeof event.pageY === "number" ? event.pageY : event.clientY + scrollY,
   };
 }
 
@@ -252,18 +246,18 @@ function listenerMouseDown(e) {
   else if (isEditing && currentRect) {
     const pointer = getPositionForRect(currentRect, positions);
     const { x, y } = pointer;
-    
+
     // 通过DOM检测优先检查是否点击在文本容器或按钮上
     const textContainer = e.target.closest(".annotation-text-container");
     const deleteBtn = e.target.closest(".annotation-delete-btn");
     const pinBtn = e.target.closest(".annotation-pin-btn");
-    
+
     if (textContainer || deleteBtn || pinBtn) {
       // 这些元素有自己的事件处理，不触发移动
       e.stopPropagation();
       return;
     }
-    
+
     const handle = getHandleAt(x, y, currentRect);
     if (handle) {
       startResizing(handle, x, y);
@@ -271,7 +265,7 @@ function listenerMouseDown(e) {
       e.stopPropagation();
       return;
     }
-    
+
     // 扩展检测区域
     const expandedMargin = 10;
     const inExpandedRect = isPointInRect(
@@ -282,7 +276,7 @@ function listenerMouseDown(e) {
       currentRect.width + expandedMargin * 2,
       currentRect.height + expandedMargin * 2
     );
-    
+
     //点击到矩阵内部或扩展区域（但不是控制点）
     if (inExpandedRect) {
       //移动矩阵
@@ -343,7 +337,7 @@ function listenerMouseMove(e) {
           currentRect.width + expandedMargin * 2,
           currentRect.height + expandedMargin * 2
         );
-        
+
         if (inExpandedRect) {
           drawingContainer.style.cursor = "move";
         } else {
@@ -458,9 +452,9 @@ function handleGlobalMouseDown(e) {
   const positions = getEventPositions(e);
   const pointer = getPositionForRect(currentRect, positions);
   const { x, y } = pointer;
-  
+
   // 扩展检测区域（控制点半径+margin）
-  const expandedMargin = 15;
+  const expandedMargin = 25;
   if (
     !isPointInRect(
       x,
@@ -694,26 +688,28 @@ function getHandleAt(x, y, rect) {
   if (!rectDiv) return null;
   const handles = rectDiv.getElementsByClassName("resize-handle");
   const { x: scrollX, y: scrollY } = getScrollOffsets();
-  
+
   // 扩展控制点的检测区域，增加5px的容差
   const handleMargin = 5;
-  
+
   for (let handle of handles) {
     const handleRect = handle.getBoundingClientRect();
     const handleX = handleRect.left + (rect.fixed ? 0 : scrollX);
     const handleY = handleRect.top + (rect.fixed ? 0 : scrollY);
     const handleW = handleRect.width;
     const handleH = handleRect.height;
-    
+
     // 扩展检测区域
-    if (isPointInRect(
-      x, 
-      y, 
-      handleX - handleMargin, 
-      handleY - handleMargin, 
-      handleW + handleMargin * 2, 
-      handleH + handleMargin * 2
-    )) {
+    if (
+      isPointInRect(
+        x,
+        y,
+        handleX - handleMargin,
+        handleY - handleMargin,
+        handleW + handleMargin * 2,
+        handleH + handleMargin * 2
+      )
+    ) {
       return {
         element: handle,
         type: handle.dataset.type,
@@ -938,7 +934,7 @@ async function saveRectangles() {
   try {
     await storageManager.savePageData("rectangles", rectangles);
 
-    // 发送实时同步操作 - 同步所有框选数据
+    //同步所有框选数据
     syncManager.sendOperation({
       type: "rectangle-update",
       data: rectangles,

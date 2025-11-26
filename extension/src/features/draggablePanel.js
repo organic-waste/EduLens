@@ -70,14 +70,13 @@ function DraggablePanel() {
 
   cardDiv = createEl("div", { class: "draggable-card" });
   const headerDiv = createEl("div", { class: "card-header" });
-  // const titleSpan = createEl("span", {
-  //   textContent: chrome.i18n.getMessage("panelHeader"),
-  // });
-  const titleSpan = createEl("span", {
-    textContent: "EduLens",
+  const titleImg = createEl("img", {
+    class: "panel-logo",
+    src: chrome.runtime.getURL("assets/title-white.png"),
+    alt: "EduLens",
   });
   const contentDiv = createEl("div", { class: "card-content" });
-  headerDiv.appendChild(titleSpan);
+  headerDiv.appendChild(titleImg);
   cardDiv.appendChild(headerDiv);
   cardDiv.appendChild(contentDiv);
 

@@ -3,7 +3,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  background: rgba(82, 102, 109, 0.2);
+  background: rgba(111, 183, 207, 0.18);
   height: 100%;
   width: 1vh;
   z-index: 9999;
@@ -13,7 +13,7 @@
   position: absolute;
   top: 0;
   width: 100%;
-  background: var(--secondary-color);
+  background: linear-gradient(180deg, var(--main-color), var(--panel-color));
   border-radius: 0 0 3px 3px;
   transition: height 0.15s ease;
 }

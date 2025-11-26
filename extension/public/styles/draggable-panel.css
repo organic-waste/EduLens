@@ -4,13 +4,14 @@
   width: 5vh;
   height: 5vh;
   border-radius: 50%;
-  background: var(--panel-color);
+  background: linear-gradient(135deg, var(--main-color), var(--panel-color));
   color: #fff;
   z-index: 9998;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.16);
   user-select: none;
   visibility: visible;
-  transition: width 0.3s ease, height 0.3s ease, border-radius 0.3s ease;
+  transition: width 0.3s ease, height 0.3s ease, border-radius 0.3s ease,
+    box-shadow 0.2s ease;
 }
 .draggable-panel.open-panel {
   width: 30vh;
@@ -27,7 +28,7 @@
   width: 5vh;
   height: 5vh;
   border: none;
-  background: var(--panel-color);
+  background: transparent;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -53,8 +54,10 @@
   position: relative;
   width: 30vh;
   height: 44vh;
-  background: #fff;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
   transition: width 0.3s ease-in-out, height 0.3s ease-in-out;
   z-index: 10000;
   padding: 0;
@@ -64,13 +67,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--panel-color);
+  background: linear-gradient(135deg, var(--main-color), var(--panel-color));
   color: #fff;
   height: 5vh;
   padding-left: 3vh;
   font-size: 2.8vh;
   border-radius: 10px 10px 0 0;
   white-space: nowrap;
+}
+
+.card-header .panel-logo {
+  height: var(--bolder-font-size);
+  max-width: 22vh;
+  object-fit: contain;
 }
 
 .card-content {
@@ -91,4 +100,13 @@
 
 .login-entry-btn {
   width: 100%;
+}
+
+:host(.edulens-logged-out) .draggable-panel.open-panel,
+:host(.edulens-logged-out) .draggable-card {
+  height: 35vh;
+}
+
+:host(.edulens-logged-out) .card-content {
+  height: 30vh;
 }
