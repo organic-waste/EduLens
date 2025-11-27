@@ -5,14 +5,14 @@
   width: 1vh;
   height: 1vh;
   border-radius: 3px;
-  background: var(--main-color);
+  background: var(--secondary-color);
   cursor: pointer;
   z-index: 10001;
   transition: background 0.2s ease-in-out, width 0.2s ease-in-out;
 }
 
 .bookmark-marker:hover {
-  background: var(--hover-color);
+  background: var(--lighter-color);
   width: 1.8vh;
 }
 

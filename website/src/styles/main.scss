@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', 'Noto Sans SC', sans-serif;
+  background-color: #F8F9FA;
+  color: #1A1A1A;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+// 滚动条美化
+// ::-webkit-scrollbar {
+//   width: 8px;
+// }
+// ::-webkit-scrollbar-track {
+//   background: #F8F9FA;
+// }
+// ::-webkit-scrollbar-thumb {
+//   background: rgba(129, 221, 212, 0.5);
+//   border-radius: 4px;
+// }
+::-webkit-scrollbar {
+  display: none;
+}

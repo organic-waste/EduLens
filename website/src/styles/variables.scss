@@ -1,0 +1,24 @@
+// 主题色
+$theme-gradient-start: #809FCC;
+$theme-gradient-end: #81DDD4;
+$theme-gradient: linear-gradient(135deg, $theme-gradient-start 0%, $theme-gradient-end 100%);
+$text-primary: #2C3E50;
+$text-secondary: #5E6D82;
+$bg-page: #F5F7FA;
+
+// 字体
+$font-main: 'Noto Sans SC', sans-serif;
+$font-display: 'Inter', sans-serif;
+
+// 响应式断点
+$mobile: 768px;
+$tablet: 1024px;
+
+// 玻璃
+@mixin glass-effect {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05);
+}
