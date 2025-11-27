@@ -1,14 +1,47 @@
-/* 鼠标强调 */
+/* 鼠标高亮 */
 .mouse-highlight {
   position: fixed;
-  width: 20px;
-  height: 20px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 0, 0.5);
+
+  background: rgba(128, 170, 204, 0.4);
+  border: 1px solid rgba(129, 193, 221, 0.6);
   pointer-events: none;
-  z-index: 9999;
-  box-shadow: 0 0 8px 4px rgba(255, 255, 0, 0.5);
+  z-index: 2147483646;
   will-change: transform;
+  backdrop-filter: blur(1px);
+}
+
+.mouse-click-ripple {
+  position: fixed;
+  border-radius: 50%;
+  background: transparent;
+
+  border: 2px solid rgba(129, 221, 212, 1);
+  box-shadow: 0 0 10px rgba(129, 221, 212, 0.8);
+
+  pointer-events: none;
+  z-index: 2147483647;
+  transform: translate(-50%, -50%);
+
+  animation: click 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* 点击波纹动画*/
+@keyframes click {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 1;
+    border-width: 4px;
+  }
+  100% {
+    width: 80px;
+    height: 80px;
+    opacity: 0;
+    border-width: 0px;
+  }
 }
 
 /* 圆形聚光灯 */
@@ -20,7 +53,6 @@
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
   pointer-events: none;
   z-index: 9999;
-  transition: box-shadow 0.2s;
   will-change: transform;
   transition: transform 0.05s ease;
 }
@@ -29,7 +61,6 @@
 .reading-spotlight {
   position: fixed;
   width: 100vw;
-  height: 4vh;
   background: transparent;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
   pointer-events: none;

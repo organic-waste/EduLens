@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@phosphor-icons/vue": "^2.2.3",
+    "@phosphor-icons/vue": "^2.2.1",
     "gsap": "^3.12.5",
     "vue": "^3.4.19"
   },

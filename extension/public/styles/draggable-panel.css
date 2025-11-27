@@ -80,6 +80,9 @@
   height: var(--bolder-font-size);
   max-width: 22vh;
   object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .card-content {

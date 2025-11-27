@@ -10,7 +10,7 @@ const HEIGHT_STEP = 12;
 
 let readingSpotlightDiv = null;
 let isActive = false;
-let spotlightHeight = 120;
+let spotlightHeight = 60;
 let rafId = null;
 
 function ensureReadingSpotlight() {

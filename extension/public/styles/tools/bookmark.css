@@ -12,7 +12,7 @@
 }
 
 .bookmark-marker:hover {
-  background: var(--lighter-color);
+  background: var(--secondary-color);
   width: 1.8vh;
 }
 
@@ -22,7 +22,7 @@
   transform: translate(-110%, -50%);
   background: var(--background-color);
   color: var(--main-color);
-  padding: 0px 4px;
+  padding: 1px 4px;
   border-radius: 4px;
   border: 1px solid var(--emphasis-color);
   white-space: nowrap;
