@@ -6,7 +6,7 @@
   
   <style scoped>
   .site-footer {
-    margin-top: 10vh;
+    margin-bottom: 5vh;
     text-align: center;
     color: #888;
     font-size: 0.9rem;

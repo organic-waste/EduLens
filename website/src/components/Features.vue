@@ -1,146 +1,193 @@
 <script setup>
-import { onMounted } from 'vue';
-import { PhPencilCircle, PhUsersThree, PhBookOpen, PhCloudCheck, PhCamera, PhLightning, PhTarget } from '@phosphor-icons/vue';
+import { onMounted, ref } from 'vue';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { 
+  PhTarget, 
+  PhBookOpen, 
+  PhUsersThree, 
+  PhPencilCircle, 
+  PhCamera, 
+  PhLightning,
+  PhCaretLeft,
+  PhCaretRight,
+  PhArrowCounterClockwise
+} from '@phosphor-icons/vue';
 
+gsap.registerPlugin(ScrollTrigger);
+
+const activeIndex = ref(0);
+
+// 介绍文案
 const features = [
-  { 
-    id: 'cloud', 
-    title: '云同步与国际化', 
-    desc: '云端 + 本地双存储；内置中英日德西多语言，学习无国界。', 
-    icon: PhCloudCheck, 
-    size: 'small',
-    bullets: ['断网自动回落本地，恢复后再次同步', '配置文件与页面数据安全缓存']
-  },
   { 
     id: 'workflow', 
     title: '快捷启动与面板', 
-    desc: '右下角可拖拽气泡，点击展开工具栏；可记忆显示/隐藏偏好。', 
+    desc: '可拖拽气泡工具栏，保障无遮挡网页内容；可记忆显示/隐藏面板偏好。', 
     icon: PhTarget, 
-    size: 'small',
-    mediaNote: '放工具面板截屏或快捷键演示',
-    bullets: ['Alt+E 快捷唤起，面板可拖拽到任意位置', '内置滚动进度条，随页面变化实时更新']
+    video: '/videos/panel.mp4',
+    bullets: ['点击气泡展开工具面板，可拖拽到任意位置', '点击右上角图标可切换面板隐藏状态']
+  },
+  { 
+    id: 'focus', 
+    title: '专注与提醒', 
+    desc: '聚光灯、鼠标高亮、阅读聚焦与倒计时，保持学习节奏不分心。', 
+    icon: PhLightning, 
+    video: '/videos/focus.mp4',
+    bullets: ['快捷键 Alt+S / Alt+H / Alt+R 快速切换', '倒计时结束弹窗提醒']
   },
   { 
     id: 'reading', 
-    title: '阅读进度 + 书签', 
+    title: '阅读进度与书签', 
     desc: '左侧竖条实时显示阅读百分比，书签可命名、跳转并跨页面保存。', 
     icon: PhBookOpen, 
-    size: 'small',
-    bullets: ['点击书签圆点平滑回到位置', '实时同步其他协作者的标记']
-  },
-  { 
-    id: 'collab', 
-    title: '多人实时协作', 
-    desc: '房间 / 分享码机制，即时同步标注与光标；未连接服务器时自动切换本地模式。', 
-    icon: PhUsersThree, 
-    size: 'large',
-    mediaNote: '这里放多人协作录屏/GIF（展示多光标与房间切换）',
-    bullets: ['房间列表一键创建/加入/切换', '书签、涂鸦、图片等操作实时同步']
+    video: '/videos/bookmark.mp4',
+    bullets: ['自定义书签标题并记忆阅读进度', '点击书签圆点平滑返回相应书签位置']
   },
   { 
     id: 'annotation', 
     title: '标注工具箱', 
-    desc: '涂鸦、框选批注、便利贴、挂图等多种形式，适配课堂讲解与个人笔记。', 
+    desc: '涂鸦、直线、框选、图片等多种形式，适配课堂讲解与个人笔记。', 
     icon: PhPencilCircle, 
-    size: 'large',
-    mediaNote: '插入标注工具动图：画笔/直线/橡皮擦/一键清除',
-    bullets: ['矩形批注双击可输入文字，悬停查看', '图片可拖拽、缩放、旋转，支持固定或随滚动']
+    video: '/videos/annotation.mp4',
+    bullets: ['矩形批注双击可输入文字内容', '矩形批注和图片可拖拽、缩放，支持切换固定或跟随页面滚动']
   },
   { 
     id: 'screenshot', 
     title: '三种截图模式', 
     desc: 'DOM 元素截图、区域截图、滚动长截图，长文档也能一键导出。', 
     icon: PhCamera, 
-    size: 'large',
-    mediaNote: '放滚动截屏演示或导出的长图示例',
-    bullets: ['悬停高亮取景，单击即可截图', '自动滚动拼接，可随时提前结束']
+    video: '/videos/screenshot.mp4',
+    bullets: ['悬停DOM高亮取景，单击即可停止截图', '长截图自动滚动拼接，可随时结束截取']
   },
   { 
-    id: 'focus', 
-    title: '专注与提醒', 
-    desc: '聚光灯、鼠标高亮、阅读聚焦与倒计时，保持节奏不分心。', 
-    icon: PhLightning, 
-    size: 'large',
-    bullets: ['快捷键 Alt+S / Alt+H / Alt+R 快速切换', '倒计时结束弹窗提醒']
-  }
+    id: 'collab', 
+    title: '多人实时协作', 
+    desc: '共享房间机制，即时同步标注数据；未连接服务器时自动切换本地模式。', 
+    icon: PhUsersThree, 
+    video: '/videos/collaboration.mp4',
+    bullets: ['本地和云端双重存储，保障数据不丢失', '书签、涂鸦、批注、图片等操作实时同步']
+  },
 ];
 
 onMounted(() => {
-  gsap.from('.feature-card', {
-    scrollTrigger: {
-      trigger: '.features-grid',
-      start: 'top 82%',
-    },
-    y: 50,
-    opacity: 0,
-    duration: 0.8,
-    stagger: 0.12
+  const steps = gsap.utils.toArray('.text-step');
+  
+  steps.forEach((step, index) => {
+    ScrollTrigger.create({
+      trigger: step,
+      start: "top center", 
+      end: "bottom center",
+      onEnter: () => activeIndex.value = index,
+      onEnterBack: () => activeIndex.value = index,
+    });
   });
 });
 </script>
 
 <template>
-  <section class="features-section" id="features">
+  <section class="sticky-features">
     <div class="container">
-      <div class="section-head">
-        <p class="eyebrow">核心功能演示</p>
-        <h2>用一个插件完成课堂讲解与知识整理</h2>
-        <p class="sub">保持玻璃拟态基调，但布局更规整，适配桌面与移动端。</p>
-      </div>
+              <div class="section-head">
+          <p class="eyebrow">核心功能演示</p>
+          <h2>用一个插件完成知识整理</h2>
+          <p class="sub">一体化学习协助、课堂互动工具</p>
+        </div>
       
-      <div class="features-grid">
+      <!-- 左侧：滚动文字区 -->
+      <div class="text-column">
+
         <div 
-          v-for="item in features" 
-          :key="item.id" 
-          :class="['feature-card', item.size]"
+          v-for="(feature, index) in features" 
+          :key="index"
+          class="text-step"
         >
-          <div class="card-head">
-            <div class="icon-wrap">
-              <component :is="item.icon" :size="28" class="icon" weight="duotone" />
+          <div class="step-card" :class="{ active: activeIndex === index }">
+            <div class="card-head">
+              <div class="icon-box">
+                <component :is="feature.icon" :size="28" weight="duotone" />
+              </div>
+              <h3>{{ feature.title }}</h3>
             </div>
-            <div class="title-wrap">
-              <p class="label">Feature</p>
-              <h3>{{ item.title }}</h3>
-            </div>
+            
+            <p class="desc">{{ feature.desc }}</p>
+            
+            <ul class="feature-bullets">
+              <li v-for="(bullet, bIndex) in feature.bullets" :key="bIndex">
+                {{ bullet }}
+              </li>
+            </ul>
           </div>
+        </div>
+        <div class="spacer"></div>
+      </div>
 
-          <p class="desc">{{ item.desc }}</p>
-
-          <ul v-if="item.bullets?.length" class="bullets">
-            <li v-for="point in item.bullets" :key="point">
-              <span class="dot"></span>
-              <span>{{ point }}</span>
-            </li>
-          </ul>
-          
-          <div v-if="item.video || item.mediaNote" class="media-area" :class="{ placeholder: !item.video }">
-            <template v-if="item.video">
-              <video :src="item.video" autoplay loop muted playsinline></video>
-            </template>
-            <template v-else>
-              <span>{{ item.mediaNote }}</span>
-            </template>
+      <!-- 右侧：固定视频区 -->
+      <div class="visual-column">
+        <div class="sticky-wrapper">
+          <div class="video-container glass-frame">
+            <transition-group name="fade">
+              <div 
+                v-for="(feature, index) in features" 
+                :key="feature.id"
+                v-show="activeIndex === index"
+                class="video-item"
+              >
+                <!-- 浏览器模拟框 -->
+                <div class="browser-content">
+                  <div class="address-bar">
+                    <div class="browser-controls">
+                      <PhCaretLeft class="ctrl-icon" size="18" weight="bold" aria-label="Back" />
+                      <PhCaretRight class="ctrl-icon" size="18" weight="bold" aria-label="Forward" />
+                      <PhArrowCounterClockwise class="ctrl-icon" size="18" weight="bold" aria-label="Refresh" />
+                    </div>
+                    <div class="url">edulens://{{ feature.id }}</div>
+                  </div>
+                  
+                  <!-- 视频/素材区域 -->
+                  <div class="media-content">
+                     <video 
+                       v-if="feature.video" 
+                       :src="feature.video" 
+                       autoplay 
+                       loop 
+                       muted 
+                       playsinline
+                     ></video>
+                     
+                     <div v-else class="placeholder-info">
+                       <component :is="feature.icon" :size="48" weight="duotone" class="ph-icon"/>
+                       <p>{{'演示视频' }}</p>
+                     </div>
+                  </div>
+                </div>
+              </div>
+            </transition-group>
           </div>
         </div>
       </div>
+
     </div>
   </section>
 </template>
 
 <style lang="scss" scoped>
-@use '../styles/variables.scss' as *;
+@use '../styles/variables.scss'as *;
+@use '../styles/main.scss'as *;
 
-.features-section {
-  padding: 12vh 0 10vh;
-  
+.sticky-features {
+  position: relative;
+  padding-top: 5vh;
+
   .container {
-    width: min(92vw, 1400px);
-    margin: 0 auto;
+    width: 100vw;
+    margin: 10vh auto;
+    display: flex;
   }
 
   .section-head {
-    margin-bottom: 6vh;
+    position: absolute;
+    margin-left: 5vw;
     .eyebrow {
       display: inline-block;
       padding: 0.5rem 1.2rem;
@@ -151,128 +198,197 @@ onMounted(() => {
       letter-spacing: 0.02em;
       margin-bottom: 1vh;
     }
-    h2 { font-size: clamp(2.2rem, 4vw, 3rem); color: $text-primary; margin-bottom: 1vh; }
-    .sub { color: $text-secondary; font-size: clamp(1rem, 1.1vw, 1.15rem); }
+    h2 { font-size: clamp(2.4rem, 4vw, 3rem); color: $text-primary; margin-bottom: 1vh; }
+    .sub { color: $text-secondary; font-size: clamp(1.1rem, 1.1vw, 1.4rem); }
   }
 
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-auto-rows: minmax(18vh, auto);
-    gap: clamp(1rem, 1.3vw, 1.8rem);
+  // --- 左侧 ---
+  .text-column {
+    width: 45%; 
+    padding: 20vh 2rem 0 4rem;
+    position: relative;
+    z-index: 10;
 
-    .feature-card {
-      @include glass-effect;
-      border-radius: 24px;
-      padding: clamp(1.2rem, 2vw, 2.2rem);
+    .text-step {
+      min-height: 70vh; 
       display: flex;
-      flex-direction: column;
-      gap: 1vh;
-      transition: transform 0.25s, box-shadow 0.25s;
-      min-height: 24vh;
-      grid-column: span 4;
-
-      &:hover { transform: translateY(-0.6vh); box-shadow: 0 14px 40px rgba(0,0,0,0.06); }
-
-      .card-head {
-        display: flex;
-        align-items: center;
-        gap: 1.4vw;
-      }
-
-      .icon-wrap {
-        width: 52px;
-        height: 52px;
-        border-radius: 16px;
-        background: rgba($theme-gradient-start, 0.12);
-        display: grid;
-        place-items: center;
-        .icon { color: $theme-gradient-start; }
-      }
-
-      .title-wrap {
-        .label { color: $text-secondary; font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; }
-        h3 { font-size: clamp(1.2rem, 1.6vw, 1.6rem); margin-top: 0.2rem; color: $text-primary; }
-      }
-
-      .desc {
-        font-size: clamp(0.98rem, 1vw, 1.05rem);
-        color: $text-secondary;
-        line-height: 1.6;
-      }
-
-      .bullets {
-        list-style: none;
-        display: grid;
-        gap: 0.6rem;
-        margin-top: 0.5vh;
-
-        li {
-          display: grid;
-          grid-template-columns: 10px 1fr;
-          align-items: baseline;
-          column-gap: 0.6rem;
-          font-size: 0.95rem;
-          color: $text-primary;
-        }
-
-        .dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: $theme-gradient;
-          margin-top: 0.2rem;
-        }
-      }
-
-      .media-area {
-        flex: 1;
-        border-radius: 16px;
-        overflow: hidden;
-        background: linear-gradient(135deg, rgba($theme-gradient-start,0.12), rgba($theme-gradient-end,0.12));
-        display: grid;
-        place-items: center;
-        text-align: center;
-        padding: 1rem;
-        margin-top: auto;
-        color: $text-secondary;
-        font-size: 0.95rem;
+      align-items: center;
+      
+      .step-card {
+        opacity: 0.5;
+        transform: translateX(-20px) scale(0.95);
+        transition: all 0.5s ease;
         
-        video {
+        &.active {
+          opacity: 1;
+          transform: translateX(0) scale(1);
+          border-color: $theme-gradient-start;
+          
+          .icon-box { background: $theme-gradient; color: white; }
+        }
+
+        .card-head {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          margin-bottom: 1rem;
+
+          .icon-box {
+            width: 8vh;
+            height: 8vh;
+            border-radius: 12px;
+            background: rgba($theme-gradient-start, 0.1);
+            color: $theme-gradient-start;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+          }
+
+          h3 { font-size: 2rem; margin: 0; color: $text-primary; }
+        }
+
+        .desc {
+          font-size: 1.2rem;
+          color: $text-secondary;
+          line-height: 1.6;
+          margin-bottom: 1.5rem;
+        }
+
+        .feature-bullets {
+          list-style: none;
+          padding: 0;
+          
+          li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: $text-primary;
+            font-size: 1.1rem;
+
+            &::before {
+              content: '';
+              position: absolute;
+              left: 0;
+              top: 8px;
+              width: 6px;
+              height: 6px;
+              border-radius: 50%;
+              background: $theme-gradient-end;
+            }
+          }
+        }
+      }
+    }
+    
+    .spacer { height: 20vh; }
+  }
+
+  // --- 右侧 ---
+  .visual-column {
+    width: 60%;
+    height: 100vh;
+    position: sticky;
+    top: 5vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .sticky-wrapper{
+      width: 100%;
+      margin-right: 4vw;
+    }
+
+    .video-container {
+      width: 100%;
+      aspect-ratio: 16/10;
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      
+      background: rgba(255,255,255,0.3);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.6);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+
+      .video-item {
+        position: absolute;
+        inset: 0;
+        padding: 10px;
+        
+        .browser-content {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          background: #fff;
+          border-radius: 12px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+
+          .address-bar {
+            height: 32px;
+            background: #f1f3f5;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 10px;
+
+            .browser-controls {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              
+              .ctrl-icon {
+                color: #9da3b4;
+                padding: 4px;
+                border-radius: 6px;
+                background: rgba(255, 255, 255, 0.6);
+              }
+            }
+            .url {
+              font-size: 10px; color: #999; 
+              background: white; padding: 2px 10px; border-radius: 4px; flex: 1;
+              text-align: center;
+            }
+          }
+
+          .media-content {
+            flex: 1;
+            background: #fafafa;
+            position: relative;
+            
+            video { 
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%; 
+              height: 100%; 
+              object-fit: cover; 
+              display: block;
+              z-index: 10;
+              filter: brightness(105%) contrast(103%);
+            }
+            
+            .placeholder-info {
+              height: 100%;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              color: $text-secondary;
+              gap: 1rem;
+              padding: 2rem;
+              text-align: center;
+              
+              .ph-icon { color: #ccc; }
+              p { font-size: 0.9rem; max-width: 80%; }
+            }
+          }
         }
-
-        &.placeholder {
-          border: 1px dashed rgba($theme-gradient-start, 0.3);
-        }
-      }
-
-      &.large { grid-column: span 6; grid-row: span 2; }
-      &.small { grid-column: span 4; grid-row: span 1; min-height: 20vh; }
-    }
-  }
-
-  @media (max-width: 1100px) {
-    .features-grid {
-      grid-template-columns: repeat(8, minmax(0, 1fr));
-      .feature-card { grid-column: span 4; }
-      .feature-card.large { grid-column: span 8; }
-      .feature-card.wide { grid-column: span 8; }
-    }
-  }
-
-  @media (max-width: 800px) {
-    .features-grid {
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      grid-auto-rows: minmax(18vh, auto);
-
-      .feature-card {
-        grid-column: span 1 !important;
-        grid-row: span 1 !important;
       }
     }
   }
 }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.5s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

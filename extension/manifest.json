@@ -46,7 +46,8 @@
         "styles/tools/screenshot.css",
         "styles/tools/upload-image.css",
         "styles/accounts/login.css",
-        "styles/accounts/room.css"
+        "styles/accounts/room.css",
+        "assets/title-white.png"
       ],
       "matches": ["<all_urls>"]
     }

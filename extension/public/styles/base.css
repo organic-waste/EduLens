@@ -2,12 +2,12 @@
 :root {
   --main-color: #7090ab;
   --panel-color: #7dbcc7;
-  --secondary-color: #7bbfd8;
+  --secondary-color: #81bfd5;
   --hover-color: #5fa6c0;
   --lighter-color: #deeaec;
   --background-color: #f5f8fa;
   --emphasis-color: #4275a4;
-  --mask-color: rgba(24, 94, 138, 0.18);
+  --mask-color: rgba(24, 94, 138, 0.2);
   --error-color: #c17379;
   --emphasis-error-color: #c05656;
   --lighter-font-size: 1.5vh;

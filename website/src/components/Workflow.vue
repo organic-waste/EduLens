@@ -1,141 +1,215 @@
 <script setup>
-import { onMounted } from 'vue';
-import gsap from 'gsap';
-
-onMounted(() => {
-  const steps = gsap.utils.toArray('.step-item');
-  
-  steps.forEach((step, i) => {
-    gsap.from(step, {
-      scrollTrigger: {
-        trigger: step,
-        start: "top 80%",
-      },
-      x: i % 2 === 0 ? -50 : 50, // 左右交替进入
-      opacity: 0,
-      duration: 0.8,
-      ease: 'power2.out'
-    });
-  });
-});
+import { PhDownloadSimple, PhPushPin, PhPower } from '@phosphor-icons/vue';
 </script>
 
 <template>
-  <section class="workflow-section">
+  <section class="workflow" id="workflow">
     <div class="container">
-      <h2>三步开启高效学习</h2>
-      <div class="steps-wrapper">
+      <div class="section-title">
+        <h2>30 秒快速上手</h2>
+        <p>简单三步，开启你的网页标注之旅</p>
+      </div>
+
+      <!-- 步骤流程 -->
+      <div class="steps-row">
         <!-- Step 1 -->
-        <div class="step-item">
-          <div class="step-num">01</div>
-          <div class="step-content">
-            <h3>一键安装</h3>
-            <p>访问 Chrome 商店，点击“添加至 Chrome”，插件即刻生效。</p>
+        <div class="step">
+          <div class="step-icon glass-icon">
+            <PhDownloadSimple :size="32" weight="bold" />
+            <div class="step-num">1</div>
           </div>
+          <h3>添加到 Chrome</h3>
+          <p>前往商店，点击"Add to Chrome"</p>
         </div>
         
+        <div class="connector"></div>
+
         <!-- Step 2 -->
-        <div class="step-item right">
-          <div class="step-num">02</div>
-          <div class="step-content">
-            <h3>任意页启动</h3>
-            <p>在浏览网页时，点击右下角悬浮气泡或使用快捷键 `Alt+E` 唤起工具栏。</p>
+        <div class="step">
+          <div class="step-icon glass-icon">
+            <PhPushPin :size="32" weight="bold" />
+            <div class="step-num">2</div>
           </div>
+          <h3>固定图标</h3>
+          <p>点击右上角扩展拼图图标，找到 EduLens 并点击大头针</p>
         </div>
 
+        <div class="connector"></div>
+
         <!-- Step 3 -->
-        <div class="step-item">
-          <div class="step-num">03</div>
-          <div class="step-content">
-            <h3>开始协作</h3>
-            <p>生成分享链接发给队友，即刻开启多人同屏标注模式。</p>
+        <div class="step">
+          <div class="step-icon glass-icon">
+            <PhPower :size="32" weight="bold" />
+            <div class="step-num">3</div>
+          </div>
+          <h3>一键使用</h3>
+          <p>点击右下角气泡即可展开工具面板</p>
+        </div>
+      </div>
+
+      <!-- 安装指引-->
+      <div class="cta-banner">
+        <div class="banner-content">
+          <h2>准备好体验了吗？</h2>
+          <p>加入高效学习者的行列，让 Web 成为你的知识库。</p>
+          <div class="banner-btns">
+            <button class="dl-btn">前往 Chrome 商店下载</button>
+            <span class="version-info">当前版本 v1.0.1 • 免费开源</span>
           </div>
         </div>
-        
-        <div class="line"></div>
+        <div class="banner-bg"></div>
       </div>
     </div>
   </section>
 </template>
 
 <style lang="scss" scoped>
-@use '../styles/variables.scss' as *;
+@use '../styles/variables.scss'as *;
+@use '../styles/main.scss'as *;
 
-.workflow-section {
+.workflow {
+  padding: 8vh 0 10vh;
 
   .container {
     width: min(90vw, 1000px);
     margin: 0 auto;
-    text-align: center;
-    h2 { font-size: 2.5rem; margin-bottom: 4rem; }
   }
 
-  .steps-wrapper {
-    position: relative;
+  .section-title {
+    text-align: center;
+    margin-bottom: 4rem;
+    h2 { font-size: 2.8rem; color: $text-primary; margin-bottom: 0.5rem; }
+    p { color: $text-secondary; }
+  }
+
+  .steps-row {
     display: flex;
-    flex-direction: column;
-    gap: 4rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 6rem;
+    position: relative;
 
-    .line {
-      position: absolute;
-      left: 50%;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: #eee;
-      transform: translateX(-50%);
-      z-index: 0;
-    }
-
-    .step-item {
-      position: relative;
-      z-index: 1;
-      width: 45%;
+    .step {
+      flex: 1;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 1.5rem;
-      text-align: right;
+      text-align: center;
+      z-index: 2;
 
-      &.right {
-        align-self: flex-end;
-        flex-direction: row-reverse;
-        text-align: left;
+      .step-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255,255,255,0.8);
+        border-radius: 20px;
         
-        .step-num { background: $theme-gradient-end; }
-      }
-
-      .step-num {
-        flex-shrink: 0;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: $theme-gradient-start;
-        color: white;
-        font-weight: 700;
-        font-size: 1.5rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 5px 15px rgba($theme-gradient-start, 0.3);
+        color: $text-primary;
+        margin-bottom: 1.5rem;
+        position: relative;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.03);
+
+        .step-num {
+          position: absolute;
+          top: -10px;
+          right: -10px;
+          width: 28px;
+          height: 28px;
+          background: $theme-gradient;
+          color: white;
+          border-radius: 50%;
+          font-size: 14px;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 10px rgba($theme-gradient-start, 0.3);
+        }
       }
 
-      .step-content {
-        h3 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-        p { color: $text-secondary; }
+      h3 { font-size: 1.1rem; margin-bottom: 0.5rem; color: $text-primary; }
+      p { font-size: 0.9rem; color: $text-secondary; max-width: 200px; }
+    }
+
+    .connector {
+      flex: 1;
+      height: 2px;
+      background: rgba($text-secondary, 0.2); 
+      margin-top: 40px; 
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba($text-secondary, 0.4);
       }
     }
   }
 
-  @media (max-width: 768px) {
-    .steps-wrapper {
-      .line { left: 30px; }
-      .step-item {
-        width: 100%;
-        text-align: left;
-        flex-direction: row !important; // 强制统一方向
-        
-        &.right { align-self: flex-start; }
+  .cta-banner {
+    position: relative;
+    border-radius: 24px;
+    padding: 4rem;
+    text-align: center;
+    overflow: hidden;
+    background: $text-primary; 
+    color: white;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+
+    .banner-content {
+      position: relative;
+      z-index: 2;
+      
+      h2 { font-size: 2.5rem; margin-bottom: 1rem; }
+      p { opacity: 0.8; margin-bottom: 2.5rem; font-size: 1.1rem; }
+      
+      .banner-btns {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+
+        .dl-btn {
+          padding: 1rem 3rem;
+          border-radius: 50px;
+          border: none;
+          background: $theme-gradient;
+          color: white;
+          font-size: 1.1rem;
+          font-weight: bold;
+          cursor: pointer;
+          transition: transform 0.2s;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+          
+          &:hover { transform: scale(1.05); }
+        }
+
+        .version-info {
+          font-size: 0.85rem;
+          opacity: 0.6;
+        }
       }
+    }
+
+    .banner-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      background: radial-gradient(circle at top right, rgba($theme-gradient-end, 0.2), transparent 40%),
+                  radial-gradient(circle at bottom left, rgba($theme-gradient-start, 0.2), transparent 40%);
     }
   }
 }

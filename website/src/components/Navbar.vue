@@ -56,7 +56,7 @@
         padding: 0.5rem 1.2rem;
         border-radius: 30px;
         border: none;
-        background: $text-primary;
+        background: $theme-gradient-start;
         color: white;
         font-weight: 600;
         cursor: pointer;
