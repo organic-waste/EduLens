@@ -17,6 +17,8 @@ import {
 gsap.registerPlugin(ScrollTrigger);
 
 const activeIndex = ref(0);
+const sectionHead = ref(null);
+const underlinePath = ref(null);
 
 // 介绍文案
 const features = [
@@ -72,7 +74,7 @@ const features = [
 
 onMounted(() => {
   const steps = gsap.utils.toArray('.text-step');
-  
+  // 控制Features的切换
   steps.forEach((step, index) => {
     ScrollTrigger.create({
       trigger: step,
@@ -82,21 +84,46 @@ onMounted(() => {
       onEnterBack: () => activeIndex.value = index,
     });
   });
+
+  if (underlinePath.value && sectionHead.value) {
+    const totalLength = underlinePath.value.getTotalLength();   // 返回整条SVG路径的像素长度
+    gsap.set(underlinePath.value, {
+      strokeDasharray: totalLength,
+      strokeDashoffset: totalLength,
+      opacity: 0
+    });
+
+    gsap.timeline({
+      scrollTrigger: {
+        trigger: sectionHead.value,
+        start: 'top 50%',
+        once: true
+      }
+    })
+    .to(underlinePath.value, { opacity: 1, duration: 0.2 })  // 一边淡入一边描线
+    .to(underlinePath.value, {
+      strokeDashoffset: 0,
+      duration: 1.1,
+      ease: 'power2.out'
+    }, '<');
+  }
 });
 </script>
 
 <template>
   <section class="sticky-features">
     <div class="container">
-              <div class="section-head">
+              <div class="section-head" ref="sectionHead">
           <p class="eyebrow">核心功能演示</p>
           <h2>用一个插件完成知识整理</h2>
-          <p class="sub">一体化学习协助、课堂互动工具</p>
+          <svg class="headline-underline" viewBox="0 0 360 60" preserveAspectRatio="none">
+            <path ref="underlinePath" d="M5 40 C 80 10, 160 50, 250 25 C 300 5, 340 35, 355 20" />
+          </svg>
+          <!-- <p class="sub">一体化学习协助、课堂互动工具</p> -->
         </div>
       
-      <!-- 左侧：滚动文字区 -->
+      <!-- 文字 -->
       <div class="text-column">
-
         <div 
           v-for="(feature, index) in features" 
           :key="index"
@@ -122,7 +149,7 @@ onMounted(() => {
         <div class="spacer"></div>
       </div>
 
-      <!-- 右侧：固定视频区 -->
+      <!-- 视频 -->
       <div class="visual-column">
         <div class="sticky-wrapper">
           <div class="video-container glass-frame">
@@ -133,7 +160,6 @@ onMounted(() => {
                 v-show="activeIndex === index"
                 class="video-item"
               >
-                <!-- 浏览器模拟框 -->
                 <div class="browser-content">
                   <div class="address-bar">
                     <div class="browser-controls">
@@ -144,7 +170,6 @@ onMounted(() => {
                     <div class="url">edulens://{{ feature.id }}</div>
                   </div>
                   
-                  <!-- 视频/素材区域 -->
                   <div class="media-content">
                      <video 
                        v-if="feature.video" 
@@ -199,10 +224,24 @@ onMounted(() => {
       margin-bottom: 1vh;
     }
     h2 { font-size: clamp(2.4rem, 4vw, 3rem); color: $text-primary; margin-bottom: 1vh; }
-    .sub { color: $text-secondary; font-size: clamp(1.1rem, 1.1vw, 1.4rem); }
+    .headline-underline {
+      position: absolute;
+      width: clamp(29rem, 44vw, 40rem);
+      height: 50px;
+      margin: -1rem 0 1.5rem;
+      overflow: visible;
+
+      path {
+        fill: none;
+        stroke: rgba($theme-gradient-start, 0.8);
+        stroke-width: 6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    }
+    .sub { color: $text-secondary; font-size: clamp(1.1rem, 1.1vw, 1.4rem);margin-top: 1rem; }
   }
 
-  // --- 左侧 ---
   .text-column {
     width: 45%; 
     padding: 20vh 2rem 0 4rem;
@@ -284,7 +323,6 @@ onMounted(() => {
     .spacer { height: 20vh; }
   }
 
-  // --- 右侧 ---
   .visual-column {
     width: 60%;
     height: 100vh;

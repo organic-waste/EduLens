@@ -53,7 +53,10 @@ import { PhDownloadSimple, PhPushPin, PhPower } from '@phosphor-icons/vue';
           <h2>准备好体验了吗？</h2>
           <p>加入高效学习者的行列，让 Web 成为你的知识库。</p>
           <div class="banner-btns">
-            <button class="dl-btn">前往 Chrome 商店下载</button>
+            <button class="dl-btn">
+              <span>前往 Chrome 商店下载</span>
+              <div class="glow"></div>
+            </button>
             <span class="version-info">当前版本 v1.0.1 • 免费开源</span>
           </div>
         </div>
@@ -190,8 +193,30 @@ import { PhDownloadSimple, PhPushPin, PhPower } from '@phosphor-icons/vue';
           cursor: pointer;
           transition: transform 0.2s;
           box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+          position: relative;
+          overflow: hidden;
+
+          span {
+            position: relative;
+            z-index: 2;
+          }
+
+          .glow {
+            position: absolute;
+            top: 0;
+            left: -120%;
+            width: 60%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+            transform: skewX(-20deg);
+            opacity: 0.8;
+            transition: left 0.6s ease;
+          }
           
-          &:hover { transform: scale(1.05); }
+          &:hover {
+            transform: scale(1.05);
+            .glow { left: 120%; }
+          }
         }
 
         .version-info {
