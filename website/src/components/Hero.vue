@@ -12,12 +12,12 @@ const handleMouseMove = (e) => {
   const x = (e.clientX / window.innerWidth - 0.5) * 2; 
   const y = (e.clientY / window.innerHeight - 0.5) * 2;
 
-  gsap.to(bgText.value, {
-    x: -x * 15,
-    y: -y * 15,
-    duration: 1.5,
-    ease: 'power2.out'
-  });
+  // gsap.to(bgText.value, {
+  //   x: -x * 15,
+  //   y: -y * 15,
+  //   duration: 1.5,
+  //   ease: 'power2.out'
+  // });
 
   gsap.to(scriptText.value, {
     x: x * 14,
@@ -35,8 +35,8 @@ onMounted(() => {
   gsap.set('.char-wrapper span', { y: 120, opacity: 0 });
 
   tl.fromTo(bgText.value, 
-    { opacity: 0, scale: 0.8 }, 
-    { opacity: 0.06, scale: 1, duration: 2, ease: 'power2.out' }
+    { opacity: 0, x: 400 }, 
+    { opacity: 0.25, x:-200, duration: 2, ease: 'power2.out' }
   );
 
   tl.to('.char-wrapper span', {
@@ -75,7 +75,6 @@ onUnmounted(() => {
     
     <!-- 背景装饰字 -->
     <div class="bg-typography" ref="bgText">
-      <span>EDULENSEDULENSEDULENS</span>
     </div>
 
     <div class="center-content">
@@ -146,22 +145,14 @@ onUnmounted(() => {
   background: transparent; 
   
   .bg-typography {
+    margin-top: 50vh;
     position: absolute;
-    top: 60%;
-    left: -40%;
-    z-index: -1;
-    pointer-events: none;
-    white-space: nowrap;
-
-    span {
-      font-family: 'Inter', sans-serif;
-      font-weight: 800;
-      font-size: 18vw; 
-      line-height: 1;
-      -webkit-text-stroke: 2px rgba($theme-gradient-start, 0.3);
-      opacity: 0.4;
-      letter-spacing: -10px;
-    }
+    background-image: url("/images/title.png");
+    background-repeat: repeat-x;
+    background-size: contain;
+    width: 200vw;
+    height: 15vw;
+    z-index: 1;
   }
 
   .center-content {
@@ -218,6 +209,7 @@ onUnmounted(() => {
       position: absolute;
       top: 55%; 
       left: 50%;
+      width: 100vw;
       transform: translate(-50%, -50%) rotate(-10deg);
       font-size: clamp(6rem, 15vw, 12rem);
       z-index: 3; 

@@ -1,22 +1,88 @@
 <script setup>
 import { PhDownloadSimple, PhPushPin, PhPower } from '@phosphor-icons/vue';
+import { ref, onMounted } from 'vue';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
+
+const numberPaths = [
+  // 1
+  "M 22 18 L 28 12 L 28 38", 
+  // 2
+  "M 16 16 C 22 8, 36 8, 34 20 C 32 32, 16 38, 16 38 L 36 38",
+  // 3
+  "M 16 14 C 26 8, 36 14, 26 24 C 36 28, 32 40, 16 38"
+]
+
+const stepRefs = ref([]);
+const workflowSection = ref(null);
+
+onMounted(() => {
+  if (!workflowSection.value) return;
+
+  ScrollTrigger.create({
+    trigger: workflowSection.value,
+    start: 'top 70%',
+    once: true,
+    onEnter: animateStepNumbers
+  });
+});
+
+// 步骤顺序手写动画
+function animateStepNumbers() {
+  stepRefs.value.forEach((stepEl, index) => {
+    const path = stepEl.querySelector('.number-path');
+    if (!path) return;
+    
+    const length = path.getTotalLength();
+    gsap.set(path, {
+      strokeDasharray: length+1,
+      strokeDashoffset: length+1
+    });
+    
+    gsap.to(path, {
+      strokeDashoffset: 0,
+      duration: 1,
+      delay: index * 0.8,
+      ease: "ease-in-out"
+    });
+  });
+}
+
+// 设置步骤引用
+function setStepRef(el) {
+  if (el) {
+    stepRefs.value.push(el);
+  }
+}
 </script>
 
 <template>
-  <section class="workflow" id="workflow">
+  <section class="workflow" id="workflow" ref="workflowSection">
     <div class="container">
       <div class="section-title">
         <h2>30 秒快速上手</h2>
         <p>简单三步，开启你的网页标注之旅</p>
       </div>
 
-      <!-- 步骤流程 -->
       <div class="steps-row">
         <!-- Step 1 -->
-        <div class="step">
+        <div class="step" :ref="setStepRef">
           <div class="step-icon glass-icon">
             <PhDownloadSimple :size="32" weight="bold" />
-            <div class="step-num">1</div>
+            <svg 
+              viewBox="0 0 50 50" 
+              fill="none" 
+              class="handwritten-svg"
+            >
+              <path 
+                :d="numberPaths[0]" 
+                stroke-linecap="round" 
+                stroke-linejoin="round"
+                class="number-path"
+              />
+            </svg>
           </div>
           <h3>添加到 Chrome</h3>
           <p>前往商店，点击"Add to Chrome"</p>
@@ -25,10 +91,21 @@ import { PhDownloadSimple, PhPushPin, PhPower } from '@phosphor-icons/vue';
         <div class="connector"></div>
 
         <!-- Step 2 -->
-        <div class="step">
+        <div class="step" :ref="setStepRef">
           <div class="step-icon glass-icon">
             <PhPushPin :size="32" weight="bold" />
-            <div class="step-num">2</div>
+            <svg 
+              viewBox="0 0 50 50" 
+              fill="none" 
+              class="handwritten-svg"
+            >
+              <path 
+                :d="numberPaths[1]" 
+                stroke-linecap="round" 
+                stroke-linejoin="round"
+                class="number-path"
+              />
+            </svg>
           </div>
           <h3>固定图标</h3>
           <p>点击右上角扩展拼图图标，找到 EduLens 并点击大头针</p>
@@ -37,10 +114,21 @@ import { PhDownloadSimple, PhPushPin, PhPower } from '@phosphor-icons/vue';
         <div class="connector"></div>
 
         <!-- Step 3 -->
-        <div class="step">
+        <div class="step" :ref="setStepRef">
           <div class="step-icon glass-icon">
             <PhPower :size="32" weight="bold" />
-            <div class="step-num">3</div>
+            <svg 
+              viewBox="0 0 50 50" 
+              fill="none" 
+              class="handwritten-svg"
+            >
+              <path 
+                :d="numberPaths[2]" 
+                stroke-linecap="round" 
+                stroke-linejoin="round"
+                class="number-path"
+              />
+            </svg>
           </div>
           <h3>一键使用</h3>
           <p>点击右下角气泡即可展开工具面板</p>
@@ -116,21 +204,22 @@ import { PhDownloadSimple, PhPushPin, PhPower } from '@phosphor-icons/vue';
         position: relative;
         box-shadow: 0 10px 20px rgba(0,0,0,0.03);
 
-        .step-num {
+        .handwritten-svg {
           position: absolute;
-          top: -10px;
-          right: -10px;
-          width: 28px;
-          height: 28px;
-          background: $theme-gradient;
-          color: white;
-          border-radius: 50%;
-          font-size: 14px;
-          font-weight: bold;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 10px rgba($theme-gradient-start, 0.3);
+          top: -20px;
+          right: -15px;
+          width: 50px;
+          height: 50px;
+          pointer-events: none;
+          filter: drop-shadow(1px 3px 2px rgba(#5b5e78, 0.3));
+
+          .number-path {
+            fill: none;
+            stroke: #3bd3e1;
+            stroke-width: 4;
+            stroke-dasharray: 1;
+            stroke-dashoffset: 1;
+          }
         }
       }
 

@@ -68,7 +68,8 @@ const cases = [
       background: rgba(255, 255, 255, 0.4);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 15px 30px rgba($theme-gradient-start, 0.1);
       
       padding: 3rem 2rem;
       border-radius: 24px;
@@ -81,7 +82,7 @@ const cases = [
         transform: translateY(-8px);
         background: rgba(255, 255, 255, 0.7);
         border-color: $theme-gradient-start;
-        box-shadow: 0 15px 30px rgba($theme-gradient-start, 0.15);
+        box-shadow: 0 15px 30px rgba($theme-gradient-start, 0.3);
 
         .icon-wrapper {
           transform: scale(1.1) rotate(5deg);

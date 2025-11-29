@@ -206,7 +206,7 @@ onMounted(() => {
 
   .container {
     width: 100vw;
-    margin: 10vh auto;
+    margin: 10vh auto 0 auto;
     display: flex;
   }
 
