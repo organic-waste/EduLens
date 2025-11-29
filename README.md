@@ -5,6 +5,8 @@
   <img src="assets/icon.png" alt="EduLens Logo" width="128" height="128">
   <img src="assets/title.png" alt="EduLens Title" height="128">
 </p>
+
+
 ## 📖 项目概览
 
 EduLens 是一款开源的 Chrome 浏览器插件，聚焦网页高效学习与实时协作。
@@ -13,6 +15,8 @@ EduLens 是一款开源的 Chrome 浏览器插件，聚焦网页高效学习与�
 
 - **项目介绍 官网**：<https://edu-lens.netlify.app/>          $\leftarrow$ 🥰点我查看项目概况
 - **Chrome 商店**：<https://chromewebstore.google.com/detail/jnncboomobahpjpkkhjoekacjogmphhc>
+
+![使用示例](./assets/example.png)
 
 ---
 

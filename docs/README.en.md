@@ -6,6 +6,7 @@
   <img src="../assets/title.png" alt="EduLens Title" height="128">
 </p>
 
+
 ## 📖 Overview
 
 EduLens is an open-source Chrome extension focused on efficient web learning and real-time collaboration.
@@ -14,6 +15,8 @@ You can take notes, capture screenshots, stay focused, and present right inside 
 
 - **Website (intro)**: <https://edu-lens.netlify.app/>          <-- 👋 Check the latest highlights and videos here
 - **Chrome Web Store**: <https://chromewebstore.google.com/detail/jnncboomobahpjpkkhjoekacjogmphhc>
+
+![demo](../assets/example.png)
 
 ---
 
