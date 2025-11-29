@@ -141,10 +141,15 @@ function setStepRef(el) {
           <h2>准备好体验了吗？</h2>
           <p>加入高效学习者的行列，让 Web 成为你的知识库。</p>
           <div class="banner-btns">
-            <button class="dl-btn">
+            <a
+              class="dl-btn"
+              href="https://chromewebstore.google.com/detail/jnncboomobahpjpkkhjoekacjogmphhc?utm_source=item-share-cb"
+              target="_blank"
+              rel="noopener"
+            >
               <span>前往 Chrome 商店下载</span>
               <div class="glow"></div>
-            </button>
+            </a>
             <span class="version-info">当前版本 v1.0.1 • 免费开源</span>
           </div>
         </div>
