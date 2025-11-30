@@ -61,6 +61,7 @@ html {
   border: 1px solid var(--secondary-color);
   border-radius: 4px;
   font-size: var(--lighter-font-size);
+  background: var(--background-color);
   outline: none;
   transition: border-color 0.2s ease;
 }

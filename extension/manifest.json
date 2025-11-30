@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_pluginName__",
   "description": "__MSG_pluginDesc__", 
-  "version": "1.0.0",
+  "version": "1.0.1",
   "default_locale": "en",
   "permissions": ["storage", "activeTab","tabs"],
   "host_permissions": [
