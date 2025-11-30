@@ -1,12 +1,10 @@
 const titleEl = document.getElementById("popup-title");
 const toggleBtn = document.getElementById("toggle-bubble-btn");
 
-const hideBtnText =
-  chrome.i18n.getMessage("bubbleHideButton") || "Hide floating panel";
-const showBtnText =
-  chrome.i18n.getMessage("bubbleShowButton") || "Show floating panel";
+const hideBtnText = chrome.i18n.getMessage("bubbleHideButton");
+const showBtnText = chrome.i18n.getMessage("bubbleShowButton");
 
-titleEl.textContent = chrome.i18n.getMessage("popupTitle") || "EduLens";
+titleEl.textContent = chrome.i18n.getMessage("popupTitle");
 toggleBtn.textContent = hideBtnText;
 toggleBtn.disabled = true;
 

@@ -375,9 +375,7 @@ function ensureClearDialog() {
   const dialog = createEl("div", { class: "clear-dialog-card" });
   const title = createEl("h3", {
     class: "clear-dialog-title",
-    textContent:
-      chrome.i18n.getMessage("graffitiClearDialogDesc") ||
-      chrome.i18n.getMessage("graffitiClear"),
+    textContent: chrome.i18n.getMessage("graffitiClearDialogDesc"),
   });
   // const desc = createEl("p", {
   //   class: "clear-dialog-desc",
@@ -389,21 +387,15 @@ function ensureClearDialog() {
   const actions = createEl("div", { class: "clear-dialog-actions" });
   const clearGraffitiBtn = createEl("button", {
     class: "clear-dialog-btn primary",
-    textContent:
-      chrome.i18n.getMessage("graffitiClearGraffiti") ||
-      chrome.i18n.getMessage("graffitiClear"),
+    textContent: chrome.i18n.getMessage("graffitiClearGraffiti"),
   });
   const clearAllBtn = createEl("button", {
     class: "clear-dialog-btn danger",
-    textContent:
-      chrome.i18n.getMessage("graffitiClearAll") ||
-      chrome.i18n.getMessage("graffitiClear"),
+    textContent: chrome.i18n.getMessage("graffitiClearAll"),
   });
   const cancelBtn = createEl("button", {
     class: "clear-dialog-btn ghost",
-    textContent:
-      chrome.i18n.getMessage("graffitiClearCancel") ||
-      chrome.i18n.getMessage("graffitiClear"),
+    textContent: chrome.i18n.getMessage("graffitiClearCancel"),
   });
 
   actions.append(clearGraffitiBtn, clearAllBtn, cancelBtn);

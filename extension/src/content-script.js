@@ -3,14 +3,13 @@ import filterStore from "./stores/filterStore.js";
 import {
   activateDraggablePanel,
   initializePanelVisibility,
-  setPanelVisibility,
 } from "./features/draggablePanel.js";
 import eventStore from "./stores/eventStore.js";
 import { apiClient } from "./services/index.js";
 
-//统一的键盘管理
+// 使用e.code物理按键检测 解决Mac的Option键问题
 function keydown(e, key, name) {
-  if (e.altKey && e.key === key) {
+  if (e.altKey && e.code === `Key${key.toUpperCase()}`) {
     if (filterStore.active === name) {
       filterStore.setActive(null);
     } else {
