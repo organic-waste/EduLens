@@ -6,7 +6,7 @@ const showBtnText = chrome.i18n.getMessage("bubbleShowButton");
 
 titleEl.textContent = chrome.i18n.getMessage("popupTitle");
 toggleBtn.textContent = hideBtnText;
-toggleBtn.disabled = true;
+toggleBtn.disabled = true; // 先把按钮禁用，防止用户在真正拿到缓存状态前狂点
 
 let panelVisible = true;
 
@@ -15,35 +15,19 @@ function renderVisibility() {
   toggleBtn.dataset.visible = String(panelVisible);
 }
 
-function queryTabs(filter) {
-  return new Promise((resolve) => {
-    chrome.tabs.query(filter, (tabs) => resolve(tabs));
-  });
-}
-
 async function broadcastVisibility(visible) {
-  const tabs = await queryTabs({ url: ["http://*/*", "https://*/*"] });
+  const tabs = await chrome.tabs.query({ url: ["http://*/*", "https://*/*"] });
+
+  // 并发给每一个标签页都发消息，确保popup的隐藏状态影响全部标签页
   await Promise.all(
     tabs.map(
       (tab) =>
-        new Promise((resolve) => {
-          chrome.tabs.sendMessage(
-            tab.id,
-            { type: "SET_PANEL_VISIBILITY", visible },
-            () => {
-              // 忽略因标签页未加载内容脚本导致的错误
-              const err = chrome.runtime.lastError;
-              if (err) {
-                console.debug(err.message);
-              }
-              resolve();
-            }
-          );
-        })
+        chrome.tabs
+          .sendMessage(tab.id, { type: "SET_PANEL_VISIBILITY", visible })
+          .catch((err) => console.debug(err.message)) // 内容脚本未注入等异常
     )
   );
 }
-
 async function loadVisibility() {
   const result = await chrome.storage.local.get({
     ["edulensPanelVisible"]: true,

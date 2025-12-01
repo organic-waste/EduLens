@@ -36,7 +36,7 @@ const features = [
     desc: '聚光灯、鼠标高亮、阅读聚焦与倒计时，保持学习节奏不分心。', 
     icon: PhLightning, 
     video: '/videos/focus.mp4',
-    bullets: ['快捷键 Alt+S / Alt+H / Alt+R 快速切换', '倒计时结束弹窗提醒']
+    bullets: ['快捷键 Alt/Option + S·H·R 快速切换', '倒计时结束弹窗提醒']
   },
   { 
     id: 'reading', 

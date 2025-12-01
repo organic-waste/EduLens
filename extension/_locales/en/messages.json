@@ -81,13 +81,13 @@
     "message": "Delete annotation"
   },
   "screenshotDOMBtn": {
-    "message": "DOM capture"
+    "message": "DOM shot"
   },
   "screenshotRegionBtn": {
-    "message": "Region capture"
+    "message": "Region shot"
   },
   "screenshotScrollBtn": {
-    "message": "Scrolling capture"
+    "message": "Scrolling shot"
   },
   "screenshotTooltip": {
     "message": "Click anywhere to finish the screenshot"
