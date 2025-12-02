@@ -54,6 +54,8 @@ export async function activateRoomSelector() {
 
 //展示房间列表
 async function showRoomList() {
+  await roomManager.loadUserRooms();
+
   const overlay = createEl("div", { class: "room-overlay" });
   const container = createEl("div", { class: "room-list-container" });
 

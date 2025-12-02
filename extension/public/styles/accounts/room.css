@@ -126,9 +126,19 @@
   margin: 8px 0;
 }
 
-.room-operations{
+.room-operations {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap:2vh;
+  gap: 2vh;
+}
+
+#room-description {
+  padding: 1.2vh;
+  border: 1px solid var(--secondary-color);
+  border-radius: 6px;
+  font-size: var(--lighter-font-size);
+  background: white;
+  transition: all 0.2s ease;
+  outline: none;
 }

@@ -46,17 +46,8 @@ function showForm() {
   const element2 = createEl("div", {
     class: "anim-element anim-element-2 square-shape",
   });
-  const element3 = createEl("div", {
-    class: "anim-element anim-element-3 triangle-shape",
-  });
-  const element4 = createEl("div", {
-    class: "anim-element anim-element-4 heart-shape",
-  });
-
   animationElements.appendChild(element1);
   animationElements.appendChild(element2);
-  animationElements.appendChild(element3);
-  animationElements.appendChild(element4);
 
   const loginForm = createLoginFormContent();
   loginContainer.appendChild(closeBtn);

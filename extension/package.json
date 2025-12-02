@@ -1,7 +1,7 @@
 {
   "name": "edulens-extension",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "EduLens Chrome Extension - Web annotation and collaboration tool",
   "type": "module",
   "engines": {

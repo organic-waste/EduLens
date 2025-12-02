@@ -150,7 +150,7 @@ function setStepRef(el) {
               <span>前往 Chrome 商店下载</span>
               <div class="glow"></div>
             </a>
-            <span class="version-info">当前版本 v1.0.1 • 免费开源</span>
+            <span class="version-info">当前版本 v1.0.3 • 免费开源</span>
           </div>
         </div>
         <div class="banner-bg"></div>

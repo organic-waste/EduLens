@@ -14,7 +14,10 @@ class RoomManager {
   async loadUserRooms() {
     if (this.isLoading) return this.userRooms;
     //如果没登录跳过加载房间
-    if (!authManager.isAuthenticated()) return [];
+    if (!authManager.isAuthenticated()) {
+      this.reset();
+      return [];
+    }
     this.isLoading = true;
     try {
       if (!webSocketClient.isConnected()) {
@@ -163,6 +166,12 @@ class RoomManager {
 
   hasRooms() {
     return this.userRooms.length > 0;
+  }
+
+  reset() {
+    this.currentRoom = null;
+    this.userRooms = [];
+    this.isLoading = false;
   }
 }
 
