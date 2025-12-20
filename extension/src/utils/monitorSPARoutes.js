@@ -22,7 +22,7 @@ export default function MonitorSPARoutes(fn) {
 
   eventStore.on(window, "popstate", () => {
     // console.log('popstate');
-    setTimeout(fn, 0);
+    setTimeout(fn, 0); //把回调推到下一次事件循环, 确保执行 fn 的时候路由，DOM 等都已经更新完成
   });
 
   eventStore.on(window, "hashchange", () => {

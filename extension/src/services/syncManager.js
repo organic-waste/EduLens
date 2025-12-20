@@ -17,7 +17,7 @@ class SyncManager {
     // 注册WebSocket事件处理器
     this.setupWebSocketHandlers();
     // 启动定期同步
-    this.startPeriodicSync();
+    // this.startPeriodicSync();
   }
 
   setupWebSocketHandlers() {

@@ -22,7 +22,7 @@ class WS {
         this.ws = new WebSocket(url);
 
         this.ws.onopen = () => {
-          console.info("WebSocket连接成功");
+          // console.info("WebSocket连接成功");
           this.isConnected = true;
           this.reconnectAttempts = 0;
           resolve();

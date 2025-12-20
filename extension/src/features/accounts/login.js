@@ -297,12 +297,10 @@ async function handleLogin(form, errorEl) {
     if (res.status === "success") {
       hideError(errorEl);
       form.closest(".login-overlay").remove();
-      updateLoginStatus(res.data.user);
+      await updateLoginStatus(res.data.user);
       // console.log(
       //   res.data.user.username + ":" + chrome.i18n.getMessage("loginSuccess")
       // );
-
-      await activateRoomSelector();
     } else {
       showError(errorEl, res.message || chrome.i18n.getMessage("loginFailed"));
     }
@@ -343,10 +341,8 @@ async function handleRegister(form, errorEl) {
     if (res.status === "success") {
       hideError(errorEl);
       form.closest(".login-overlay").remove();
-      updateLoginStatus(res.data.user);
+      await updateLoginStatus(res.data.user);
       // console.log(username + ":" + chrome.i18n.getMessage("loginSuccess"));
-
-      await activateRoomSelector();
     } else {
       showError(errorEl, res.message);
     }
@@ -423,7 +419,7 @@ export async function activateLogin() {
     const user = authManager.getUser();
     // console.log("用户信息: ", user);
     if (isValid && user) {
-      updateLoginStatus(user);
+      await updateLoginStatus(user);
     } else {
       showLoginEntryButton();
     }

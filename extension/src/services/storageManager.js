@@ -188,8 +188,8 @@ class StorageManager {
   }
 
   // 清理过期数据
-  async cleanupExpiredData(maxAge = 30 * 24 * 60 * 60 * 1000) {
-    // 默认30天
+  async cleanupExpiredData(maxAge = 90 * 24 * 60 * 60 * 1000) {
+    // 默认90天
     try {
       const allData = await this.getAllPagesData();
       const now = Date.now();
