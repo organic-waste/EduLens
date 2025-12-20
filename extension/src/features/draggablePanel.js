@@ -2,7 +2,6 @@
 import eventStore from "../stores/eventStore.js";
 import filterStore from "../stores/filterStore.js";
 import { getOffsetPos, createEl } from "../utils/index.js";
-import MonitorSPARoutes from "../utils/monitorSPARoutes.js";
 
 import { activateScrollProgress } from "./tools/scrollProgress.js";
 import { activateBookmark } from "./tools/bookmark.js";

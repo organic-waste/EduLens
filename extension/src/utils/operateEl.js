@@ -1,5 +1,4 @@
 /* 操作元素 */
-
 export function createEl(tag, attrs = {}, ...children) {
   const el = document.createElement(tag);
   Object.entries(attrs).forEach(([key, value]) => {

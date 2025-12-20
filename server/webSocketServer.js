@@ -116,7 +116,6 @@ class WebsocketServer {
         this.rooms.set(roomId, new Set());
         this.operations.set(roomId, new Map());
       }
-      //初始化该页面的操作队列
       if (!this.operations.get(roomId).has(pageUrl)) {
         this.operations.get(roomId).set(pageUrl, []);
       }
@@ -134,20 +133,12 @@ class WebsocketServer {
   async handleOperation(ws, message) {
     const { roomId, pageUrl, operation, clientVersion } = message;
 
-    // 验证客户端是否加入了该房间
     if (!ws.roomId || ws.roomId !== roomId) {
-      console.warn(
-        `客户端 ${ws.userId} 未加入房间 ${roomId}，当前房间: ${ws.roomId}`
-      );
       this.sendError(ws, "未加入该房间");
       return;
     }
 
-    // 验证客户端是否在正确的页面
     if (ws.pageUrl !== pageUrl) {
-      console.warn(
-        `客户端 ${ws.userId} 页面不匹配，期望: ${pageUrl}, 实际: ${ws.pageUrl}`
-      );
       this.sendError(ws, "页面不匹配");
       return;
     }
@@ -157,7 +148,7 @@ class WebsocketServer {
     );
 
     const pageOperations = this.operations.get(roomId)?.get(pageUrl) || [];
-    const serverVersion = pageOperations.length;
+    // const serverVersion = pageOperations.length;
 
     //解决冲突的转换操作函数
     const transformedOp = this.transformedOperation(
@@ -165,10 +156,19 @@ class WebsocketServer {
       pageOperations,
       clientVersion
     );
+
+    // 如果操作因版本落后且冲突被 LWW 策略丢弃，不保存也不广播
+    if (transformedOp.type === "reject") {
+      this.send(ws, {
+        type: "operation-ack",
+        version: pageOperations.length,
+      });
+      return;
+    }
+
     await this.saveOperationToDB(roomId, pageUrl, transformedOp);
     pageOperations.push(transformedOp);
 
-    // 广播操作给房间内其他客户端（使用 ws.roomId 确保一致性）
     this.broadcastToRoom(ws.roomId, ws, {
       type: "operation",
       operation: transformedOp,
@@ -212,15 +212,30 @@ class WebsocketServer {
 
     switch (operation.type) {
       case "bookmark-add":
-      case "bookmark-update":
         if (!newData.bookmarks) newData.bookmarks = [];
-        const existingIndex = newData.bookmarks.findIndex(
+        const addBmIndex = newData.bookmarks.findIndex(
           (b) => b.id === operation.data.id
         );
-        if (existingIndex >= 0) {
-          newData.bookmarks[existingIndex] = operation.data;
+        if (addBmIndex >= 0) {
+          newData.bookmarks[addBmIndex] = operation.data;
         } else {
           newData.bookmarks.push(operation.data);
+        }
+        break;
+
+      case "bookmark-update":
+        if (Array.isArray(operation.data)) {
+          newData.bookmarks = operation.data;
+        } else {
+          if (!newData.bookmarks) newData.bookmarks = [];
+          const bmIndex = newData.bookmarks.findIndex(
+            (b) => b.id === operation.data.id
+          );
+          if (bmIndex >= 0) {
+            newData.bookmarks[bmIndex] = operation.data;
+          } else {
+            newData.bookmarks.push(operation.data);
+          }
         }
         break;
       case "bookmark-delete":
@@ -301,6 +316,7 @@ class WebsocketServer {
     //对高于客户端版本的服务器操作进行转换
     for (let i = clientVersion; i < opQueue.length; i++) {
       const serverOp = opQueue[i];
+      if (transformedOp.type === "reject") break;
       transformedOp = this.transformSingleOperation(transformedOp, serverOp);
     }
     return transformedOp;
@@ -308,70 +324,85 @@ class WebsocketServer {
 
   //转换单个操作
   transformSingleOperation(clientOp, serverOp) {
-    if (clientOp.type !== serverOp.type) return clientOp;
-
-    switch (clientOp.type) {
-      case "bookmark-update":
-        return this.transformBookmarkOperation(clientOp, serverOp);
-      case "canvas-update":
-        return this.transformCanvasOperation(clientOp, serverOp);
-      case "rectangle-update":
-        return this.transformRectangleOperation(clientOp, serverOp);
-      case "image-update":
-        return this.transformImageOperation(clientOp, serverOp);
-      default:
-        return clientOp;
+    // 矩形ID不同则可保留
+    if (
+      clientOp.type.startsWith("rectangle-") &&
+      serverOp.type.startsWith("rectangle-")
+    ) {
+      return this.resolveRectangleConflict(clientOp, serverOp);
     }
+
+    // 书签防重叠
+    if (clientOp.type === "bookmark-add" && serverOp.type === "bookmark-add") {
+      return this.resolveBookmarkCollision(clientOp, serverOp);
+    }
+
+    // LWW
+    if (clientOp.type === serverOp.type) {
+      return this.resolveUpdateConflictLWW(clientOp, serverOp);
+    }
+
+    return clientOp;
   }
 
-  transformBookmarkOperation(clientOp, serverOp) {
-    if (new Date(clientOp.timestamp) > new Date(serverOp.timestamp)) {
-      return clientOp;
+  resolveBookmarkCollision(clientOp, serverOp) {
+    const clientY = clientOp.data.scrollPercent;
+    const serverY = serverOp.data.scrollPercent;
+
+    if (Math.abs(clientY - serverY) < 0.005) {
+      console.log(`书签位置冲突`);
+      const newData = { ...clientOp.data };
+      newData.scrollPercent += 0.005;
+
+      return {
+        ...clientOp,
+        data: newData,
+      };
     }
-    return serverOp;
+    return clientOp;
   }
 
-  transformCanvasOperation(clientOp, serverOp) {
-    if (new Date(clientOp.timestamp) > new Date(serverOp.timestamp)) {
+  resolveRectangleConflict(clientOp, serverOp) {
+    const clientId = clientOp.data.id;
+    const serverId = serverOp.data.id;
+
+    if (clientId !== serverId) {
       return clientOp;
     }
-    return serverOp;
+
+    return this.resolveUpdateConflictLWW(clientOp, serverOp);
   }
 
-  transformRectangleOperation(clientOp, serverOp) {
-    if (new Date(clientOp.timestamp) > new Date(serverOp.timestamp)) {
-      return clientOp;
-    }
-    return serverOp;
-  }
+  resolveUpdateConflictLWW(clientOp, serverOp) {
+    const clientTime = new Date(clientOp.timestamp).getTime();
+    const serverTime = new Date(serverOp.timestamp).getTime();
 
-  transformImageOperation(clientOp, serverOp) {
-    if (new Date(clientOp.timestamp) > new Date(serverOp.timestamp)) {
+    if (clientTime > serverTime) {
       return clientOp;
+    } else {
+      return { type: "reject" };
     }
-    return serverOp;
   }
 
   //向房间内的其他在此页面的客户端广播信息(排除自身)
   broadcastToRoom(roomId, excludeClient, message) {
-    console.log("=== 开始广播 ===");
-    console.log("房间ID: ", roomId);
-    console.log("发送操作的客户端: ", {
-      userId: excludeClient.userId,
-      roomId: excludeClient.roomId,
-      pageUrl: excludeClient.pageUrl,
-      readyState: excludeClient.readyState,
-      id: excludeClient.id,
-    });
+    // console.log("开始广播 ");
+    // console.log("房间ID: ", roomId);
+    // console.log("发送操作的客户端: ", {
+    //   userId: excludeClient.userId,
+    //   roomId: excludeClient.roomId,
+    //   pageUrl: excludeClient.pageUrl,
+    //   readyState: excludeClient.readyState,
+    //   id: excludeClient.id,
+    // });
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      console.warn(`房间 ${roomId} 不存在于房间映射中`);
       console.log("当前所有房间: ", Array.from(this.rooms.keys()));
       return;
     }
 
-    console.log(`房间 ${roomId} 中的客户端数量: ${room.size}`);
+    // console.log(`房间 ${roomId} 中的客户端数量: ${room.size}`);
 
     let broadcastCount = 0;
     let skippedCount = 0;
@@ -380,40 +411,30 @@ class WebsocketServer {
       const isOpen = client.readyState === WebSocket.OPEN;
       const isSamePage = client.pageUrl === excludeClient.pageUrl;
 
-      console.log(`检查客户端 ${client.userId}:`, {
-        isSelf,
-        isOpen,
-        isSamePage,
-        clientPageUrl: client.pageUrl,
-        excludePageUrl: excludeClient.pageUrl,
-        clientRoomId: client.roomId,
-        readyState: client.readyState,
-      });
-
       //只发送给开启ws且为同一页面的其他客户端
       if (!isSelf && isOpen && isSamePage) {
-        console.log(`✓ 广播到客户端: ${client.userId}`);
+        console.log(`广播到客户端: ${client.userId}`);
         this.send(client, message);
         broadcastCount++;
       } else {
         skippedCount++;
-        if (isSelf) {
-          console.log(`  ✗ 跳过：是发送者自己`);
-        } else if (!isOpen) {
-          console.log(
-            `  ✗ 跳过：WebSocket未打开 (readyState=${client.readyState})`
-          );
-        } else if (!isSamePage) {
-          console.log(
-            `  ✗ 跳过：页面不匹配 (${client.pageUrl} !== ${excludeClient.pageUrl})`
-          );
-        }
+        // if (isSelf) {
+        //   console.log(`跳过：是发送者自己`);
+        // } else if (!isOpen) {
+        //   console.log(
+        //     `跳过：WebSocket未打开 ，readyState=${client.readyState})`
+        //   );
+        // } else if (!isSamePage) {
+        //   console.log(
+        //     `跳过：页面不匹配 (${client.pageUrl} !== ${excludeClient.pageUrl})`
+        //   );
+        // }
       }
     });
 
-    console.log(
-      `=== 广播完成: 成功 ${broadcastCount} 个，跳过 ${skippedCount} 个 ===`
-    );
+    // console.log(
+    //   ` 广播完成:，成功 ${broadcastCount} 个，跳过 ${skippedCount} 个 `
+    // );
   }
 
   //发送房间状态到客户端

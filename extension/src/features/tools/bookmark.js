@@ -112,7 +112,9 @@ function renderBookmarks() {
   const scrollDiv = shadowRoot.querySelector(".scroll-percent");
   if (!scrollDiv) return;
 
-  scrollDiv.querySelectorAll(".bookmark-marker").forEach((node) => node.remove());
+  scrollDiv
+    .querySelectorAll(".bookmark-marker")
+    .forEach((node) => node.remove());
   cachedBookmarks.forEach((bookmark) => {
     const marker = createBookmarkEle(bookmark);
     if (marker) {
@@ -140,14 +142,21 @@ async function saveBookmark(scrollTop, text, id) {
     scrollPercent: calculateScrollPercent(scrollTop),
   };
 
-  bookmarks.push(newBookmark);
+  const existingBookmarkIndex = bookmarks.findIndex((b) => b.id === id);
+  const isUpdate = existingBookmarkIndex >= 0;
+
+  if (isUpdate) {
+    bookmarks[existingBookmarkIndex] = newBookmark;
+  } else {
+    bookmarks.push(newBookmark);
+  }
+
   await storageManager.savePageData("bookmarks", bookmarks);
   cachedBookmarks = bookmarks;
   scheduleRenderBookmarks();
 
-  // 发送实时同步操作
   syncManager.sendOperation({
-    type: "bookmark-add",
+    type: isUpdate ? "bookmark-update" : "bookmark-add",
     data: newBookmark,
   });
 }
@@ -173,7 +182,10 @@ async function persistMissingPercents() {
   const updated = cachedBookmarks.map((bookmark) => {
     if (typeof bookmark.scrollPercent !== "number") {
       shouldPersist = true;
-      return { ...bookmark, scrollPercent: calculateScrollPercent(bookmark.scrollTop) };
+      return {
+        ...bookmark,
+        scrollPercent: calculateScrollPercent(bookmark.scrollTop),
+      };
     }
     return bookmark;
   });

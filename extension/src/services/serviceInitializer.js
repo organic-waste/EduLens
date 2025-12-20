@@ -18,8 +18,8 @@ class ServiceInitializer {
 
       await webSocketClient.connect();
       // console.log(
-        // "[EduLens] WebSocket连接状态:",
-        // webSocketClient.isConnected()
+      // "[EduLens] WebSocket连接状态:",
+      // webSocketClient.isConnected()
       // );
 
       await roomManager.loadUserRooms();
