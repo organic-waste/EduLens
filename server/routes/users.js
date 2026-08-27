@@ -2,6 +2,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+const { logger } = require("../utils/logger");
 
 const router = express.Router();
 
@@ -70,7 +71,10 @@ router.post("/register", async (req, res) => {
       });
     }
     const newUser = await User.create({ username, email, password });
-    console.log("newUser: ", newUser);
+    logger.info("auth.registered", {
+      requestId: req.requestId,
+      userId: newUser._id.toString(),
+    });
     const token = signToken(newUser._id);
     res.status(201).json({
       status: "success",
@@ -102,7 +106,6 @@ router.post("/login", async (req, res) => {
       });
     }
     const user = await User.findOne({ email }).select("+password");
-    console.log("user: ", user);
     if (!user || !(await user.correctPassword(password))) {
       return res.status(401).json({
         status: "error",
@@ -110,6 +113,10 @@ router.post("/login", async (req, res) => {
       });
     }
     const token = signToken(user._id);
+    logger.info("auth.logged_in", {
+      requestId: req.requestId,
+      userId: user._id.toString(),
+    });
     res.json({
       status: "success",
       token,

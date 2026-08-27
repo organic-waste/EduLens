@@ -5,6 +5,11 @@ const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const Room = require("./models/room");
 const Annotation = require("./models/annotation");
+const { logger } = require("./utils/logger");
+const {
+  applyOperationToData,
+  transformOperation,
+} = require("./services/annotationOperations");
 
 class WebsocketServer {
   constructor(server) {
@@ -16,11 +21,11 @@ class WebsocketServer {
   }
 
   async handleConnection(ws) {
-    console.log("建立新的WebSocket连接");
     ws.isAlive = true;
     ws.id = uuidv4();
     ws.roomId = null;
     ws.userId = null;
+    logger.info("websocket.connected", { connectionId: ws.id });
 
     ws.on("message", (data) => this.handleMessage(ws, data));
     ws.on("close", () => this.handleDisconnect(ws));
@@ -60,10 +65,13 @@ class WebsocketServer {
           this.handleLeaveRoom(ws);
           break;
         default:
-          console.warn("未知的消息类型:", message.type);
+          logger.warn("websocket.unknown_message", {
+            connectionId: ws.id,
+            type: message.type,
+          });
       }
     } catch (error) {
-      console.error("消息处理错误:", error);
+      logger.error("websocket.message_failed", { connectionId: ws.id, error });
       this.sendError(ws, "消息格式错误");
     }
   }
@@ -89,7 +97,6 @@ class WebsocketServer {
       return;
     }
     const { roomId, pageUrl } = message;
-    console.log("message: ", message);
     try {
       const room = await Room.findOne({
         _id: roomId,
@@ -120,12 +127,21 @@ class WebsocketServer {
         this.operations.get(roomId).set(pageUrl, []);
       }
       this.rooms.get(roomId).add(ws);
-      console.log(`客户端 ${ws.userId} 加入房间 ${roomId}, 页面 ${pageUrl}`);
+      logger.info("websocket.room_joined", {
+        connectionId: ws.id,
+        userId: ws.userId,
+        roomId,
+        pageUrl,
+      });
 
       //发送当前房间状态给新加入的客户端
       await this.sendRoomState(ws, roomId, pageUrl);
     } catch (error) {
-      console.error("加入房间错误:", error);
+      logger.error("websocket.room_join_failed", {
+        connectionId: ws.id,
+        roomId,
+        error,
+      });
       this.sendError(ws, "加入房间失败");
     }
   }
@@ -143,15 +159,18 @@ class WebsocketServer {
       return;
     }
 
-    console.log(
-      `处理操作: userId=${ws.userId}, roomId=${roomId}, pageUrl=${pageUrl}, operationType=${operation.type}`
-    );
+    logger.info("websocket.operation_received", {
+      userId: ws.userId,
+      roomId,
+      pageUrl,
+      operationType: operation.type,
+    });
 
     const pageOperations = this.operations.get(roomId)?.get(pageUrl) || [];
     // const serverVersion = pageOperations.length;
 
     //解决冲突的转换操作函数
-    const transformedOp = this.transformedOperation(
+    const transformedOp = transformOperation(
       operation,
       pageOperations,
       clientVersion
@@ -186,7 +205,7 @@ class WebsocketServer {
     try {
       let annotation = await Annotation.findOne({ roomId, pageUrl });
       if (annotation) {
-        annotation.annotations = this.applyOperationToData(
+        annotation.annotations = applyOperationToData(
           annotation.annotations,
           operation
         );
@@ -197,190 +216,17 @@ class WebsocketServer {
         annotation = new Annotation({
           roomId,
           pageUrl,
-          annotations: this.applyOperationToData({}, operation),
+          annotations: applyOperationToData({}, operation),
         });
         await annotation.save();
       }
     } catch (error) {
-      console.error("保存操作到数据库失败:", error);
-    }
-  }
-
-  //将操作应用到不同类型的数据
-  applyOperationToData(data, operation) {
-    const newData = { ...data };
-
-    switch (operation.type) {
-      case "bookmark-add":
-        if (!newData.bookmarks) newData.bookmarks = [];
-        const addBmIndex = newData.bookmarks.findIndex(
-          (b) => b.id === operation.data.id
-        );
-        if (addBmIndex >= 0) {
-          newData.bookmarks[addBmIndex] = operation.data;
-        } else {
-          newData.bookmarks.push(operation.data);
-        }
-        break;
-
-      case "bookmark-update":
-        if (Array.isArray(operation.data)) {
-          newData.bookmarks = operation.data;
-        } else {
-          if (!newData.bookmarks) newData.bookmarks = [];
-          const bmIndex = newData.bookmarks.findIndex(
-            (b) => b.id === operation.data.id
-          );
-          if (bmIndex >= 0) {
-            newData.bookmarks[bmIndex] = operation.data;
-          } else {
-            newData.bookmarks.push(operation.data);
-          }
-        }
-        break;
-      case "bookmark-delete":
-        if (newData.bookmarks) {
-          newData.bookmarks = newData.bookmarks.filter(
-            (b) => b.id !== operation.data.id
-          );
-        }
-        break;
-
-      case "canvas-update":
-        newData.canvas = operation.data;
-        break;
-
-      case "rectangle-add":
-        if (!newData.rectangles) newData.rectangles = [];
-        const addRectIndex = newData.rectangles.findIndex(
-          (r) => r.id === operation.data.id
-        );
-        if (addRectIndex >= 0) {
-          newData.rectangles[addRectIndex] = operation.data;
-        } else {
-          newData.rectangles.push(operation.data);
-        }
-        break;
-      case "rectangle-update":
-        // 如果 data 是数组，则替换整个框选数组
-        if (Array.isArray(operation.data)) {
-          newData.rectangles = operation.data;
-        } else {
-          // 如果是单个对象，则更新单个框选
-          if (!newData.rectangles) newData.rectangles = [];
-          const rectIndex = newData.rectangles.findIndex(
-            (r) => r.id === operation.data.id
-          );
-          if (rectIndex >= 0) {
-            newData.rectangles[rectIndex] = operation.data;
-          } else {
-            newData.rectangles.push(operation.data);
-          }
-        }
-        break;
-      case "rectangle-delete":
-        if (newData.rectangles) {
-          newData.rectangles = newData.rectangles.filter(
-            (r) => r.id !== operation.data.id
-          );
-        }
-        break;
-
-      case "image-add":
-      case "image-update":
-        if (!newData.images) newData.images = [];
-        const imgIndex = newData.images.findIndex(
-          (i) => i.id === operation.data.id
-        );
-        if (imgIndex >= 0) {
-          newData.images[imgIndex] = operation.data;
-        } else {
-          newData.images.push(operation.data);
-        }
-        break;
-
-      case "image-delete":
-        if (newData.images) {
-          newData.images = newData.images.filter(
-            (i) => i.id !== operation.data.id
-          );
-        }
-        break;
-    }
-    return newData;
-  }
-
-  //解决客户端和服务器总操作之间的冲突
-  transformedOperation(operation, opQueue, clientVersion) {
-    let transformedOp = { ...operation };
-    //对高于客户端版本的服务器操作进行转换
-    for (let i = clientVersion; i < opQueue.length; i++) {
-      const serverOp = opQueue[i];
-      if (transformedOp.type === "reject") break;
-      transformedOp = this.transformSingleOperation(transformedOp, serverOp);
-    }
-    return transformedOp;
-  }
-
-  //转换单个操作
-  transformSingleOperation(clientOp, serverOp) {
-    // 矩形ID不同则可保留
-    if (
-      clientOp.type.startsWith("rectangle-") &&
-      serverOp.type.startsWith("rectangle-")
-    ) {
-      return this.resolveRectangleConflict(clientOp, serverOp);
-    }
-
-    // 书签防重叠
-    if (clientOp.type === "bookmark-add" && serverOp.type === "bookmark-add") {
-      return this.resolveBookmarkCollision(clientOp, serverOp);
-    }
-
-    // LWW
-    if (clientOp.type === serverOp.type) {
-      return this.resolveUpdateConflictLWW(clientOp, serverOp);
-    }
-
-    return clientOp;
-  }
-
-  resolveBookmarkCollision(clientOp, serverOp) {
-    const clientY = clientOp.data.scrollPercent;
-    const serverY = serverOp.data.scrollPercent;
-
-    if (Math.abs(clientY - serverY) < 0.005) {
-      console.log(`书签位置冲突`);
-      const newData = { ...clientOp.data };
-      newData.scrollPercent += 0.005;
-
-      return {
-        ...clientOp,
-        data: newData,
-      };
-    }
-    return clientOp;
-  }
-
-  resolveRectangleConflict(clientOp, serverOp) {
-    const clientId = clientOp.data.id;
-    const serverId = serverOp.data.id;
-
-    if (clientId !== serverId) {
-      return clientOp;
-    }
-
-    return this.resolveUpdateConflictLWW(clientOp, serverOp);
-  }
-
-  resolveUpdateConflictLWW(clientOp, serverOp) {
-    const clientTime = new Date(clientOp.timestamp).getTime();
-    const serverTime = new Date(serverOp.timestamp).getTime();
-
-    if (clientTime > serverTime) {
-      return clientOp;
-    } else {
-      return { type: "reject" };
+      logger.error("annotation.operation_save_failed", {
+        roomId,
+        pageUrl,
+        operationType: operation.type,
+        error,
+      });
     }
   }
 
@@ -398,7 +244,7 @@ class WebsocketServer {
 
     const room = this.rooms.get(roomId);
     if (!room) {
-      console.log("当前所有房间: ", Array.from(this.rooms.keys()));
+      logger.warn("websocket.room_not_found", { roomId });
       return;
     }
 
@@ -413,7 +259,10 @@ class WebsocketServer {
 
       //只发送给开启ws且为同一页面的其他客户端
       if (!isSelf && isOpen && isSamePage) {
-        console.log(`广播到客户端: ${client.userId}`);
+        logger.debug("websocket.operation_broadcast", {
+          roomId,
+          userId: client.userId,
+        });
         this.send(client, message);
         broadcastCount++;
       } else {
@@ -450,7 +299,7 @@ class WebsocketServer {
         version: pageOperations.length,
       });
     } catch (error) {
-      console.error("发送房间状态失败:", error);
+      logger.error("websocket.room_state_failed", { roomId, pageUrl, error });
       this.sendError(ws, "加载房间数据失败");
     }
   }
@@ -477,7 +326,7 @@ class WebsocketServer {
     if (ws.roomId) {
       this.handleLeaveRoom(ws);
     }
-    console.log(`客户端 ${ws.id} 断开连接`);
+    logger.info("websocket.disconnected", { connectionId: ws.id });
   }
 
   send(ws, message) {

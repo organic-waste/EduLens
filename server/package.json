@@ -4,13 +4,14 @@
   "description": "EduLens backend server with WebSocket support",
   "main": "app.js",
   "engines": {
-    "node": ">=16.0.0",
+    "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
   "scripts": {
     "start": "cross-env NODE_ENV=production node app.js",
     "dev": "cross-env NODE_ENV=development nodemon app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [
     "edulens",
@@ -24,16 +25,17 @@
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
+    "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^7.0.0",
     "mongoose": "^8.19.1",
     "uuid": "^13.0.0",
-    "ws": "^8.18.3",
-    "cross-env": "^10.1.0"
+    "ws": "^8.18.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "vitest": "^3.2.7"
   }
 }

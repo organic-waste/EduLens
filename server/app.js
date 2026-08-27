@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const WebsocketServer = require("./webSocketServer");
+const requestLogger = require("./middleware/requestLogger");
+const { logger } = require("./utils/logger");
 
 // 根据 NODE_ENV 决定加载哪份配置
 const path = `.env.${process.env.NODE_ENV || 'development'}`;
@@ -10,6 +12,7 @@ require('dotenv').config({ path });
 
 const app = express();
 app.use(cors());
+app.use(requestLogger);
 app.use(express.json({ limit: "50mb" }));
 //解析客户端发送的 URL 编码格式的请求体数据，将其转换为 Javascript 对象，并将其赋值给 req.body
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -20,8 +23,8 @@ const wsServer = new WebsocketServer(server);
 
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => console.log("MongoDB连接成功"))
-  .catch((error) => console.log("MongoDB连接失败:", error));
+  .then(() => logger.info("database.connected"))
+  .catch((error) => logger.error("database.connection_failed", { error }));
 
 app.use("/api/test", require("./routes/tests"));
 app.use("/api/auth", require("./routes/users"));
@@ -30,6 +33,5 @@ app.use("/api/rooms", require("./routes/rooms"));
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`后端服务运行：http://localhost:${PORT}`);
-  console.log(`WebSocket服务运行：ws://localhost:${PORT}`);
+  logger.info("server.started", { port: Number(PORT) });
 });
