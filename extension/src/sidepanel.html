@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EduLens AI</title>
+  </head>
+  <body>
+    <main class="ai-shell">
+      <header class="ai-header">
+        <div>
+          <p class="eyebrow">EDULENS</p>
+          <h1>AI 学习助手</h1>
+        </div>
+        <button
+          id="settings-toggle"
+          class="icon-button"
+          type="button"
+          title="对话记录"
+          aria-label="对话记录"
+        >
+          ☰
+        </button>
+      </header>
+
+      <section id="messages" class="messages" aria-live="polite">
+        <div class="empty-state">
+          <strong>从一个问题开始</strong>
+          <span>让 AI 帮你理解当前学习内容。</span>
+        </div>
+      </section>
+
+      <section id="history" class="history" hidden>
+        <div class="history-heading">
+          <h2>对话记录</h2>
+          <button id="new-conversation" class="text-button" type="button">新对话</button>
+        </div>
+        <div id="history-list" class="history-list"></div>
+      </section>
+
+      <form id="composer" class="composer">
+        <textarea
+          id="prompt"
+          rows="3"
+          placeholder="输入你的问题..."
+          required
+        ></textarea>
+        <div class="composer-footer">
+          <span id="status" class="status">就绪</span>
+          <div class="composer-actions">
+            <button id="select-page" class="tool-button" type="button" title="引用当前网页中的文字">引用网页选区</button>
+            <button id="send" class="send-button" type="submit">发送</button>
+          </div>
+        </div>
+      </form>
+
+    </main>
+    <script type="module" src="./sidepanel.js"></script>
+  </body>
+</html>

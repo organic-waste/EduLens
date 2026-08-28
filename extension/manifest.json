@@ -4,7 +4,7 @@
   "description": "__MSG_pluginDesc__", 
   "version": "1.0.4",
   "default_locale": "en",
-  "permissions": ["storage", "activeTab","tabs"],
+  "permissions": ["storage", "activeTab", "tabs", "scripting", "sidePanel"],
   "host_permissions": [
     "<all_urls>"
   ],
@@ -15,21 +15,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/content-script.js"],
-      "css": [
-        "styles/draggable-panel.css",
-        "styles/base.css",
-        "styles/tools/scroll-progress.css",
-        "styles/tools/bookmark.css",
-        "styles/tools/countdown.css",
-        "styles/filters/mouse-enhance.css",
-        "styles/tools/graffiti.css",
-        "styles/tools/rectangle-annotation.css",
-        "styles/tools/screenshot.css",
-        "styles/tools/upload-image.css",
-        "styles/accounts/login.css",
-        "styles/accounts/room.css"
-      ]  
+      "js": ["src/content-script.js"]
     }
   ],
   "web_accessible_resources": [
@@ -53,7 +39,10 @@
     }
   ],
   "action": {
-    "default_popup": "src/popup.html"
+    "default_title": "EduLens AI"
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel.html"
   },
   "icons": {
     "16": "assets/icon.png",
