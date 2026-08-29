@@ -26,7 +26,7 @@ export async function askAI(messages, options = {}) {
   });
 
   if (!response.ok) {
-    const detail = await response.text().catch(() => "");
+    const detail = await response.text();
     throw new Error(
       `AI 请求失败（${response.status}）${detail ? `：${detail.slice(0, 160)}` : ""}`,
     );
