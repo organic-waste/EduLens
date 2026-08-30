@@ -1,0 +1,8 @@
+[
+  { "id": "semantic-1", "query": "什么是闭包以及它如何保存变量", "targetSummaryItemId": "11111111-1111-5111-8111-111111111111" },
+  { "id": "semantic-2", "query": "解释 RAG 的检索增强生成流程", "targetSummaryItemId": "22222222-2222-5222-8222-222222222222" },
+  { "id": "semantic-3", "query": "JWT 如何验证用户身份", "targetSummaryItemId": "33333333-3333-5333-8333-333333333333" },
+  { "id": "semantic-4", "query": "MongoDB 文档与集合的关系", "targetSummaryItemId": "44444444-4444-5444-8444-444444444444" },
+  { "id": "semantic-5", "query": "什么是向量余弦相似度", "targetSummaryItemId": "55555555-5555-5555-8555-555555555555" },
+  { "id": "semantic-6", "query": "解释 JavaScript Promise 的状态", "targetSummaryItemId": "66666666-6666-5666-8666-666666666666" }
+]
