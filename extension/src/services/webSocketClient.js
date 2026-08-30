@@ -1,6 +1,5 @@
 /* WebSocket实时通信 */
 import { webSocket } from "./webSocket.js";
-import { authManager } from "./authManager.js";
 import { getPageKey } from "../utils/index.js";
 
 class WebSocketClient {
@@ -13,14 +12,14 @@ class WebSocketClient {
     this.isConnecting = false;
   }
 
-  async connect() {
-    if (this.wsConnected || !authManager.getToken()) {
+  async connect(token) {
+    if (this.wsConnected || !token) {
       return false;
     }
     return new Promise(async (resolve, reject) => {
       try {
         await webSocket.connect(this.wsURL);
-        webSocket.authenticate(authManager.getToken());
+        webSocket.authenticate(token);
 
         // 注册内置消息处理器
         webSocket.on("operation", this.handleOperation.bind(this));

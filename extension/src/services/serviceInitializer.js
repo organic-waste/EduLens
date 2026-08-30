@@ -2,12 +2,16 @@
 import { authManager } from "./authManager.js";
 import { roomManager } from "./roomManager.js";
 import { webSocketClient } from "./webSocketClient.js";
-import { syncManager } from "./syncManager.js";
-import { webSocket } from "./webSocket.js";
 
 class ServiceInitializer {
   constructor() {
     this.isInitialized = false;
+    authManager.onAuthStateChange(({ isAuthenticated }) => {
+      if (!isAuthenticated) {
+        this.isInitialized = false;
+        webSocketClient.disconnect();
+      }
+    });
   }
 
   async initialize() {
@@ -16,7 +20,7 @@ class ServiceInitializer {
     try {
       // console.log("[EduLens] 用户已认证，开始初始化其他服务");
 
-      await webSocketClient.connect();
+      await webSocketClient.connect(authManager.getToken());
       // console.log(
       // "[EduLens] WebSocket连接状态:",
       // webSocketClient.isConnected()

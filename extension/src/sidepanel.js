@@ -1,4 +1,5 @@
 import { askAI } from "./services/aiClient.js";
+import { marked } from "marked";
 import { authManager } from "./services/index.js";
 import {
   loadRemoteSummaryDocuments,
@@ -23,11 +24,14 @@ const summaryContextTitleEl = document.getElementById("summary-context-title");
 const clearSummaryContextButton = document.getElementById("clear-summary-context");
 const summaryTitleEl = document.getElementById("summary-title");
 const closeSummaryButton = document.getElementById("close-summary");
-const newConversationButton = document.getElementById("new-conversation");
-const libraryIcon = settingsToggle.querySelector("svg:first-child");
-const returnIcon = settingsToggle.querySelector("svg:last-child");
+const libraryIcon = settingsToggle.querySelector(".library-icon");
+const returnIcon = settingsToggle.querySelector(".return-icon");
+returnIcon.setAttribute("viewBox", "0 0 24 24");
+returnIcon.innerHTML = '<path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />';
 
 const CHAT_ICON = `<svg class="action-icon" viewBox="0 0 1024 1024" aria-hidden="true"><path d="M853.333333 138.666667H170.666667c-40.533333 0-74.666667 34.133333-74.666667 74.666666v512c0 40.533333 34.133333 74.666667 74.666667 74.666667h151.466666V917.333333c0 12.8 8.533333 25.6 19.2 29.866667 4.266667 2.133333 8.533333 2.133333 12.8 2.133333 8.533333 0 17.066667-4.266667 23.466667-10.666666l136.533333-138.666667H853.333333c40.533333 0 74.666667-34.133333 74.666667-74.666667V213.333333c0-40.533333-34.133333-74.666667-74.666667-74.666666z m10.666667 586.666666c0 6.4-4.266667 10.666667-10.666667 10.666667H501.333333c-8.533333 0-17.066667 4.266667-23.466666 10.666667l-89.6 93.866666V768c0-17.066667-14.933333-32-32-32H170.666667c-6.4 0-10.666667-4.266667-10.666667-10.666667V213.333333c0-6.4 4.266667-10.666667 10.666667-10.666666h682.666666c6.4 0 10.666667 4.266667 10.666667 10.666666v512z" /><path d="M512 490.666667H298.666667c-17.066667 0-32 14.933333-32 32S281.6 554.666667 298.666667 554.666667h213.333333c17.066667 0 32-14.933333 32-32S529.066667 490.666667 512 490.666667zM672 341.333333H298.666667c-17.066667 0-32 14.933333-32 32S281.6 405.333333 298.666667 405.333333h373.333333c17.066667 0 32-14.933333 32-32s-14.933333-32-32-32z" /></svg>`;
+
+closeSummaryButton.innerHTML = CHAT_ICON;
 
 const conversation = [];
 let showingHistory = false;
@@ -193,8 +197,13 @@ function addMessage(role, content, onSupplement) {
   const label = document.createElement("span");
   label.className = "message-label";
   label.textContent = role === "user" ? "你" : "AI 助手";
-  const body = document.createElement("p");
-  body.textContent = content;
+  const body = document.createElement(role === "assistant" ? "div" : "p");
+  if (role === "assistant") {
+    body.className = "markdown-body";
+    body.innerHTML = marked.parse(content, { async: false, gfm: true, breaks: true });
+  } else {
+    body.textContent = content;
+  }
   item.append(label, body);
   if (onSupplement) {
     const supplement = document.createElement("button");
@@ -223,6 +232,7 @@ function showSummary(show) {
   summaryEl.hidden = !show;
   messagesEl.hidden = show;
   composer.hidden = show;
+  if (show) setSettingsToggleIcon(false);
   renderSummaryContext();
 }
 
@@ -388,11 +398,26 @@ function toggleHistory(show) {
   messagesEl.hidden = show;
   composer.hidden = show;
   if (show) summaryEl.hidden = true;
-  settingsToggle.title = show ? "返回对话" : "摘要库";
-  settingsToggle.setAttribute("aria-label", settingsToggle.title);
-  libraryIcon.hidden = show;
-  returnIcon.hidden = !show;
+  setSettingsToggleIcon(show);
 }
+
+function setSettingsToggleIcon(showingLibrary) {
+  settingsToggle.title = showingLibrary ? "返回对话" : "摘要库";
+  settingsToggle.setAttribute("aria-label", settingsToggle.title);
+  if (showingLibrary) {
+    libraryIcon.setAttribute("hidden", "");
+    libraryIcon.style.display = "none";
+    returnIcon.removeAttribute("hidden");
+    returnIcon.style.display = "block";
+    return;
+  }
+  libraryIcon.removeAttribute("hidden");
+  libraryIcon.style.display = "block";
+  returnIcon.setAttribute("hidden", "");
+  returnIcon.style.display = "none";
+}
+
+setSettingsToggleIcon(false);
 
 settingsToggle.addEventListener("click", async () => {
   if (showingHistory) {
@@ -401,15 +426,6 @@ settingsToggle.addEventListener("click", async () => {
   }
   await renderHistory();
   toggleHistory(true);
-});
-
-newConversationButton.addEventListener("click", () => {
-  conversation.length = 0;
-  clearSummaryContext();
-  renderConversation();
-  summaryEl.hidden = true;
-  toggleHistory(false);
-  statusEl.textContent = "新对话";
 });
 
 document.getElementById("select-page").addEventListener("click", async () => {

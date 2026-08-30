@@ -1,7 +1,5 @@
 /* 用户注册、登录和认证状态 */
 import { apiClient } from "./apiClient.js";
-import { roomManager } from "./roomManager.js";
-import { serviceInitializer } from "./serviceInitializer.js";
 
 class AuthManager {
   constructor() {
@@ -10,6 +8,7 @@ class AuthManager {
     this.isOnline = false;
     this.authFailureCallback = null;
     this.isInitialized = false;
+    this.authStateListeners = new Set();
   }
 
   async init() {
@@ -29,6 +28,7 @@ class AuthManager {
         const isValid = await this.validateToken();
         if (isValid) {
           this.isOnline = true;
+          this.notifyAuthStateChange();
           this.isInitialized = true;
           return true;
         } else {
@@ -45,6 +45,16 @@ class AuthManager {
 
   setAuthFailureCallback(callback) {
     this.authFailureCallback = callback;
+  }
+
+  onAuthStateChange(listener) {
+    this.authStateListeners.add(listener);
+    return () => this.authStateListeners.delete(listener);
+  }
+
+  notifyAuthStateChange() {
+    const state = { isAuthenticated: Boolean(this.isAuthenticated()), user: this.user };
+    this.authStateListeners.forEach((listener) => listener(state));
   }
 
   async handleAuthFailure() {
@@ -85,18 +95,7 @@ class AuthManager {
     this.isInitialized = false;
     apiClient.setToken(null);
 
-    try {
-      // 重置房间状态，避免账户切换后沿用旧数据
-      roomManager.reset();
-    } catch (error) {
-      console.warn("清空房间状态失败:", error);
-    }
-
-    try {
-      serviceInitializer.isInitialized = false;
-    } catch (error) {
-      console.warn("重置服务初始化状态失败:", error);
-    }
+    this.notifyAuthStateChange();
 
     await chrome.storage.local.remove(["cloudToken", "cloudUser"]);
   }
@@ -151,6 +150,7 @@ class AuthManager {
       cloudToken: token,
       cloudUser: user,
     });
+    this.notifyAuthStateChange();
   }
 
   isAuthenticated() {

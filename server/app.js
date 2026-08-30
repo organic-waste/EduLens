@@ -31,6 +31,7 @@ app.use("/api/auth", require("./routes/users"));
 app.use("/api/annotations", require("./routes/annotations"));
 app.use("/api/rooms", require("./routes/rooms"));
 app.use("/api/summaries", require("./routes/summaries"));
+app.use("/api/learning", require("./routes/learning"));
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

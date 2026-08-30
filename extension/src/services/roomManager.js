@@ -9,6 +9,9 @@ class RoomManager {
     this.currentRoom = null;
     this.userRooms = [];
     this.isLoading = false;
+    authManager.onAuthStateChange(({ isAuthenticated }) => {
+      if (!isAuthenticated) this.reset();
+    });
   }
 
   async loadUserRooms() {
@@ -21,7 +24,7 @@ class RoomManager {
     this.isLoading = true;
     try {
       if (!webSocketClient.isConnected()) {
-        await webSocketClient.connect();
+        await webSocketClient.connect(authManager.getToken());
       }
 
       const response = await apiClient.request("/rooms/my-rooms");
