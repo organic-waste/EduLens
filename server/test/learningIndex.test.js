@@ -1,0 +1,40 @@
+const { createLearningNodes } = require("../services/learningIndex");
+
+describe("learning index nodes", () => {
+  it("creates one retrievable node per knowledge item with citation metadata", () => {
+    const nodes = createLearningNodes([
+      {
+        _id: "summary-1",
+        sourceUrl: "https://example.com/article",
+        groups: [
+          {
+            topic: "RAG",
+            items: [
+              {
+                id: "item-1",
+                content: "检索增强生成",
+                citation: {
+                  pageUrl: "https://example.com/article#rag",
+                  quote: "retrieval augmented generation",
+                  selector: "#rag",
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0].id_).toBe("item-1");
+    expect(nodes[0].getText()).toContain("检索增强生成");
+    expect(nodes[0].metadata).toMatchObject({
+      summaryId: "summary-1",
+      summaryItemId: "item-1",
+      topic: "RAG",
+      pageUrl: "https://example.com/article#rag",
+      quote: "retrieval augmented generation",
+      selector: "#rag",
+    });
+  });
+});

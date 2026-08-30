@@ -19,7 +19,14 @@ function parseSummary(content) {
     throw new Error("摘要结果格式无效");
   }
 
-  return { ...summary, groups };
+  return {
+    ...summary,
+    groups: groups.map((group) => ({
+      ...group,
+      id: crypto.randomUUID(),
+      items: group.items.map((item) => ({ ...item, id: crypto.randomUUID() })),
+    })),
+  };
 }
 
 export async function generateLearningSummary({ text, pageTitle, pageUrl }) {

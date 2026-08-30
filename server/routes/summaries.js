@@ -1,6 +1,7 @@
 const express = require("express");
 const SummaryDocument = require("../models/summaryDocument");
 const auth = require("../middleware/auth");
+const { invalidateUserLearningIndex } = require("../services/learningIndex");
 
 const router = express.Router();
 
@@ -33,6 +34,15 @@ function attachSourceToItems(groups, source) {
   }));
 }
 
+function hasStableItemIds(groups) {
+  return groups.every(
+    (group) =>
+      group?.id &&
+      Array.isArray(group.items) &&
+      group.items.every((item) => item?.id),
+  );
+}
+
 router.get("/", auth, async (req, res) => {
   try {
     const summaries = await SummaryDocument.find({ userId: req.userId })
@@ -52,10 +62,10 @@ router.post("/upsert", auth, async (req, res) => {
     const normalizedSource = Array.isArray(groups)
       ? normalizeSummarySource(source, sourceUrl, groups)
       : null;
-    if (!title || !Array.isArray(groups) || !normalizedSource) {
+    if (!title || !Array.isArray(groups) || !normalizedSource || !hasStableItemIds(groups)) {
       return res
         .status(400)
-        .json({ status: "error", message: "摘要数据不完整" });
+        .json({ status: "error", message: "摘要数据不完整或缺少稳定知识点 ID" });
     }
     const document =
       id &&
@@ -78,6 +88,7 @@ router.post("/upsert", auth, async (req, res) => {
         source: normalizedSource,
         sourceUrl: normalizedSource.pageUrl,
       }));
+    invalidateUserLearningIndex(req.userId);
     res.json({ status: "success", data: { summary: saved } });
   } catch (error) {
     res
