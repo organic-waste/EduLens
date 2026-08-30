@@ -1,5 +1,6 @@
 const { createDeepSeekChatCompletion } = require("./modelClient");
 const { searchLearningKnowledge } = require("./learningSearch");
+const { updateLearningMemory } = require("./learningMemoryService");
 
 const MAX_TOOL_ROUNDS = 3;
 
@@ -67,20 +68,23 @@ function toCitations(results) {
     pageUrl: result.metadata.pageUrl,
     quote: result.metadata.quote,
     selector: result.metadata.selector,
+    prefix: result.metadata.prefix,
+    suffix: result.metadata.suffix,
+    textPosition: result.metadata.textPosition,
     semanticScore: result.semanticScore,
     score: result.score,
   }));
 }
 
-function isMemoryTargetAllowed(args, retrieved) {
-  const itemMatches = retrieved.some((item) => item.summaryItemId === args.itemId);
-  const topicMatches = args.topic && retrieved.some(
-    (item) => item.metadata.topic.toLocaleLowerCase() === args.topic.toLocaleLowerCase(),
-  );
-  return itemMatches || topicMatches;
+function findRetrievedItem(itemId, retrieved) {
+  return retrieved.find((item) => item.summaryItemId === itemId);
 }
 
-function createLearningAgent({ chatCompletion = createDeepSeekChatCompletion, search = searchLearningKnowledge } = {}) {
+function createLearningAgent({
+  chatCompletion = createDeepSeekChatCompletion,
+  search = searchLearningKnowledge,
+  updateMemory = updateLearningMemory,
+} = {}) {
   return async function chat({ userId, message, activeSummaryId, profile, topicInterests, memories }) {
     if (!userId) throw new Error("userId is required");
     if (!message?.trim()) throw new Error("message is required");
@@ -129,12 +133,30 @@ function createLearningAgent({ chatCompletion = createDeepSeekChatCompletion, se
         } else if (call.function?.name === "update_learning_memory") {
           if (state.memoryUpdated) {
             output = { error: "本轮最多允许一次记忆更新" };
-          } else if (!isMemoryTargetAllowed(args, state.retrieved)) {
-            output = { error: "只能更新本轮已检索的知识点或相关主题" };
           } else {
-            state.memoryUpdated = true;
-            // 学习记忆持久化在第 4 阶段实现；本阶段禁止模型产生任何数据库写入。
-            output = { accepted: false, message: "学习状态保存将在下一阶段启用" };
+            const target = findRetrievedItem(args.itemId, state.retrieved);
+            if (!target) {
+              output = { error: "只能更新本轮已检索的知识点" };
+            } else if (!args.state) {
+              output = { error: "缺少学习状态" };
+            } else {
+              state.memoryUpdated = true;
+              const change = await updateMemory({
+                userId,
+                itemId: args.itemId,
+                state: args.state,
+                topic: target.metadata.topic,
+                reason: `Agent：${message.trim()}`,
+              });
+              const memoryChange = {
+                summaryItemId: args.itemId,
+                topic: target.metadata.topic,
+                previousState: change.event.previousState,
+                state: change.memory.state,
+              };
+              state.memoryChanges.push(memoryChange);
+              output = { accepted: true, memoryChange };
+            }
           }
         } else {
           output = { error: "未知工具" };

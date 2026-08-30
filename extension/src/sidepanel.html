@@ -6,12 +6,44 @@
     <title>EduLens AI</title>
   </head>
   <body>
-    <main class="ai-shell">
+    <section id="auth-screen" class="auth-screen" hidden>
+      <div class="auth-card">
+        <div class="auth-animation-elements" aria-hidden="true">
+          <span class="auth-anim-element auth-anim-circle"></span>
+          <span class="auth-anim-element auth-anim-square"></span>
+        </div>
+        <p class="eyebrow">EDULENS</p>
+        <h1 id="auth-title">登录学习助手</h1>
+        <p id="auth-description" class="auth-description">登录后即可使用 AI 对话、摘要库和个性化学习记忆。</p>
+        <form id="auth-form" class="auth-form" novalidate>
+          <label id="auth-username-field" hidden>用户名<input id="auth-username" autocomplete="username" minlength="3" placeholder="至少 3 个字符" /></label>
+          <label id="auth-account-field">用户名或邮箱<input id="auth-account" autocomplete="username" placeholder="输入用户名或邮箱" required /></label>
+          <label id="auth-email-field" hidden>邮箱<input id="auth-email" type="email" autocomplete="email" placeholder="name@example.com" /></label>
+          <label>密码<input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="至少 6 个字符" required /></label>
+          <label id="auth-confirm-field" hidden>确认密码<input id="auth-confirm-password" type="password" autocomplete="new-password" minlength="6" placeholder="再次输入密码" /></label>
+          <p id="auth-error" class="auth-error" role="alert"></p>
+          <button id="auth-submit" class="auth-submit" type="submit">登录</button>
+        </form>
+        <button id="auth-toggle" class="text-button" type="button">还没有账号？去注册</button>
+      </div>
+    </section>
+
+    <main id="ai-shell" class="ai-shell" hidden>
       <header class="ai-header">
         <div>
           <p class="eyebrow">EDULENS</p>
           <h1>AI 学习助手</h1>
         </div>
+        <div class="header-actions">
+        <button
+          id="profile-button"
+          class="icon-button"
+          type="button"
+          title="个人主页"
+          aria-label="个人主页"
+        >
+          <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.42 0-8 2.24-8 5v3h16v-3c0-2.76-3.58-5-8-5Z" /></svg>
+        </button>
         <button
           id="settings-toggle"
           class="icon-button"
@@ -28,6 +60,7 @@
             <path d="M384 512L731.733333 202.666667c17.066667-14.933333 19.2-42.666667 4.266667-59.733334-14.933333-17.066667-42.666667-19.2-59.733333-4.266666l-384 341.333333c-10.666667 8.533333-14.933333 19.2-14.933334 32s4.266667 23.466667 14.933334 32l384 341.333333c8.533333 6.4 19.2 10.666667 27.733333 10.666667 12.8 0 23.466667-4.266667 32-14.933333 14.933333-17.066667 14.933333-44.8-4.266667-59.733334L384 512z" />
           </svg>
         </button>
+        </div>
       </header>
 
       <section id="messages" class="messages" aria-live="polite">

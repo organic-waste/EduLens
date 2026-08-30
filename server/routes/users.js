@@ -98,18 +98,21 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
+    const account = (req.body.account || req.body.email || "").trim();
+    const { password } = req.body;
+    if (!account || !password) {
       return res.status(400).json({
         status: "error",
-        message: "请提供邮箱和密码",
+        message: "请提供用户名或邮箱和密码",
       });
     }
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({
+      $or: [{ username: account }, { email: account.toLowerCase() }],
+    }).select("+password");
     if (!user || !(await user.correctPassword(password))) {
       return res.status(401).json({
         status: "error",
-        message: "邮箱或密码不正确",
+        message: "用户名、邮箱或密码不正确",
       });
     }
     const token = signToken(user._id);

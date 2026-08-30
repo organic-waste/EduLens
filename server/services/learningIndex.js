@@ -30,6 +30,9 @@ function createLearningNodes(summaries) {
             pageUrl: citation.pageUrl,
             quote: citation.quote,
             selector: citation.selector,
+            prefix: citation.prefix,
+            suffix: citation.suffix,
+            textPosition: citation.textPosition,
           },
         });
       }),

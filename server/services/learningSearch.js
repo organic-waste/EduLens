@@ -62,6 +62,9 @@ function rerankLearningNodes(results, { profile = {}, topicInterests = [], memor
           pageUrl: metadata.pageUrl,
           quote: metadata.quote,
           selector: metadata.selector,
+          prefix: metadata.prefix,
+          suffix: metadata.suffix,
+          textPosition: metadata.textPosition,
         },
         _index: index,
       };

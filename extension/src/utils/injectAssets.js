@@ -34,6 +34,15 @@ let host = null;
 
 //注入样式
 export async function injectStyles() {
+  const existingHost = document.getElementById("edulens-host");
+  if (existingHost?.shadowRoot) {
+    host = existingHost;
+    shadowRoot = existingHost.shadowRoot;
+    window.__EDULENS_SHADOW_ROOT__ = shadowRoot;
+    window.__EDULENS_HOST__ = host;
+    return;
+  }
+
   host = document.createElement("div");
   host.id = "edulens-host";
   host.style.display = "contents"; //不占布局

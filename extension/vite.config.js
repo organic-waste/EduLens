@@ -22,6 +22,7 @@ export default defineConfig({
         background: "src/background.js",
         popup: "src/popup.html",
         sidepanel: "src/sidepanel.html",
+        profile: "src/profile.html",
       },
     },
   },

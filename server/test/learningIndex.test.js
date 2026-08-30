@@ -17,6 +17,9 @@ describe("learning index nodes", () => {
                   pageUrl: "https://example.com/article#rag",
                   quote: "retrieval augmented generation",
                   selector: "#rag",
+                  prefix: "before ",
+                  suffix: " after",
+                  textPosition: { start: 1, end: 29 },
                 },
               },
             ],
@@ -35,6 +38,9 @@ describe("learning index nodes", () => {
       pageUrl: "https://example.com/article#rag",
       quote: "retrieval augmented generation",
       selector: "#rag",
+      prefix: "before ",
+      suffix: " after",
+      textPosition: { start: 1, end: 29 },
     });
   });
 });

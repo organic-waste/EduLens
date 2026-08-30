@@ -1,5 +1,9 @@
-/* 颜色变量 */
-:root {
+/*
+ * Shadow DOM 中的样式应定义在宿主元素上。
+ * :root 指向页面文档根节点，无法可靠地作为 Shadow DOM 面板的变量来源，
+ * 还会让页面自身同名变量影响面板的颜色。
+ */
+:host {
   --main-color: #7090ab;
   --panel-color: #7dbcc7;
   --secondary-color: #81bfd5;
@@ -14,6 +18,10 @@
   --normal-font-size: 1.8vh;
   --bolder-font-size: 2.2vh;
   --boldest-font-size: 3vh;
+
+  /* 隔离宿主从网页继承的样式。 */
+  all: initial;
+  font-family: Arial, sans-serif;
 }
 
 html {
@@ -24,15 +32,10 @@ html {
   overflow: hidden !important;
 }
 
-/* 清除外界的样式，防止被影响 */
-:host,
-::before,
-::after {
-  all: unset;
-}
-*,
-*::before,
-*::after {
+/* 不重置所有伪元素，以免工具自身的 ::before/::after 样式失效。 */
+:host *,
+:host *::before,
+:host *::after {
   box-sizing: border-box;
 }
 

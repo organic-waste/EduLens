@@ -8,6 +8,23 @@ import {
 import { generateLearningSummary } from "./skills/summarySkill.js";
 import "./sidepanel.css";
 
+const authScreenEl = document.getElementById("auth-screen");
+const assistantShellEl = document.getElementById("ai-shell");
+const authForm = document.getElementById("auth-form");
+const authTitleEl = document.getElementById("auth-title");
+const authDescriptionEl = document.getElementById("auth-description");
+const authUsernameFieldEl = document.getElementById("auth-username-field");
+const authAccountFieldEl = document.getElementById("auth-account-field");
+const authEmailFieldEl = document.getElementById("auth-email-field");
+const authConfirmFieldEl = document.getElementById("auth-confirm-field");
+const authUsernameEl = document.getElementById("auth-username");
+const authAccountEl = document.getElementById("auth-account");
+const authEmailEl = document.getElementById("auth-email");
+const authPasswordEl = document.getElementById("auth-password");
+const authConfirmPasswordEl = document.getElementById("auth-confirm-password");
+const authErrorEl = document.getElementById("auth-error");
+const authSubmitEl = document.getElementById("auth-submit");
+const authToggleEl = document.getElementById("auth-toggle");
 const messagesEl = document.getElementById("messages");
 const composer = document.getElementById("composer");
 const promptEl = document.getElementById("prompt");
@@ -16,6 +33,7 @@ const statusEl = document.getElementById("status");
 const historyEl = document.getElementById("history");
 const historyListEl = document.getElementById("history-list");
 const settingsToggle = document.getElementById("settings-toggle");
+const profileButton = document.getElementById("profile-button");
 const summarizeButton = document.getElementById("summarize");
 const summaryEl = document.getElementById("summary");
 const summaryItemsEl = document.getElementById("summary-items");
@@ -39,6 +57,44 @@ let selectedPage = null;
 let activeSummaryItem = null;
 let activeSummaryDocument = null;
 let currentSummaryDocument = null;
+let authMode = "login";
+let assistantInitialized = false;
+
+function renderAuthMode() {
+  const isRegister = authMode === "register";
+  authTitleEl.textContent = isRegister ? "创建 EduLens 账号" : "登录学习助手";
+  authDescriptionEl.textContent = isRegister
+    ? "注册后即可保存学习画像、摘要和个性化学习记忆。"
+    : "登录后即可使用 AI 对话、摘要库和个性化学习记忆。";
+  authUsernameFieldEl.hidden = !isRegister;
+  authAccountFieldEl.hidden = isRegister;
+  authEmailFieldEl.hidden = !isRegister;
+  authConfirmFieldEl.hidden = !isRegister;
+  authUsernameEl.required = isRegister;
+  authAccountEl.required = !isRegister;
+  authEmailEl.required = isRegister;
+  authConfirmPasswordEl.required = isRegister;
+  authPasswordEl.autocomplete = isRegister ? "new-password" : "current-password";
+  authSubmitEl.textContent = isRegister ? "注册并进入" : "登录";
+  authToggleEl.textContent = isRegister ? "已有账号？去登录" : "还没有账号？去注册";
+  authErrorEl.textContent = "";
+}
+
+function showAuthScreen() {
+  assistantShellEl.hidden = true;
+  authScreenEl.hidden = false;
+  renderAuthMode();
+}
+
+async function showAssistant() {
+  authScreenEl.hidden = true;
+  assistantShellEl.hidden = false;
+  if (assistantInitialized) return;
+  assistantInitialized = true;
+  await restoreSummary();
+  await restoreConversation();
+  await restoreRemoteSummaries();
+}
 
 function renderSummaryContext() {
   const hasContext = activeSummaryDocument?.groups.some((group) => group.items.length);
@@ -419,6 +475,81 @@ function setSettingsToggleIcon(showingLibrary) {
 
 setSettingsToggleIcon(false);
 
+const authInputs = [
+  authUsernameEl,
+  authAccountEl,
+  authEmailEl,
+  authPasswordEl,
+  authConfirmPasswordEl,
+];
+
+function showAuthFieldError(input, message) {
+  input.setAttribute("aria-invalid", "true");
+  authErrorEl.textContent = message;
+  input.focus();
+  return false;
+}
+
+function validateAuthForm() {
+  const isRegister = authMode === "register";
+  const username = authUsernameEl.value.trim();
+  const account = authAccountEl.value.trim();
+  const email = authEmailEl.value.trim();
+  const password = authPasswordEl.value;
+  const confirmPassword = authConfirmPasswordEl.value;
+
+  authInputs.forEach((input) => input.removeAttribute("aria-invalid"));
+  authErrorEl.textContent = "";
+
+  if (!isRegister && !account) return showAuthFieldError(authAccountEl, "请填写用户名或邮箱。");
+  if (isRegister && !username) return showAuthFieldError(authUsernameEl, "请填写用户名。");
+  if (isRegister && username.length < 3) return showAuthFieldError(authUsernameEl, "用户名至少需要 3 个字符。");
+  if (isRegister && !email) return showAuthFieldError(authEmailEl, "请填写邮箱。");
+  if (isRegister && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAuthFieldError(authEmailEl, "请输入有效的邮箱地址。");
+  if (!password) return showAuthFieldError(authPasswordEl, "请填写密码。");
+  if (password.length < 6) return showAuthFieldError(authPasswordEl, "密码至少需要 6 个字符。");
+  if (isRegister && !confirmPassword) return showAuthFieldError(authConfirmPasswordEl, "请确认密码。");
+  if (isRegister && password !== confirmPassword) return showAuthFieldError(authConfirmPasswordEl, "两次输入的密码不一致。");
+
+  return true;
+}
+
+authInputs.forEach((input) => {
+  input.addEventListener("input", () => input.removeAttribute("aria-invalid"));
+});
+
+authToggleEl.addEventListener("click", () => {
+  authMode = authMode === "login" ? "register" : "login";
+  renderAuthMode();
+});
+
+authForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!validateAuthForm()) return;
+  const password = authPasswordEl.value;
+  const isRegister = authMode === "register";
+  const username = authUsernameEl.value.trim();
+  const email = authEmailEl.value.trim();
+  const account = authAccountEl.value.trim();
+  authSubmitEl.disabled = true;
+  authErrorEl.textContent = "";
+  try {
+    const result = isRegister
+      ? await authManager.register({ username, email, password })
+      : await authManager.login({ account, password });
+    if (result.status !== "success") throw new Error(result.message || "认证失败");
+    await showAssistant();
+  } catch (error) {
+    authErrorEl.textContent = error.message;
+  } finally {
+    authSubmitEl.disabled = false;
+  }
+});
+
+profileButton.addEventListener("click", () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL("src/profile.html") });
+});
+
 settingsToggle.addEventListener("click", async () => {
   if (showingHistory) {
     toggleHistory(false);
@@ -579,6 +710,13 @@ async function restoreRemoteSummaries() {
   }
 }
 
-restoreSummary();
-restoreConversation();
-authManager.init().then(restoreRemoteSummaries);
+async function initializeSidepanel() {
+  const authenticated = await authManager.init();
+  if (!authenticated) {
+    showAuthScreen();
+    return;
+  }
+  await showAssistant();
+}
+
+initializeSidepanel();

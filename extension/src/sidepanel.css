@@ -33,6 +33,42 @@ input {
 button {
   cursor: pointer;
 }
+.auth-screen {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 18px;
+}
+.auth-card {
+  position: relative;
+  overflow: hidden;
+  width: min(100%, 360px);
+  border: 1px solid #d4e2e5;
+  border-radius: 8px;
+  padding: 22px;
+  background: white;
+  box-shadow: 0 9px 26px rgba(62, 98, 112, 0.08);
+}
+.auth-card > :not(.auth-animation-elements) { position: relative; z-index: 1; }
+.auth-animation-elements { position: absolute; inset: 0; pointer-events: none; }
+.auth-anim-element { position: absolute; opacity: .48; background: var(--lighter-color); }
+.auth-anim-circle { top: -42px; left: -42px; width: 100px; height: 100px; border-radius: 50%; animation: auth-rotate-slow 12s linear infinite; }
+.auth-anim-square { right: -34px; bottom: 16px; width: 76px; height: 76px; border-radius: 15%; animation: auth-rotate-medium 8s linear infinite reverse; }
+@keyframes auth-rotate-slow { to { transform: rotate(360deg); } }
+@keyframes auth-rotate-medium { to { transform: rotate(360deg); } }
+.auth-card h1 { margin-bottom: 8px; }
+.auth-description { margin: 0 0 18px; color: #617783; font-size: 13px; line-height: 1.55; }
+.auth-form { display: grid; gap: 11px; }
+.auth-form label { display: grid; gap: 5px; color: #3f5965; font-size: 13px; }
+.auth-form label[hidden] { display: none; }
+.auth-form input { width: 100%; padding: 8px; border: 1px solid #d1e0e3; border-radius: 4px; outline: none; background: #fbfdfd; }
+.auth-form input:focus { border-color: var(--hover-color); box-shadow: 0 0 0 2px rgba(95, 166, 192, 0.16); }
+.auth-form input[aria-invalid="true"] { border-color: var(--error-color); background: #fff7f7; box-shadow: 0 0 0 2px rgba(212, 67, 67, 0.12); }
+.auth-error { min-height: 17px; margin: 0; color: var(--error-color); font-size: 12px; }
+.auth-submit { border: 0; border-radius: 4px; padding: 9px; background: var(--main-color); color: white; }
+.auth-submit:hover { background: var(--hover-color); }
+.auth-submit:disabled { opacity: .55; cursor: default; }
+.auth-card .text-button { margin-top: 13px; padding: 0; }
 .ai-shell {
   display: flex;
   flex-direction: column;
@@ -47,6 +83,7 @@ button {
   border-bottom: 1px solid #d6e3e6;
   padding-bottom: 12px;
 }
+.header-actions { display: flex; align-items: center; gap: 7px; }
 .eyebrow {
   margin: 0 0 3px;
   color: var(--panel-color);

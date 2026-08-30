@@ -1,0 +1,213 @@
+:root {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: #1d2a33;
+  background: #f5f8fa;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+.profile-shell {
+  width: min(720px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 24px 18px 40px;
+}
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #d6e3e6;
+  padding-bottom: 15px;
+}
+.profile-header p {
+  margin: 0 0 3px;
+  color: #7dbcc7;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+h1 {
+  margin-bottom: 0;
+  color: #4275a4;
+  font-size: 22px;
+}
+h2 {
+  margin-bottom: 2px;
+  color: #4275a4;
+  font-size: 16px;
+}
+.icon-button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #c5d8dc;
+  border-radius: 5px;
+  background: white;
+  color: #617783;
+  font-size: 22px;
+  line-height: 1;
+}
+.card {
+  margin-bottom: 12px;
+  border: 1px solid #d4e2e5;
+  border-radius: 7px;
+  padding: 14px;
+  background: white;
+}
+.account-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.account-card p,
+.account-card small {
+  margin: 0;
+  color: #617783;
+}
+.avatar {
+  display: grid;
+  width: 43px;
+  height: 43px;
+  place-items: center;
+  border-radius: 50%;
+  background: #deeaec;
+  color: #4275a4;
+  font-size: 18px;
+  font-weight: 700;
+}
+.section-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.section-heading span,
+.form-card label small,
+.empty-copy {
+  color: #71838b;
+  font-size: 12px;
+}
+.form-card {
+  display: grid;
+  gap: 11px;
+}
+.form-card label {
+  display: grid;
+  gap: 5px;
+  color: #3f5965;
+  font-size: 13px;
+}
+.form-card input:not([type="checkbox"]),
+.form-card select,
+.memory-item select {
+  width: 100%;
+  border: 1px solid #d1e0e3;
+  border-radius: 4px;
+  padding: 8px;
+  background: #fbfdfd;
+  color: #1d2a33;
+}
+.form-card .checkbox {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 34px;
+  gap: 8px;
+  color: #71838b;
+  font-size: 12px;
+}
+.primary-button,
+.secondary-button {
+  border-radius: 4px;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+.primary-button {
+  border: 0;
+  background: #7090ab;
+  color: white;
+}
+.secondary-button {
+  border: 1px solid #bfd5d9;
+  background: #f4fafb;
+  color: #4275a4;
+}
+.interest-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  color: #71838b;
+  font-size: 12px;
+}
+.interest-tag {
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: #edf7f8;
+  color: #4275a4;
+}
+.memory-list {
+  display: grid;
+  gap: 8px;
+}
+.memory-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-top: 1px solid #e6eef0;
+  padding-top: 10px;
+}
+.memory-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.memory-item strong {
+  color: #4275a4;
+  font-size: 12px;
+}
+.memory-item p {
+  max-width: 450px;
+  margin: 3px 0 0;
+  color: #40545c;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.memory-item select {
+  width: 108px;
+  flex: 0 0 auto;
+  font-size: 12px;
+}
+@media (max-width: 440px) {
+  .profile-shell {
+    padding: 18px 12px;
+  }
+  .memory-item {
+    align-items: start;
+    flex-direction: column;
+  }
+  .memory-item select {
+    width: 100%;
+  }
+}
