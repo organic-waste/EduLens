@@ -35,11 +35,12 @@ describe("learning search", () => {
     expect(samples.every((sample) => fixtureIds.has(sample.targetSummaryItemId))).toBe(true);
   });
 
-  it("reranks focused and confusing topics while preserving semantic score and citation metadata", () => {
+  it("reranks preferred and confusing topics while preserving semantic score and citation metadata", () => {
     const result = rerankLearningNodes(
       [node("generic", "JavaScript", 0.9), node("focused", "RAG", 0.82)],
       {
         profile: { focusTopics: ["RAG"] },
+        userPreferences: [{ topic: "RAG", weight: 6 }],
         memories: [{ summaryItemId: "focused", state: "confusing" }],
       },
     );
@@ -79,6 +80,7 @@ describe("learning search", () => {
       userId: "user-1",
       query: "RAG",
       profile: { focusTopics: ["RAG"] },
+      userPreferences: [{ topic: "RAG", weight: 5 }],
     });
     expect(retrieve).toHaveBeenCalledWith("RAG");
     expect(result).toHaveLength(4);

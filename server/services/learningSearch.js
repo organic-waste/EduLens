@@ -10,16 +10,16 @@ function normalizeKey(value) {
   return String(value || "").trim().toLocaleLowerCase();
 }
 
-function toInterestMap(topicInterests) {
-  if (Array.isArray(topicInterests)) {
+function toPreferenceMap(userPreferences) {
+  if (Array.isArray(userPreferences)) {
     return new Map(
-      topicInterests.map((item) => [normalizeKey(item.topic), Number(item.score) || 0]),
+      userPreferences.map((item) => [normalizeKey(item.topic), Number(item.weight) || 0]),
     );
   }
   return new Map(
-    Object.entries(topicInterests || {}).map(([topic, score]) => [
+    Object.entries(userPreferences || {}).map(([topic, weight]) => [
       normalizeKey(topic),
-      Number(score) || 0,
+      Number(weight) || 0,
     ]),
   );
 }
@@ -31,9 +31,9 @@ function toMemoryMap(memories) {
   return new Map(Object.entries(memories || {}));
 }
 
-function rerankLearningNodes(results, { profile = {}, topicInterests = [], memories = [], activeSummaryId } = {}) {
+function rerankLearningNodes(results, { profile = {}, userPreferences = [], memories = [], activeSummaryId } = {}) {
   const focusTopics = new Set((profile.focusTopics || []).map(normalizeKey));
-  const interests = toInterestMap(topicInterests);
+  const preferences = toPreferenceMap(userPreferences);
   const memoryByItem = toMemoryMap(memories);
   const activeId = activeSummaryId ? String(activeSummaryId) : null;
 
@@ -43,10 +43,10 @@ function rerankLearningNodes(results, { profile = {}, topicInterests = [], memor
       const topic = normalizeKey(metadata.topic);
       const memory = memoryByItem.get(String(metadata.summaryItemId));
       const semanticScore = Number(result.score) || 0;
-      const interestScore = interests.get(topic) || 0;
+      const preferenceWeight = preferences.get(topic) || 0;
       let score = semanticScore;
       if (focusTopics.has(topic)) score += 0.25;
-      score += Math.min(Math.max(interestScore, 0), 10) * 0.02;
+      score += Math.min(Math.max(preferenceWeight, 0), 10) * 0.02;
       score += STATE_BONUS[memory?.state] || 0;
       if (activeId && String(metadata.summaryId) === activeId) score += 0.15;
 
@@ -78,7 +78,7 @@ async function searchLearningKnowledge({
   query,
   activeSummaryId,
   profile,
-  topicInterests,
+  userPreferences,
   memories,
 } = {}) {
   if (!userId) throw new Error("userId is required");
@@ -91,7 +91,7 @@ async function searchLearningKnowledge({
     .retrieve(query.trim());
   return rerankLearningNodes(retrieved, {
     profile,
-    topicInterests,
+    userPreferences,
     memories,
     activeSummaryId,
   }).slice(0, 4);

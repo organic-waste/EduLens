@@ -154,18 +154,29 @@ h2 {
   background: #f4fafb;
   color: #4275a4;
 }
-.interest-list {
-  display: flex;
-  flex-wrap: wrap;
+.preference-list {
+  display: grid;
+  gap: 8px;
+}
+.preference-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px auto auto;
   gap: 7px;
-  color: #71838b;
+}
+.preference-item input {
+  min-width: 0;
+  border: 1px solid #d1e0e3;
+  border-radius: 4px;
+  padding: 7px;
+  background: #fbfdfd;
+  color: #1d2a33;
   font-size: 12px;
 }
-.interest-tag {
-  border-radius: 999px;
-  padding: 5px 8px;
-  background: #edf7f8;
-  color: #4275a4;
+.text-danger-button {
+  border: 0;
+  background: transparent;
+  color: #b85e68;
+  font-size: 12px;
 }
 .memory-list {
   display: grid;
@@ -209,5 +220,8 @@ h2 {
   }
   .memory-item select {
     width: 100%;
+  }
+  .preference-item {
+    grid-template-columns: 1fr 72px;
   }
 }

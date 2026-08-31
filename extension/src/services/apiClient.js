@@ -11,7 +11,7 @@ class ApiClient {
     this.token = token;
   }
 
-  async request(endpoint, options = {}) {
+  async request(endpoint, { allowUnauthorized = false, ...options } = {}) {
     const url = `${this.baseURL}${endpoint}`;
     const config = {
       ...options,
@@ -27,7 +27,7 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config);
-      if (response.status === 401) {
+      if (response.status === 401 && !allowUnauthorized) {
         // 清除无效token
         this.token = null;
         throw new Error("UNAUTHORIZED");
@@ -39,7 +39,7 @@ class ApiClient {
         await new Promise((resolve) =>
           setTimeout(resolve, 1000 * this.retryCount)
         );
-        return this.request(endpoint, options);
+        return this.request(endpoint, { ...options, allowUnauthorized });
       }
       this.retryCount = 0;
 

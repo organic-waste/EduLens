@@ -1,6 +1,6 @@
 const LearningMemory = require("../models/learningMemory");
 const LearningMemoryEvent = require("../models/learningMemoryEvent");
-const TopicInterest = require("../models/topicInterest");
+const UserPreference = require("../models/userPreference");
 
 async function updateLearningMemory({ userId, itemId, state, topic, reason = "" }) {
   const previous = await LearningMemory.findOne({ userId, summaryItemId: itemId }).lean();
@@ -17,9 +17,9 @@ async function updateLearningMemory({ userId, itemId, state, topic, reason = "" 
     reason,
   });
   if (topic) {
-    await TopicInterest.findOneAndUpdate(
+    await UserPreference.findOneAndUpdate(
       { userId, topic },
-      { $inc: { interactionCount: 1, score: 1 } },
+      { $inc: { interactionCount: 1, weight: 1 } },
       { upsert: true, setDefaultsOnInsert: true },
     );
   }

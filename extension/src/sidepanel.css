@@ -39,6 +39,8 @@ button {
   place-items: center;
   padding: 18px;
 }
+.auth-screen[hidden],
+.ai-shell[hidden] { display: none; }
 .auth-card {
   position: relative;
   overflow: hidden;
@@ -193,6 +195,11 @@ h1 {
 .markdown-body code { border-radius: 3px; padding: 1px 4px; background: #edf3f4; color: #486b78; font: 12px ui-monospace, SFMono-Regular, Consolas, monospace; }
 .markdown-body pre code { padding: 0; background: transparent; color: inherit; }
 .markdown-body a { color: var(--emphasis-color); }
+.message-citations, .memory-changes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 9px; padding-top: 8px; border-top: 1px solid #e1ecee; }
+.message-citations > span { width: 100%; color: #71838b; font-size: 11px; }
+.message-citations button, .memory-changes button { border: 1px solid #bfd5d9; border-radius: 999px; padding: 4px 7px; background: #f4fafb; color: var(--emphasis-color); font-size: 11px; }
+.memory-changes span { border-radius: 999px; padding: 4px 7px; background: #edf7f8; color: #486b78; font-size: 11px; }
+.memory-changes button { margin-left: auto; border-radius: 4px; }
 .supplement-button { margin-top: 9px; border: 1px solid #bfd5d9; border-radius: 4px; padding: 5px 8px; background: #f4fafb; color: var(--emphasis-color); font-size: 11px; }
 .supplement-button:hover { background: var(--lighter-color); }
 .history { flex: 1; min-height: 0; overflow-y: auto; }

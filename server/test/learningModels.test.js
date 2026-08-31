@@ -1,5 +1,5 @@
 const UserLearningProfile = require("../models/userLearningProfile");
-const TopicInterest = require("../models/topicInterest");
+const UserPreference = require("../models/userPreference");
 const LearningMemory = require("../models/learningMemory");
 const LearningMemoryEvent = require("../models/learningMemoryEvent");
 
@@ -9,13 +9,14 @@ describe("learning persistence models", () => {
     expect(profile.experienceLevel).toBe("beginner");
     expect(profile.answerDepth).toBe("balanced");
     expect(profile.preferExamples).toBe(true);
+    expect(profile.includeInterviewQa).toBe(false);
     expect(UserLearningProfile.schema.path("experienceLevel").enumValues).toEqual([
       "beginner", "intermediate", "advanced",
     ]);
   });
 
-  it("uses user-scoped unique compound indexes for interest and memory", () => {
-    expect(TopicInterest.schema.indexes()).toContainEqual([
+  it("uses user-scoped unique compound indexes for preferences and memory", () => {
+    expect(UserPreference.schema.indexes()).toContainEqual([
       { userId: 1, topic: 1 },
       { unique: true, background: true },
     ]);

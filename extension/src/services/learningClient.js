@@ -29,6 +29,40 @@ export function updateLearningMemory(summaryItemId, state) {
   });
 }
 
+export function createUserPreference(preference) {
+  return requestLearning("/preferences", {
+    method: "POST",
+    body: JSON.stringify(preference),
+  });
+}
+
+export function updateUserPreference(preferenceId, preference) {
+  return requestLearning(`/preferences/${encodeURIComponent(preferenceId)}`, {
+    method: "PUT",
+    body: JSON.stringify(preference),
+  });
+}
+
+export function deleteUserPreference(preferenceId) {
+  return requestLearning(`/preferences/${encodeURIComponent(preferenceId)}`, {
+    method: "DELETE",
+  });
+}
+
 export function undoLearningMemory() {
   return requestLearning("/memory/undo", { method: "POST" });
+}
+
+export function chatWithLearningAgent({ message, activeSummaryId }) {
+  return requestLearning("/chat", {
+    method: "POST",
+    body: JSON.stringify({ message, activeSummaryId }),
+  });
+}
+
+export function generateLearningSummary(source) {
+  return requestLearning("/summarize", {
+    method: "POST",
+    body: JSON.stringify(source),
+  }).then((result) => result.summary);
 }

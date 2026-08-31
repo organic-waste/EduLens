@@ -2,9 +2,10 @@ const express = require("express");
 const auth = require("../middleware/auth");
 const SummaryDocument = require("../models/summaryDocument");
 const UserLearningProfile = require("../models/userLearningProfile");
-const TopicInterest = require("../models/topicInterest");
+const UserPreference = require("../models/userPreference");
 const LearningMemory = require("../models/learningMemory");
 const { chatWithLearningAgent } = require("../services/learningAgent");
+const { generateLearningSummary } = require("../services/learningSummaryService");
 const { updateLearningMemory, undoLatestLearningMemory } = require("../services/learningMemoryService");
 
 const router = express.Router();
@@ -15,6 +16,7 @@ const PROFILE_FIELDS = [
   "answerDepth",
   "preferExamples",
   "preferInterviewView",
+  "includeInterviewQa",
 ];
 const LEARNING_STATES = ["mastered", "confusing", "review"];
 
@@ -39,16 +41,16 @@ function validateProfile(body) {
 }
 
 async function loadLearningContext(userId) {
-  const [profile, topicInterests, memories] = await Promise.all([
+  const [profile, userPreferences, memories] = await Promise.all([
     UserLearningProfile.findOneAndUpdate(
       { userId },
       { $setOnInsert: { userId } },
       { new: true, upsert: true, setDefaultsOnInsert: true },
     ).lean(),
-    TopicInterest.find({ userId }).sort({ score: -1, topic: 1 }).lean(),
+    UserPreference.find({ userId }).sort({ weight: -1, topic: 1 }).lean(),
     LearningMemory.find({ userId }).sort({ updatedAt: -1 }).lean(),
   ]);
-  return { profile: profilePayload(profile), topicInterests, memories };
+  return { profile: profilePayload(profile), userPreferences, memories };
 }
 
 async function decorateMemories(userId, memories) {
@@ -99,6 +101,55 @@ router.put("/profile", auth, async (req, res) => {
   }
 });
 
+function validateUserPreference({ topic, weight }) {
+  if (!topic?.trim()) return "偏好主题不能为空";
+  if (!Number.isFinite(Number(weight)) || Number(weight) < -10 || Number(weight) > 10) {
+    return "偏好权重必须在 -10 到 10 之间";
+  }
+  return null;
+}
+
+router.post("/preferences", auth, async (req, res) => {
+  const validationError = validateUserPreference(req.body);
+  if (validationError) return res.status(400).json({ status: "error", message: validationError });
+  try {
+    const preference = await UserPreference.create({
+      userId: req.userId,
+      topic: req.body.topic.trim(),
+      weight: Number(req.body.weight),
+    });
+    res.status(201).json({ preference });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: `用户偏好保存失败：${error.message}` });
+  }
+});
+
+router.put("/preferences/:preferenceId", auth, async (req, res) => {
+  const validationError = validateUserPreference(req.body);
+  if (validationError) return res.status(400).json({ status: "error", message: validationError });
+  try {
+    const preference = await UserPreference.findOneAndUpdate(
+      { _id: req.params.preferenceId, userId: req.userId },
+      { topic: req.body.topic.trim(), weight: Number(req.body.weight) },
+      { new: true, runValidators: true },
+    ).lean();
+    if (!preference) return res.status(404).json({ status: "error", message: "用户偏好不存在" });
+    res.json({ preference });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: `用户偏好更新失败：${error.message}` });
+  }
+});
+
+router.delete("/preferences/:preferenceId", auth, async (req, res) => {
+  try {
+    const result = await UserPreference.deleteOne({ _id: req.params.preferenceId, userId: req.userId });
+    if (!result.deletedCount) return res.status(404).json({ status: "error", message: "用户偏好不存在" });
+    res.json({ deleted: true });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: `用户偏好删除失败：${error.message}` });
+  }
+});
+
 router.put("/memory/:summaryItemId", auth, async (req, res) => {
   const { summaryItemId } = req.params;
   const { state, reason = "手动调整" } = req.body;
@@ -144,6 +195,16 @@ router.post("/chat", auth, async (req, res) => {
     res.json(result);
   } catch (error) {
     const isBadRequest = error.message === "message is required";
+    res.status(isBadRequest ? 400 : 500).json({ status: "error", message: error.message });
+  }
+});
+
+router.post("/summarize", auth, async (req, res) => {
+  try {
+    const summary = await generateLearningSummary(req.body);
+    res.json({ summary });
+  } catch (error) {
+    const isBadRequest = error.message === "摘要来源信息不完整";
     res.status(isBadRequest ? 400 : 500).json({ status: "error", message: error.message });
   }
 });

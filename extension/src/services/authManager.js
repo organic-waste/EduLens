@@ -125,6 +125,7 @@ class AuthManager {
       const response = await apiClient.request("/auth/login", {
         method: "POST",
         body: JSON.stringify(userData),
+        allowUnauthorized: true,
       });
       const data = await response.json();
 

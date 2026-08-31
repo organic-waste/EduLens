@@ -9,6 +9,7 @@ const userLearningProfileSchema = new mongoose.Schema(
     answerDepth: { type: String, enum: ["concise", "balanced", "detailed"], default: "balanced" },
     preferExamples: { type: Boolean, default: true },
     preferInterviewView: { type: Boolean, default: false },
+    includeInterviewQa: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

@@ -1,11 +1,14 @@
-import { askAI } from "./services/aiClient.js";
 import { marked } from "marked";
 import { authManager } from "./services/index.js";
+import {
+  chatWithLearningAgent,
+  generateLearningSummary,
+  undoLearningMemory,
+} from "./services/learningClient.js";
 import {
   loadRemoteSummaryDocuments,
   syncSummaryDocument,
 } from "./services/summaryClient.js";
-import { generateLearningSummary } from "./skills/summarySkill.js";
 import "./sidepanel.css";
 
 const authScreenEl = document.getElementById("auth-screen");
@@ -187,21 +190,6 @@ function mergeSummariesBySource(documents) {
   return [...summariesBySource.values()];
 }
 
-function summaryPrompt(summary) {
-  const topics = summary.groups
-    .map(
-      (group) =>
-        `${group.topic}:\n${group.items.map((item) => `- ${item.content}`).join("\n")}`,
-    )
-    .join("\n");
-  return [
-    "Answer the user based on this summary and its cited source.",
-    `Summary title: ${summary.title}`,
-    topics,
-    `Source: ${summary.source?.pageUrl || "current webpage"}`,
-  ].join("\n");
-}
-
 function clearSummaryContext() {
   activeSummaryItem = null;
   activeSummaryDocument = null;
@@ -220,24 +208,6 @@ function getCitation(summary, item) {
   };
 }
 
-function attachSourceToSummaryItems(summary, source) {
-  return {
-    ...summary,
-    groups: summary.groups.map((group) => ({
-      ...group,
-      items: group.items.map((item) => ({
-        ...item,
-        citation: {
-          ...source.citation,
-          ...item.citation,
-          pageUrl: source.pageUrl,
-          quote: item.citation?.quote || item.quote || source.citation?.quote,
-        },
-      })),
-    })),
-  };
-}
-
 function showCitationResult(result) {
   if (result?.error) {
     statusEl.textContent = result.error;
@@ -246,7 +216,13 @@ function showCitationResult(result) {
   statusEl.textContent = result?.located ? "已定位网页引用" : "未找到对应网页引用";
 }
 
-function addMessage(role, content, onSupplement) {
+function addMessage(role, content, {
+  onSupplement,
+  citations = [],
+  memoryChanges = [],
+  preferenceChanges = [],
+  uncovered = false,
+} = {}) {
   messagesEl.querySelector(".empty-state")?.remove();
   const item = document.createElement("article");
   item.className = `message ${role}`;
@@ -261,11 +237,70 @@ function addMessage(role, content, onSupplement) {
     body.textContent = content;
   }
   item.append(label, body);
+  if (citations.length) {
+    const citationList = document.createElement("div");
+    citationList.className = "message-citations";
+    const title = document.createElement("span");
+    title.textContent = "学习库引用";
+    citationList.appendChild(title);
+    citations.forEach((citation, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = `${index + 1}. ${citation.topic || "知识点"}`;
+      button.title = citation.quote || "跳转到原文";
+      button.addEventListener("click", async () => {
+        const result = await chrome.runtime.sendMessage({ type: "JUMP_TO_CITATION", citation });
+        showCitationResult(result);
+      });
+      citationList.appendChild(button);
+    });
+    item.appendChild(citationList);
+  }
+  if (memoryChanges.length) {
+    const memoryPanel = document.createElement("div");
+    memoryPanel.className = "memory-changes";
+    memoryChanges.forEach((change) => {
+      const tag = document.createElement("span");
+      tag.textContent = `${change.topic || "知识点"}：${({ mastered: "已掌握", confusing: "易混淆", review: "稍后复习" })[change.state] || change.state}`;
+      memoryPanel.appendChild(tag);
+    });
+    const undoButton = document.createElement("button");
+    undoButton.type = "button";
+    undoButton.textContent = "撤销本次记忆变更";
+    undoButton.addEventListener("click", async () => {
+      undoButton.disabled = true;
+      try {
+        await undoLearningMemory();
+        undoButton.textContent = "已撤销";
+        statusEl.textContent = "已撤销最近一次学习状态变更";
+      } catch (error) {
+        undoButton.disabled = false;
+        statusEl.textContent = error.message;
+      }
+    });
+    memoryPanel.appendChild(undoButton);
+    item.appendChild(memoryPanel);
+  }
+  if (preferenceChanges.length) {
+    const preferencePanel = document.createElement("div");
+    preferencePanel.className = "memory-changes";
+    const fields = preferenceChanges.flatMap((change) => change.fields || []);
+    const labels = {
+      answerDepth: "回答深度",
+      preferExamples: "示例偏好",
+      preferInterviewView: "面试视角",
+      includeInterviewQa: "面试常考题与参考答案",
+    };
+    const tag = document.createElement("span");
+    tag.textContent = `已保存回答偏好：${fields.map((field) => labels[field] || field).join("、")}`;
+    preferencePanel.appendChild(tag);
+    item.appendChild(preferencePanel);
+  }
   if (onSupplement) {
     const supplement = document.createElement("button");
     supplement.className = "supplement-button";
     supplement.type = "button";
-    supplement.textContent = "补充到当前摘要";
+    supplement.textContent = uncovered ? "补充到当前摘要库" : "补充到当前摘要";
     supplement.addEventListener("click", onSupplement);
     item.appendChild(supplement);
   }
@@ -340,7 +375,9 @@ function renderConversation() {
     messagesEl.innerHTML = `<div class="empty-state"><strong>从一个问题开始</strong><span>让 AI 帮你理解当前学习内容。</span></div>`;
     return;
   }
-  conversation.forEach(({ role, content }) => addMessage(role, content));
+  conversation.forEach(({ role, content, citations, memoryChanges, preferenceChanges, uncovered }) =>
+    addMessage(role, content, { citations, memoryChanges, preferenceChanges, uncovered }),
+  );
 }
 
 async function persistConversation() {
@@ -587,15 +624,12 @@ summarizeButton.addEventListener("click", async () => {
   setBusy(true, "正在整理摘要...");
   summarizeButton.disabled = true;
   try {
-    const summary = attachSourceToSummaryItems(
-      await generateLearningSummary(selectedPage),
-      selectedPage,
-    );
+    const summary = await generateLearningSummary(selectedPage);
     const summaryDocument = {
       id: crypto.randomUUID(),
       ...summary,
-      source: selectedPage,
-      sourceUrl: selectedPage.pageUrl,
+      source: summary.source,
+      sourceUrl: summary.sourceUrl,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -616,20 +650,30 @@ clearSummaryContextButton.addEventListener("click", () => {
   clearSummaryContext();
 });
 
-async function supplementSummary(answer) {
-  if (!activeSummaryDocument || !activeSummaryItem) return;
+async function supplementSummary(answer, { uncovered = false } = {}) {
+  if (!activeSummaryDocument) return;
+  const activeTopic = activeSummaryDocument.groups.find((group) =>
+    group.items.includes(activeSummaryItem),
+  )?.topic;
+  const citation = activeSummaryItem
+    ? getCitation(activeSummaryDocument, activeSummaryItem)
+    : getCitation(activeSummaryDocument, activeSummaryDocument.groups[0]?.items[0] || {});
   const item = {
     id: crypto.randomUUID(),
     content: answer,
-    quote: activeSummaryItem.quote,
-    level: Math.min((activeSummaryItem.level || 1) + 1, 3),
+    quote: citation.quote,
+    citation,
+    level: Math.min((activeSummaryItem?.level || 1) + 1, 3),
     generated: true,
+    ...(uncovered ? { sourceType: "ai-supplement" } : {}),
   };
   activeSummaryDocument.updatedAt = new Date().toISOString();
   activeSummaryDocument = normalizeSummaryDocument(activeSummaryDocument);
-  const targetGroup = activeSummaryDocument.groups.find((group) =>
-    group.items.includes(activeSummaryItem),
-  ) || activeSummaryDocument.groups[0];
+  let targetGroup = activeSummaryDocument.groups.find((group) => group.topic === activeTopic);
+  if (!targetGroup) {
+    targetGroup = { id: crypto.randomUUID(), topic: "AI 补充", items: [] };
+    activeSummaryDocument.groups.push(targetGroup);
+  }
   targetGroup.items.push(item);
   const { edulensSummaryDocuments = [] } = await chrome.storage.local.get({ edulensSummaryDocuments: [] });
   await chrome.storage.local.set({
@@ -658,16 +702,32 @@ composer.addEventListener("submit", async (event) => {
   setBusy(true, "思考中...");
 
   try {
-    const context = activeSummaryDocument
-      ? [{ role: "system", content: summaryPrompt(activeSummaryDocument) }]
-      : [];
-    const answer = await askAI([...context, ...conversation]);
-    conversation.push({ role: "assistant", content: answer });
+    const result = await chatWithLearningAgent({
+      message: prompt,
+      activeSummaryId: activeSummaryDocument?.remoteId,
+    });
+    const answer = result.answer;
+    conversation.push({
+      role: "assistant",
+      content: answer,
+      citations: result.citations,
+      memoryChanges: result.memoryChanges,
+      preferenceChanges: result.preferenceChanges,
+      uncovered: result.uncovered,
+    });
     await persistConversation();
     addMessage(
       "assistant",
       answer,
-      activeSummaryItem ? () => supplementSummary(answer) : undefined,
+      {
+        onSupplement: (activeSummaryItem || (result.uncovered && activeSummaryDocument))
+          ? () => supplementSummary(answer, { uncovered: result.uncovered })
+          : undefined,
+        citations: result.citations,
+        memoryChanges: result.memoryChanges,
+        preferenceChanges: result.preferenceChanges,
+        uncovered: result.uncovered,
+      },
     );
     setBusy(false);
   } catch (error) {

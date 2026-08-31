@@ -42,6 +42,20 @@ describe("learning agent", () => {
       textPosition: { start: 1, end: 9 },
     })]);
     expect(chatCompletion).toHaveBeenCalledTimes(2);
+    expect(result.uncovered).toBe(false);
+  });
+
+  it("marks an empty search result as uncovered for the client UI", async () => {
+    const chatCompletion = vi
+      .fn()
+      .mockResolvedValueOnce({ choices: [{ message: { tool_calls: [toolCall("search_learning_knowledge", { query: "未知主题" })] } }] })
+      .mockResolvedValueOnce({ choices: [{ message: { content: "以下是简要说明。" } }] });
+    const result = await createLearningAgent({
+      chatCompletion,
+      search: vi.fn().mockResolvedValue([]),
+    })({ userId: "user-1", message: "未知主题是什么" });
+
+    expect(result).toMatchObject({ uncovered: true, citations: [] });
   });
 
   it("rejects memory updates for items absent from this turn's retrieval", async () => {
@@ -95,9 +109,49 @@ describe("learning agent", () => {
     }]);
   });
 
-  it("exposes only the two fixed native tools", () => {
+  it("persists an explicit long-term response preference", async () => {
+    const chatCompletion = vi
+      .fn()
+      .mockResolvedValueOnce({ choices: [{ message: { tool_calls: [
+        toolCall("update_response_preferences", { preferExamples: false }),
+      ] } }] })
+      .mockResolvedValueOnce({ choices: [{ message: { content: "已保存此回答偏好。" } }] });
+    const updatePreferences = vi.fn().mockResolvedValue({ preferExamples: false });
+    const result = await createLearningAgent({ chatCompletion, updatePreferences })({
+      userId: "user-1",
+      message: "以后回答请不要默认附示例",
+    });
+
+    expect(updatePreferences).toHaveBeenCalledWith({
+      userId: "user-1",
+      preferences: { preferExamples: false },
+    });
+    expect(result.preferenceChanges).toEqual([{ fields: ["preferExamples"] }]);
+  });
+
+  it("reliably persists the interview Q&A preference from a direct future-answer request", async () => {
+    const chatCompletion = vi.fn().mockResolvedValue({
+      choices: [{ message: { content: "已保存此回答偏好。" } }],
+    });
+    const updatePreferences = vi.fn().mockResolvedValue({ includeInterviewQa: true });
+    const result = await createLearningAgent({ chatCompletion, updatePreferences })({
+      userId: "user-1",
+      message: "回答我问的知识点时，在末尾带上面试相关常考题目及对应参考答案",
+    });
+
+    expect(updatePreferences).toHaveBeenCalledWith({
+      userId: "user-1",
+      preferences: { includeInterviewQa: true, preferInterviewView: true },
+    });
+    expect(result.preferenceChanges).toEqual([{
+      fields: ["includeInterviewQa", "preferInterviewView"],
+    }]);
+  });
+
+  it("exposes only the declared native tools", () => {
     expect(LEARNING_TOOLS.map((tool) => tool.function.name)).toEqual([
       "search_learning_knowledge",
+      "update_response_preferences",
       "update_learning_memory",
     ]);
   });
