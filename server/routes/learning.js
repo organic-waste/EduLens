@@ -3,8 +3,13 @@ const auth = require("../middleware/auth");
 const SummaryDocument = require("../models/summaryDocument");
 const UserLearningProfile = require("../models/userLearningProfile");
 const LearningMemory = require("../models/learningMemory");
-const { chatWithLearningAgent } = require("../services/learningAgent");
-const { generateLearningSummary } = require("../services/learningSummaryService");
+const {
+  chatWithLearningAgent,
+  normalizeConversationHistory,
+} = require("../services/learningAgent");
+const {
+  generateLearningSummary,
+} = require("../services/learningSummaryService");
 const { updateLearningMemory } = require("../services/learningMemoryService");
 
 const router = express.Router();
@@ -25,10 +30,16 @@ function profilePayload(profile) {
 }
 
 function validateProfile(body) {
-  if (body.experienceLevel && !["beginner", "intermediate", "advanced"].includes(body.experienceLevel)) {
+  if (
+    body.experienceLevel &&
+    !["beginner", "intermediate", "advanced"].includes(body.experienceLevel)
+  ) {
     return "经验等级无效";
   }
-  if (body.answerDepth && !["concise", "balanced", "detailed"].includes(body.answerDepth)) {
+  if (
+    body.answerDepth &&
+    !["concise", "balanced", "detailed"].includes(body.answerDepth)
+  ) {
     return "回答深度无效";
   }
   return null;
@@ -51,13 +62,15 @@ async function decorateMemories(userId, memories) {
   const itemContext = new Map();
   summaries.forEach((summary) => {
     summary.groups.forEach((group) => {
-      group.items.forEach((item) => itemContext.set(item.id, {
-        summaryId: String(summary._id),
-        summaryTitle: summary.title,
-        topic: group.topic,
-        content: item.content,
-        citation: item.citation,
-      }));
+      group.items.forEach((item) =>
+        itemContext.set(item.id, {
+          summaryId: String(summary._id),
+          summaryTitle: summary.title,
+          topic: group.topic,
+          content: item.content,
+          citation: item.citation,
+        }),
+      );
     });
   });
   return memories.map((memory) => {
@@ -79,13 +92,16 @@ router.get("/profile", auth, async (req, res) => {
       memories: await decorateMemories(req.userId, context.memories),
     });
   } catch (error) {
-    res.status(500).json({ status: "error", message: `学习画像加载失败：${error.message}` });
+    res
+      .status(500)
+      .json({ status: "error", message: `学习画像加载失败：${error.message}` });
   }
 });
 
 router.put("/profile", auth, async (req, res) => {
   const validationError = validateProfile(req.body);
-  if (validationError) return res.status(400).json({ status: "error", message: validationError });
+  if (validationError)
+    return res.status(400).json({ status: "error", message: validationError });
   const updates = PROFILE_FIELDS.reduce((result, field) => {
     if (req.body[field] !== undefined) result[field] = req.body[field];
     return result;
@@ -94,11 +110,18 @@ router.put("/profile", auth, async (req, res) => {
     const profile = await UserLearningProfile.findOneAndUpdate(
       { userId: req.userId },
       { $set: updates, $setOnInsert: { userId: req.userId } },
-      { new: true, upsert: true, setDefaultsOnInsert: true, runValidators: true },
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
+        runValidators: true,
+      },
     ).lean();
     res.json({ profile: profilePayload(profile) });
   } catch (error) {
-    res.status(500).json({ status: "error", message: `学习画像保存失败：${error.message}` });
+    res
+      .status(500)
+      .json({ status: "error", message: `学习画像保存失败：${error.message}` });
   }
 });
 
@@ -109,8 +132,12 @@ router.put("/memory/:summaryItemId", auth, async (req, res) => {
     return res.status(400).json({ status: "error", message: "学习状态无效" });
   }
   try {
-    const summary = await SummaryDocument.findOne({ userId: req.userId, "groups.items.id": summaryItemId }).lean();
-    if (!summary) return res.status(404).json({ status: "error", message: "知识点不存在" });
+    const summary = await SummaryDocument.findOne({
+      userId: req.userId,
+      "groups.items.id": summaryItemId,
+    }).lean();
+    if (!summary)
+      return res.status(404).json({ status: "error", message: "知识点不存在" });
     const change = await updateLearningMemory({
       userId: req.userId,
       itemId: summaryItemId,
@@ -118,30 +145,66 @@ router.put("/memory/:summaryItemId", auth, async (req, res) => {
     });
     res.json({ memory: change.memory });
   } catch (error) {
-    res.status(500).json({ status: "error", message: `学习状态保存失败：${error.message}` });
+    res
+      .status(500)
+      .json({ status: "error", message: `学习状态保存失败：${error.message}` });
   }
 });
 
+function writeSse(res, event, payload) {
+  if (res.writableEnded) return;
+  res.write(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`);
+  res.flush?.();
+}
+
 router.post("/chat", auth, async (req, res) => {
+  const badRequestMessages = [
+    "message is required",
+    "history must be an array",
+    "history contains an invalid message",
+    "history contains an empty message",
+    "history is too long",
+  ];
+  try {
+    if (!req.body.message?.trim()) throw new Error("message is required");
+    normalizeConversationHistory(req.body.history);
+  } catch (error) {
+    if (badRequestMessages.includes(error.message)) {
+      return res.status(400).json({ status: "error", message: error.message });
+    }
+    throw error;
+  }
+  res.status(200);
+  res.set({
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+  res.flushHeaders?.();
+  writeSse(res, "ready", { status: "ok" });
+  let closed = false;
+  req.on("close", () => {
+    closed = true;
+  });
+
   try {
     const context = await loadLearningContext(req.userId);
-    const result = await chatWithLearningAgent({
+    for await (const event of chatWithLearningAgent.stream({
       userId: req.userId,
       message: req.body.message,
       activeSummaryId: req.body.activeSummaryId,
       history: req.body.history,
       ...context,
-    });
-    res.json(result);
+    })) {
+      if (closed) break;
+      const { type, ...payload } = event;
+      writeSse(res, type || "message", payload);
+    }
   } catch (error) {
-    const isBadRequest = [
-      "message is required",
-      "history must be an array",
-      "history contains an invalid message",
-      "history contains an empty message",
-      "history is too long",
-    ].includes(error.message);
-    res.status(isBadRequest ? 400 : 500).json({ status: "error", message: error.message });
+    if (!closed) writeSse(res, "error", { message: error.message });
+  } finally {
+    if (!res.writableEnded) res.end();
   }
 });
 
@@ -151,7 +214,9 @@ router.post("/summarize", auth, async (req, res) => {
     res.json({ summary });
   } catch (error) {
     const isBadRequest = error.message === "摘要来源信息不完整";
-    res.status(isBadRequest ? 400 : 500).json({ status: "error", message: error.message });
+    res
+      .status(isBadRequest ? 400 : 500)
+      .json({ status: "error", message: error.message });
   }
 });
 

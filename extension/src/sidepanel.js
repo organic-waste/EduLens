@@ -1,7 +1,7 @@
 import { marked } from "marked";
 import { authManager } from "./services/index.js";
 import {
-  chatWithLearningAgent,
+  streamLearningAgent,
   generateLearningSummary,
 } from "./services/learningClient.js";
 import {
@@ -44,6 +44,7 @@ const summaryContextTitleEl = document.getElementById("summary-context-title");
 const clearSummaryContextButton = document.getElementById("clear-summary-context");
 const summaryTitleEl = document.getElementById("summary-title");
 const closeSummaryButton = document.getElementById("close-summary");
+const summaryHeadingEl = summaryTitleEl.parentElement;
 const libraryIcon = settingsToggle.querySelector(".library-icon");
 const returnIcon = settingsToggle.querySelector(".return-icon");
 returnIcon.setAttribute("viewBox", "0 0 24 24");
@@ -53,6 +54,30 @@ const CHAT_ICON = `<svg class="action-icon" viewBox="0 0 1024 1024" aria-hidden=
 
 closeSummaryButton.innerHTML = CHAT_ICON;
 
+const summaryTitleInputEl = document.createElement("input");
+summaryTitleInputEl.className = "summary-title-input";
+summaryTitleInputEl.hidden = true;
+summaryHeadingEl.insertBefore(summaryTitleInputEl, closeSummaryButton);
+
+const summaryActionsEl = document.createElement("div");
+summaryActionsEl.className = "summary-actions";
+const editSummaryButton = document.createElement("button");
+editSummaryButton.className = "summary-edit-button";
+editSummaryButton.type = "button";
+editSummaryButton.textContent = "编辑";
+const saveSummaryButton = document.createElement("button");
+saveSummaryButton.className = "summary-edit-button";
+saveSummaryButton.type = "button";
+saveSummaryButton.textContent = "保存";
+saveSummaryButton.hidden = true;
+const cancelSummaryEditButton = document.createElement("button");
+cancelSummaryEditButton.className = "summary-edit-button";
+cancelSummaryEditButton.type = "button";
+cancelSummaryEditButton.textContent = "取消";
+cancelSummaryEditButton.hidden = true;
+summaryActionsEl.append(editSummaryButton, saveSummaryButton, cancelSummaryEditButton);
+summaryHeadingEl.insertBefore(summaryActionsEl, closeSummaryButton);
+
 const conversation = [];
 const MAX_CONVERSATION_HISTORY = 8;
 let showingHistory = false;
@@ -60,6 +85,8 @@ let selectedPage = null;
 let activeSummaryItem = null;
 let activeSummaryDocument = null;
 let currentSummaryDocument = null;
+let summaryEditDraft = null;
+let summaryBeforeEdit = null;
 let authMode = "login";
 let assistantInitialized = false;
 
@@ -287,6 +314,7 @@ function addMessage(role, content, {
   }
   messagesEl.appendChild(item);
   messagesEl.scrollTop = messagesEl.scrollHeight;
+  return item;
 }
 
 function setBusy(busy, text = "就绪") {
@@ -308,10 +336,24 @@ function showSummary(show) {
   renderSummaryContext();
 }
 
-function renderSummary(summary) {
+function setSummaryEditing(editing) {
+  summaryTitleEl.hidden = editing;
+  summaryTitleInputEl.hidden = !editing;
+  editSummaryButton.hidden = editing;
+  saveSummaryButton.hidden = !editing;
+  cancelSummaryEditButton.hidden = !editing;
+}
+
+function renderSummary(summary, { editing = false } = {}) {
   summary = normalizeSummaryDocument(summary);
   currentSummaryDocument = summary;
-  summaryTitleEl.textContent = summary.title;
+  setSummaryEditing(editing);
+  if (editing) {
+    summaryTitleInputEl.value = summary.title;
+    summaryTitleInputEl.oninput = () => { summary.title = summaryTitleInputEl.value; };
+  } else {
+    summaryTitleEl.textContent = summary.title;
+  }
   summaryItemsEl.innerHTML = "";
   summary.groups.forEach((group) => {
     const section = document.createElement("section");
@@ -322,6 +364,16 @@ function renderSummary(summary) {
     group.items.forEach((item, index) => {
       const row = document.createElement("article");
       row.className = "summary-item";
+      if (editing) {
+        const editor = document.createElement("textarea");
+        editor.className = "summary-content-editor";
+        editor.value = item.content;
+        editor.setAttribute("aria-label", `${group.topic} 第 ${index + 1} 个知识点`);
+        editor.addEventListener("input", () => { item.content = editor.value; });
+        row.append(editor);
+        section.appendChild(row);
+        return;
+      }
       const isAiSupplement = item.sourceType === "ai-supplement";
       const text = document.createElement(isAiSupplement ? "p" : "button");
       text.className = `summary-content${isAiSupplement ? " summary-content--plain" : ""}`;
@@ -351,6 +403,41 @@ function renderSummary(summary) {
     summaryItemsEl.appendChild(section);
   });
   showSummary(true);
+}
+
+function cloneSummary(summary) {
+  return JSON.parse(JSON.stringify(summary));
+}
+
+async function saveEditedSummary(summary) {
+  const { edulensSummaryDocuments = [] } = await chrome.storage.local.get({
+    edulensSummaryDocuments: [],
+  });
+  const index = edulensSummaryDocuments.findIndex((item) =>
+    item.id === summary.id || (summary.remoteId && item.remoteId === summary.remoteId),
+  );
+  const documents = [...edulensSummaryDocuments];
+  if (index >= 0) documents[index] = summary;
+  else documents.unshift(summary);
+  await chrome.storage.local.set({
+    edulensSummaryDocuments: documents,
+    edulensCurrentSummary: summary,
+  });
+
+  try {
+    const remote = await syncSummaryDocument(summary);
+    if (!remote?._id) return summary;
+    const saved = { ...summary, remoteId: remote._id };
+    documents[index >= 0 ? index : 0] = saved;
+    await chrome.storage.local.set({
+      edulensSummaryDocuments: documents,
+      edulensCurrentSummary: saved,
+    });
+    return saved;
+  } catch (error) {
+    console.warn("摘要编辑同步失败，已保留本地修改", error);
+    return summary;
+  }
 }
 
 function renderConversation() {
@@ -637,6 +724,55 @@ summarizeButton.addEventListener("click", async () => {
 });
 
 closeSummaryButton.addEventListener("click", () => showSummary(false));
+editSummaryButton.addEventListener("click", () => {
+  if (!currentSummaryDocument) return;
+  summaryBeforeEdit = currentSummaryDocument;
+  summaryEditDraft = cloneSummary(currentSummaryDocument);
+  renderSummary(summaryEditDraft, { editing: true });
+  summaryTitleInputEl.focus();
+});
+
+cancelSummaryEditButton.addEventListener("click", () => {
+  if (!summaryBeforeEdit) return;
+  const summary = summaryBeforeEdit;
+  summaryEditDraft = null;
+  summaryBeforeEdit = null;
+  renderSummary(summary);
+});
+
+saveSummaryButton.addEventListener("click", async () => {
+  if (!summaryEditDraft) return;
+  const title = summaryEditDraft.title.trim();
+  const hasEmptyItem = summaryEditDraft.groups.some((group) =>
+    group.items.some((item) => !item.content.trim()),
+  );
+  if (!title || hasEmptyItem) {
+    statusEl.textContent = "标题和知识点内容不能为空";
+    return;
+  }
+
+  summaryEditDraft.title = title;
+  summaryEditDraft.groups.forEach((group) => {
+    group.items.forEach((item) => { item.content = item.content.trim(); });
+  });
+  saveSummaryButton.disabled = true;
+  statusEl.textContent = "正在保存摘要...";
+  try {
+    const saved = await saveEditedSummary(summaryEditDraft);
+    if (activeSummaryDocument?.id === summaryBeforeEdit?.id) {
+      activeSummaryDocument = saved;
+    }
+    summaryEditDraft = null;
+    summaryBeforeEdit = null;
+    renderSummary(saved);
+    statusEl.textContent = "摘要已保存";
+  } catch (error) {
+    statusEl.textContent = error.message;
+  } finally {
+    saveSummaryButton.disabled = false;
+  }
+});
+
 clearSummaryContextButton.addEventListener("click", () => {
   clearSummaryContext();
 });
@@ -686,13 +822,32 @@ composer.addEventListener("submit", async (event) => {
   promptEl.value = "";
   setBusy(true, "思考中...");
 
+  let streamingItem = null;
   try {
-    const result = await chatWithLearningAgent({
+    let answer = "";
+    let result = null;
+    streamingItem = addMessage("assistant", "");
+    const streamingBody = streamingItem.querySelector(".markdown-body");
+    await streamLearningAgent({
       message: prompt,
       activeSummaryId: activeSummaryDocument?.remoteId,
       history: getRecentConversationHistory(),
+      onEvent: (event) => {
+        if (event.type === "delta") {
+          answer += event.content || "";
+          streamingBody.innerHTML = renderMarkdown(answer);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+          statusEl.textContent = "正在生成...";
+        } else if (event.type === "done") {
+          result = event;
+        } else if (event.type === "error") {
+          throw new Error(event.message || "AI 请求失败");
+        }
+      },
     });
-    const answer = result.answer;
+    result = result || { answer };
+    answer = result.answer || answer;
+    streamingItem.remove();
     const canSupplement = Boolean(activeSummaryItem || (result.uncovered && activeSummaryDocument));
     conversation.push({
       role: "assistant",
@@ -714,6 +869,7 @@ composer.addEventListener("submit", async (event) => {
     );
     setBusy(false);
   } catch (error) {
+    streamingItem?.remove();
     addMessage("error", error.message);
     setBusy(false, "请求失败");
   }

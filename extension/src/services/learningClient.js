@@ -36,6 +36,68 @@ export function chatWithLearningAgent({ message, activeSummaryId, history }) {
   });
 }
 
+export async function streamLearningAgent({
+  message,
+  activeSummaryId,
+  history,
+  onEvent,
+  signal,
+}) {
+  if (!authManager.isAuthenticated()) {
+    throw new Error("登录后使用 AI 学习助手");
+  }
+  const response = await apiClient.request("/learning/chat", {
+    method: "POST",
+    headers: { Accept: "text/event-stream" },
+    body: JSON.stringify({ message, activeSummaryId, history }),
+    signal,
+  });
+  if (!response.ok) {
+    let result = {};
+    try {
+      result = await response.json();
+    } catch {
+      /* non-JSON error */
+    }
+    throw new Error(result.message || "学习数据请求失败");
+  }
+  if (!response.body) throw new Error("服务器未返回可读数据流");
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  const emit = (rawEvent) => {
+    const lines = rawEvent.split(/\r?\n/);
+    const event =
+      lines
+        .find((line) => line.startsWith("event:"))
+        ?.slice(6)
+        .trim() || "message";
+    const data = lines
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice(5).trimStart())
+      .join("\n");
+    if (!data) return;
+    let payload;
+    try {
+      payload = JSON.parse(data);
+    } catch {
+      return;
+    }
+    onEvent?.({ type: event, ...payload });
+  };
+
+  while (true) {
+    const { value, done } = await reader.read();
+    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+    const events = buffer.split(/\r?\n\r?\n/);
+    buffer = events.pop() || "";
+    events.forEach(emit);
+    if (done) break;
+  }
+  if (buffer.trim()) emit(buffer);
+}
+
 export function generateLearningSummary(source) {
   return requestLearning("/summarize", {
     method: "POST",

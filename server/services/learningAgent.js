@@ -1,4 +1,7 @@
-const { createDeepSeekChatCompletion } = require("./modelClient");
+const {
+  createDeepSeekChatCompletion,
+  createDeepSeekChatCompletionStream,
+} = require("./modelClient");
 const { searchLearningKnowledge } = require("./learningSearch");
 const { updateLearningMemory } = require("./learningMemoryService");
 
@@ -11,10 +14,13 @@ const LEARNING_TOOLS = [
     type: "function",
     function: {
       name: "search_learning_knowledge",
-      description: "检索当前用户学习摘要库中的知识点和原文引用。教育类知识问题应优先调用。",
+      description:
+        "检索当前用户学习摘要库中的知识点和原文引用。教育类知识问题应优先调用。",
       parameters: {
         type: "object",
-        properties: { query: { type: "string", description: "用于检索学习库的具体问题" } },
+        properties: {
+          query: { type: "string", description: "用于检索学习库的具体问题" },
+        },
         required: ["query"],
         additionalProperties: false,
       },
@@ -24,7 +30,8 @@ const LEARNING_TOOLS = [
     type: "function",
     function: {
       name: "update_learning_memory",
-      description: "仅在用户明确表达掌握、困惑或需要复习时更新本轮已检索知识点的学习状态。",
+      description:
+        "仅在用户明确表达掌握、困惑或需要复习时更新本轮已检索知识点的学习状态。",
       parameters: {
         type: "object",
         properties: {
@@ -50,7 +57,9 @@ function buildSystemPrompt(profile = {}) {
     profile.preferInterviewView ? "回答偏好：补充面试表达。" : "",
     profile.targetDirection ? `用户目标方向：${profile.targetDirection}。` : "",
     profile.experienceLevel ? `用户经验等级：${profile.experienceLevel}。` : "",
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function parseArguments(raw) {
@@ -83,15 +92,23 @@ function normalizeConversationHistory(history) {
   if (history === undefined) return [];
   if (!Array.isArray(history)) throw new Error("history must be an array");
   const messages = history.slice(-MAX_HISTORY_MESSAGES).map((item) => {
-    if (!item || !["user", "assistant"].includes(item.role) || typeof item.content !== "string") {
+    if (
+      !item ||
+      !["user", "assistant"].includes(item.role) ||
+      typeof item.content !== "string"
+    ) {
       throw new Error("history contains an invalid message");
     }
     const content = item.content.trim();
     if (!content) throw new Error("history contains an empty message");
     return { role: item.role, content };
   });
-  const characters = messages.reduce((count, item) => count + item.content.length, 0);
-  if (characters > MAX_HISTORY_CHARACTERS) throw new Error("history is too long");
+  const characters = messages.reduce(
+    (count, item) => count + item.content.length,
+    0,
+  );
+  if (characters > MAX_HISTORY_CHARACTERS)
+    throw new Error("history is too long");
   return messages;
 }
 
@@ -106,10 +123,11 @@ function createChatResult(answer, state) {
 
 function createLearningAgent({
   chatCompletion = createDeepSeekChatCompletion,
+  streamCompletion = createDeepSeekChatCompletionStream,
   search = searchLearningKnowledge,
   updateMemory = updateLearningMemory,
 } = {}) {
-  return async function chat({
+  const chat = async function chat({
     userId,
     message,
     activeSummaryId,
@@ -133,7 +151,10 @@ function createLearningAgent({
     ];
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
-      const response = await chatCompletion({ messages, tools: LEARNING_TOOLS });
+      const response = await chatCompletion({
+        messages,
+        tools: LEARNING_TOOLS,
+      });
       const assistant = response.choices?.[0]?.message;
       if (!assistant) throw new Error("DeepSeek 返回内容为空");
       const toolCalls = assistant.tool_calls || [];
@@ -201,8 +222,137 @@ function createLearningAgent({
       }
     }
 
-    return createChatResult("已完成学习库检索，但工具调用轮次已达到上限。", state);
+    return createChatResult(
+      "已完成学习库检索，但工具调用轮次已达到上限。",
+      state,
+    );
   };
+
+  async function* streamChat({
+    userId,
+    message,
+    activeSummaryId,
+    profile,
+    memories,
+    history,
+  }) {
+    if (!userId) throw new Error("userId is required");
+    if (!message?.trim()) throw new Error("message is required");
+    const historyMessages = normalizeConversationHistory(history);
+    const state = {
+      searched: false,
+      memoryUpdated: false,
+      retrieved: [],
+      memoryChanges: [],
+    };
+    let usedTools = false;
+    const messages = [
+      { role: "system", content: buildSystemPrompt(profile) },
+      ...historyMessages,
+      { role: "user", content: message.trim() },
+    ];
+
+    for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
+      const response = await chatCompletion({
+        messages,
+        tools: LEARNING_TOOLS,
+      });
+      const assistant = response.choices?.[0]?.message;
+      if (!assistant) throw new Error("DeepSeek 返回内容为空");
+      const toolCalls = assistant.tool_calls || [];
+      usedTools = usedTools || toolCalls.length > 0;
+      messages.push({
+        role: "assistant",
+        content: assistant.content || "",
+        ...(toolCalls.length ? { tool_calls: toolCalls } : {}),
+      });
+
+      if (!toolCalls.length) {
+        let answer = assistant.content || "";
+        if (usedTools) {
+          answer = "";
+          for await (const chunk of streamCompletion({ messages })) {
+            const content = chunk.choices?.[0]?.delta?.content || "";
+            if (!content) continue;
+            answer += content;
+            yield { type: "delta", content };
+          }
+        } else {
+          // The first non-tool response is already complete; split it so the
+          // client still receives the same incremental SSE contract.
+          for (let index = 0; index < answer.length; index += 32) {
+            yield { type: "delta", content: answer.slice(index, index + 32) };
+          }
+        }
+        const result = createChatResult(answer, state);
+        yield { type: "done", ...result };
+        return;
+      }
+
+      for (const call of toolCalls) {
+        const args = parseArguments(call.function?.arguments);
+        let output;
+        if (!args) {
+          output = { error: "工具参数不是有效 JSON" };
+        } else if (call.function?.name === "search_learning_knowledge") {
+          if (state.searched) {
+            output = { error: "本轮最多允许一次检索" };
+          } else {
+            state.searched = true;
+            state.retrieved = await search({
+              userId,
+              query: args.query,
+              activeSummaryId,
+              memories,
+            });
+            output = { results: state.retrieved };
+          }
+        } else if (call.function?.name === "update_learning_memory") {
+          if (state.memoryUpdated) {
+            output = { error: "本轮最多允许一次记忆更新" };
+          } else {
+            const target = findRetrievedItem(args.itemId, state.retrieved);
+            if (!target) {
+              output = { error: "只能更新本轮已检索的知识点" };
+            } else if (!args.state) {
+              output = { error: "缺少学习状态" };
+            } else {
+              state.memoryUpdated = true;
+              const change = await updateMemory({
+                userId,
+                itemId: args.itemId,
+                state: args.state,
+              });
+              const memoryChange = {
+                summaryItemId: args.itemId,
+                topic: target.metadata.topic,
+                state: change.state,
+              };
+              state.memoryChanges.push(memoryChange);
+              output = { accepted: true, memoryChange };
+            }
+          }
+        } else {
+          output = { error: "未知工具" };
+        }
+        messages.push({
+          role: "tool",
+          tool_call_id: call.id,
+          content: JSON.stringify(output),
+        });
+      }
+    }
+
+    const result = createChatResult(
+      "已完成学习库检索，但工具调用轮次已达到上限。",
+      state,
+    );
+    yield { type: "delta", content: result.answer };
+    yield { type: "done", ...result };
+  }
+
+  chat.stream = streamChat;
+  return chat;
 }
 
 const chatWithLearningAgent = createLearningAgent();
@@ -214,5 +364,6 @@ module.exports = {
   MAX_HISTORY_CHARACTERS,
   normalizeConversationHistory,
   createLearningAgent,
+  createLearningAgentStream: (options) => createLearningAgent(options).stream,
   chatWithLearningAgent,
 };
