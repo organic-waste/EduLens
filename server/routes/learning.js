@@ -2,21 +2,18 @@ const express = require("express");
 const auth = require("../middleware/auth");
 const SummaryDocument = require("../models/summaryDocument");
 const UserLearningProfile = require("../models/userLearningProfile");
-const UserPreference = require("../models/userPreference");
 const LearningMemory = require("../models/learningMemory");
 const { chatWithLearningAgent } = require("../services/learningAgent");
 const { generateLearningSummary } = require("../services/learningSummaryService");
-const { updateLearningMemory, undoLatestLearningMemory } = require("../services/learningMemoryService");
+const { updateLearningMemory } = require("../services/learningMemoryService");
 
 const router = express.Router();
 const PROFILE_FIELDS = [
   "targetDirection",
   "experienceLevel",
-  "focusTopics",
   "answerDepth",
   "preferExamples",
   "preferInterviewView",
-  "includeInterviewQa",
 ];
 const LEARNING_STATES = ["mastered", "confusing", "review"];
 
@@ -34,23 +31,19 @@ function validateProfile(body) {
   if (body.answerDepth && !["concise", "balanced", "detailed"].includes(body.answerDepth)) {
     return "回答深度无效";
   }
-  if (body.focusTopics && (!Array.isArray(body.focusTopics) || body.focusTopics.some((topic) => typeof topic !== "string"))) {
-    return "关注主题格式无效";
-  }
   return null;
 }
 
 async function loadLearningContext(userId) {
-  const [profile, userPreferences, memories] = await Promise.all([
+  const [profile, memories] = await Promise.all([
     UserLearningProfile.findOneAndUpdate(
       { userId },
       { $setOnInsert: { userId } },
       { new: true, upsert: true, setDefaultsOnInsert: true },
     ).lean(),
-    UserPreference.find({ userId }).sort({ weight: -1, topic: 1 }).lean(),
     LearningMemory.find({ userId }).sort({ updatedAt: -1 }).lean(),
   ]);
-  return { profile: profilePayload(profile), userPreferences, memories };
+  return { profile: profilePayload(profile), memories };
 }
 
 async function decorateMemories(userId, memories) {
@@ -67,7 +60,15 @@ async function decorateMemories(userId, memories) {
       }));
     });
   });
-  return memories.map((memory) => ({ ...memory, ...(itemContext.get(memory.summaryItemId) || {}) }));
+  return memories.map((memory) => {
+    const context = itemContext.get(memory.summaryItemId);
+    return {
+      summaryItemId: memory.summaryItemId,
+      state: memory.state,
+      topic: context?.topic,
+      content: context?.content,
+    };
+  });
 }
 
 router.get("/profile", auth, async (req, res) => {
@@ -101,85 +102,23 @@ router.put("/profile", auth, async (req, res) => {
   }
 });
 
-function validateUserPreference({ topic, weight }) {
-  if (!topic?.trim()) return "偏好主题不能为空";
-  if (!Number.isFinite(Number(weight)) || Number(weight) < -10 || Number(weight) > 10) {
-    return "偏好权重必须在 -10 到 10 之间";
-  }
-  return null;
-}
-
-router.post("/preferences", auth, async (req, res) => {
-  const validationError = validateUserPreference(req.body);
-  if (validationError) return res.status(400).json({ status: "error", message: validationError });
-  try {
-    const preference = await UserPreference.create({
-      userId: req.userId,
-      topic: req.body.topic.trim(),
-      weight: Number(req.body.weight),
-    });
-    res.status(201).json({ preference });
-  } catch (error) {
-    res.status(500).json({ status: "error", message: `用户偏好保存失败：${error.message}` });
-  }
-});
-
-router.put("/preferences/:preferenceId", auth, async (req, res) => {
-  const validationError = validateUserPreference(req.body);
-  if (validationError) return res.status(400).json({ status: "error", message: validationError });
-  try {
-    const preference = await UserPreference.findOneAndUpdate(
-      { _id: req.params.preferenceId, userId: req.userId },
-      { topic: req.body.topic.trim(), weight: Number(req.body.weight) },
-      { new: true, runValidators: true },
-    ).lean();
-    if (!preference) return res.status(404).json({ status: "error", message: "用户偏好不存在" });
-    res.json({ preference });
-  } catch (error) {
-    res.status(500).json({ status: "error", message: `用户偏好更新失败：${error.message}` });
-  }
-});
-
-router.delete("/preferences/:preferenceId", auth, async (req, res) => {
-  try {
-    const result = await UserPreference.deleteOne({ _id: req.params.preferenceId, userId: req.userId });
-    if (!result.deletedCount) return res.status(404).json({ status: "error", message: "用户偏好不存在" });
-    res.json({ deleted: true });
-  } catch (error) {
-    res.status(500).json({ status: "error", message: `用户偏好删除失败：${error.message}` });
-  }
-});
-
 router.put("/memory/:summaryItemId", auth, async (req, res) => {
   const { summaryItemId } = req.params;
-  const { state, reason = "手动调整" } = req.body;
+  const { state } = req.body;
   if (!LEARNING_STATES.includes(state)) {
     return res.status(400).json({ status: "error", message: "学习状态无效" });
   }
   try {
     const summary = await SummaryDocument.findOne({ userId: req.userId, "groups.items.id": summaryItemId }).lean();
     if (!summary) return res.status(404).json({ status: "error", message: "知识点不存在" });
-    const group = summary.groups.find((item) => item.items.some((item) => item.id === summaryItemId));
     const change = await updateLearningMemory({
       userId: req.userId,
       itemId: summaryItemId,
       state,
-      topic: group.topic,
-      reason,
     });
     res.json({ memory: change.memory });
   } catch (error) {
     res.status(500).json({ status: "error", message: `学习状态保存失败：${error.message}` });
-  }
-});
-
-router.post("/memory/undo", auth, async (req, res) => {
-  try {
-    const event = await undoLatestLearningMemory(req.userId);
-    if (!event) return res.status(404).json({ status: "error", message: "没有可撤销的学习状态变更" });
-    res.json({ undone: true, summaryItemId: event.summaryItemId, state: event.previousState });
-  } catch (error) {
-    res.status(500).json({ status: "error", message: `撤销学习状态失败：${error.message}` });
   }
 });
 
@@ -190,11 +129,18 @@ router.post("/chat", auth, async (req, res) => {
       userId: req.userId,
       message: req.body.message,
       activeSummaryId: req.body.activeSummaryId,
+      history: req.body.history,
       ...context,
     });
     res.json(result);
   } catch (error) {
-    const isBadRequest = error.message === "message is required";
+    const isBadRequest = [
+      "message is required",
+      "history must be an array",
+      "history contains an invalid message",
+      "history contains an empty message",
+      "history is too long",
+    ].includes(error.message);
     res.status(isBadRequest ? 400 : 500).json({ status: "error", message: error.message });
   }
 });

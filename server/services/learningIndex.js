@@ -15,8 +15,8 @@ function createLearningNodes(summaries) {
   return summaries.flatMap((summary) => {
     const summaryId = String(summary._id || summary.id);
     return summary.groups.flatMap((group) =>
-      group.items.map((item) => {
-        const citation = item.citation;
+      group.items.filter((item) => item.sourceType !== "ai-supplement").map((item) => {
+        const citation = item.citation || {};
         const text = [group.topic, item.content, citation.quote]
           .filter(Boolean)
           .join("\n");
@@ -72,14 +72,8 @@ function invalidateUserLearningIndex(userId) {
   indexCache.delete(String(userId));
 }
 
-function clearLearningIndexCache() {
-  indexCache.clear();
-}
-
 module.exports = {
   createLearningNodes,
   getUserLearningIndex,
-  buildUserLearningIndex,
   invalidateUserLearningIndex,
-  clearLearningIndexCache,
 };

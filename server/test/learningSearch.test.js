@@ -35,12 +35,10 @@ describe("learning search", () => {
     expect(samples.every((sample) => fixtureIds.has(sample.targetSummaryItemId))).toBe(true);
   });
 
-  it("reranks preferred and confusing topics while preserving semantic score and citation metadata", () => {
+  it("reranks confusing knowledge points while preserving semantic score and citation metadata", () => {
     const result = rerankLearningNodes(
       [node("generic", "JavaScript", 0.9), node("focused", "RAG", 0.82)],
       {
-        profile: { focusTopics: ["RAG"] },
-        userPreferences: [{ topic: "RAG", weight: 6 }],
         memories: [{ summaryItemId: "focused", state: "confusing" }],
       },
     );
@@ -64,7 +62,7 @@ describe("learning search", () => {
     expect(report).toEqual({ hits: 5, total: 5, recallAt3: 1 });
   });
 
-  it("uses semantic top 12 but returns personalized top 4", async () => {
+  it("uses semantic top 12 but returns the top 4 reranked results", async () => {
     const retrieve = vi.fn(async () => [
       node("item-1", "JavaScript", 0.99),
       node("item-2", "RAG", 0.8),
@@ -79,12 +77,11 @@ describe("learning search", () => {
     const result = await searchLearningKnowledge({
       userId: "user-1",
       query: "RAG",
-      profile: { focusTopics: ["RAG"] },
-      userPreferences: [{ topic: "RAG", weight: 5 }],
+      memories: [{ summaryItemId: "item-2", state: "confusing" }],
     });
     expect(retrieve).toHaveBeenCalledWith("RAG");
     expect(result).toHaveLength(4);
-    expect(result[0].metadata.topic).toBe("RAG");
+    expect(result[0].summaryItemId).toBe("item-2");
     vi.restoreAllMocks();
   });
 });

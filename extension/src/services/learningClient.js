@@ -29,34 +29,10 @@ export function updateLearningMemory(summaryItemId, state) {
   });
 }
 
-export function createUserPreference(preference) {
-  return requestLearning("/preferences", {
-    method: "POST",
-    body: JSON.stringify(preference),
-  });
-}
-
-export function updateUserPreference(preferenceId, preference) {
-  return requestLearning(`/preferences/${encodeURIComponent(preferenceId)}`, {
-    method: "PUT",
-    body: JSON.stringify(preference),
-  });
-}
-
-export function deleteUserPreference(preferenceId) {
-  return requestLearning(`/preferences/${encodeURIComponent(preferenceId)}`, {
-    method: "DELETE",
-  });
-}
-
-export function undoLearningMemory() {
-  return requestLearning("/memory/undo", { method: "POST" });
-}
-
-export function chatWithLearningAgent({ message, activeSummaryId }) {
+export function chatWithLearningAgent({ message, activeSummaryId, history }) {
   return requestLearning("/chat", {
     method: "POST",
-    body: JSON.stringify({ message, activeSummaryId }),
+    body: JSON.stringify({ message, activeSummaryId, history }),
   });
 }
 

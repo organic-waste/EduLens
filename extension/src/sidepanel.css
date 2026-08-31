@@ -218,8 +218,9 @@ h1 {
 .summary-heading h2 { margin: 0; overflow: hidden; color: var(--panel-color); font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
 .summary-items { display: flex; flex-direction: column; gap: 8px; }
 .summary-item { padding: 10px; border: 1px solid #d4e2e5; border-radius: 5px; background: white; }
-.summary-content { width: 100%; padding: 0; border: 0; background: transparent; color: #1d2a33; text-align: left; line-height: 1.55; }
-.summary-content:hover { color: var(--emphasis-color); }
+.summary-content { width: 100%; margin: 0; padding: 0; border: 0; background: transparent; color: #1d2a33; text-align: left; line-height: 1.55; }
+.summary-content:not(.summary-content--plain):hover { color: var(--emphasis-color); }
+.summary-content--plain { cursor: default; }
 .summary-item small { display: block; margin-top: 7px; overflow: hidden; color: #71838b; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .composer {
   border: 1px solid #c5d8dc;

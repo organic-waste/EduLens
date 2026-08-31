@@ -1,9 +1,10 @@
 const { createDeepSeekChatCompletion } = require("./modelClient");
 const { searchLearningKnowledge } = require("./learningSearch");
 const { updateLearningMemory } = require("./learningMemoryService");
-const { updateResponsePreferences } = require("./learningProfileService");
 
 const MAX_TOOL_ROUNDS = 3;
+const MAX_HISTORY_MESSAGES = 8;
+const MAX_HISTORY_CHARACTERS = 6000;
 
 const LEARNING_TOOLS = [
   {
@@ -22,23 +23,6 @@ const LEARNING_TOOLS = [
   {
     type: "function",
     function: {
-      name: "update_response_preferences",
-      description: "仅当用户明确要求未来回答的格式、示例或面试内容时，更新其长期回答偏好。",
-      parameters: {
-        type: "object",
-        properties: {
-          answerDepth: { type: "string", enum: ["concise", "balanced", "detailed"] },
-          preferExamples: { type: "boolean" },
-          preferInterviewView: { type: "boolean" },
-          includeInterviewQa: { type: "boolean", description: "每次知识回答末尾附带面试常考题及参考答案" },
-        },
-        additionalProperties: false,
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
       name: "update_learning_memory",
       description: "仅在用户明确表达掌握、困惑或需要复习时更新本轮已检索知识点的学习状态。",
       parameters: {
@@ -46,7 +30,6 @@ const LEARNING_TOOLS = [
         properties: {
           itemId: { type: "string" },
           state: { type: "string", enum: ["mastered", "confusing", "review"] },
-          topic: { type: "string" },
         },
         required: ["itemId"],
         additionalProperties: false,
@@ -62,11 +45,9 @@ function buildSystemPrompt(profile = {}) {
     "教育类知识问题优先调用 search_learning_knowledge，再基于返回证据回答。",
     "没有学习库证据时，直接基于通用知识回答问题；不要提及学习库、知识库覆盖范围、来源缺失，也不要建议用户加入学习库、展开话题或更新学习状态。",
     "回答必须使用 Markdown 格式输出；不要输出原始 HTML。",
-    "当用户明确要求未来回答的格式、示例或面试内容时，必须调用 update_response_preferences 保存偏好。仅在设置偏好的请求中，工具成功后简短确认，不要追加引导性示例或问题列表。",
     `回答深度：${depth}。`,
-    profile.preferExamples ? "用户偏好示例，请在有证据时使用简短示例。" : "",
-    profile.includeInterviewQa ? "每次知识讲解末尾必须增加“面试常考题”小节，列出相关问题和对应参考答案。" : "",
-    profile.preferInterviewView ? "用户偏好面试视角，请补充面试表达。" : "",
+    profile.preferExamples ? "回答偏好：在有证据时使用简短示例。" : "",
+    profile.preferInterviewView ? "回答偏好：补充面试表达。" : "",
     profile.targetDirection ? `用户目标方向：${profile.targetDirection}。` : "",
     profile.experienceLevel ? `用户经验等级：${profile.experienceLevel}。` : "",
   ].filter(Boolean).join("\n");
@@ -91,8 +72,6 @@ function toCitations(results) {
     prefix: result.metadata.prefix,
     suffix: result.metadata.suffix,
     textPosition: result.metadata.textPosition,
-    semanticScore: result.semanticScore,
-    score: result.score,
   }));
 }
 
@@ -100,15 +79,20 @@ function findRetrievedItem(itemId, retrieved) {
   return retrieved.find((item) => item.summaryItemId === itemId);
 }
 
-function inferResponsePreferenceUpdate(message) {
-  const content = String(message || "");
-  const requestsFutureBehavior = /以后|之后|今后|每次|回答.*时/.test(content);
-  const requestsInterviewQa = /面试/.test(content)
-    && /(常考|题目|问题)/.test(content)
-    && /(答案|参考答案)/.test(content);
-  return requestsFutureBehavior && requestsInterviewQa
-    ? { includeInterviewQa: true, preferInterviewView: true }
-    : null;
+function normalizeConversationHistory(history) {
+  if (history === undefined) return [];
+  if (!Array.isArray(history)) throw new Error("history must be an array");
+  const messages = history.slice(-MAX_HISTORY_MESSAGES).map((item) => {
+    if (!item || !["user", "assistant"].includes(item.role) || typeof item.content !== "string") {
+      throw new Error("history contains an invalid message");
+    }
+    const content = item.content.trim();
+    if (!content) throw new Error("history contains an empty message");
+    return { role: item.role, content };
+  });
+  const characters = messages.reduce((count, item) => count + item.content.length, 0);
+  if (characters > MAX_HISTORY_CHARACTERS) throw new Error("history is too long");
+  return messages;
 }
 
 function createChatResult(answer, state) {
@@ -116,7 +100,6 @@ function createChatResult(answer, state) {
     answer: answer || "暂时无法生成回答，请换一种说法后重试。",
     citations: toCitations(state.retrieved),
     memoryChanges: state.memoryChanges,
-    preferenceChanges: state.preferenceChanges,
     uncovered: state.searched && state.retrieved.length === 0,
   };
 }
@@ -125,34 +108,29 @@ function createLearningAgent({
   chatCompletion = createDeepSeekChatCompletion,
   search = searchLearningKnowledge,
   updateMemory = updateLearningMemory,
-  updatePreferences = updateResponsePreferences,
 } = {}) {
-  return async function chat({ userId, message, activeSummaryId, profile, userPreferences, memories }) {
+  return async function chat({
+    userId,
+    message,
+    activeSummaryId,
+    profile,
+    memories,
+    history,
+  }) {
     if (!userId) throw new Error("userId is required");
     if (!message?.trim()) throw new Error("message is required");
-
-    const messages = [
-      { role: "system", content: buildSystemPrompt(profile) },
-      { role: "user", content: message.trim() },
-    ];
+    const historyMessages = normalizeConversationHistory(history);
     const state = {
       searched: false,
       memoryUpdated: false,
-      preferencesUpdated: false,
       retrieved: [],
       memoryChanges: [],
-      preferenceChanges: [],
     };
-    const inferredPreferences = inferResponsePreferenceUpdate(message);
-    if (inferredPreferences) {
-      const profileUpdate = await updatePreferences({ userId, preferences: inferredPreferences });
-      state.preferencesUpdated = true;
-      state.preferenceChanges.push({ fields: Object.keys(inferredPreferences) });
-      messages.push({
-        role: "system",
-        content: `系统已保存本轮回答偏好：${JSON.stringify(profileUpdate)}。请简短确认，不要追加示例或引导问题。`,
-      });
-    }
+    const messages = [
+      { role: "system", content: buildSystemPrompt(profile) },
+      ...historyMessages,
+      { role: "user", content: message.trim() },
+    ];
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
       const response = await chatCompletion({ messages, tools: LEARNING_TOOLS });
@@ -183,8 +161,6 @@ function createLearningAgent({
               userId,
               query: args.query,
               activeSummaryId,
-              profile,
-              userPreferences,
               memories,
             });
             output = { results: state.retrieved };
@@ -204,31 +180,14 @@ function createLearningAgent({
                 userId,
                 itemId: args.itemId,
                 state: args.state,
-                topic: target.metadata.topic,
-                reason: `Agent：${message.trim()}`,
               });
               const memoryChange = {
                 summaryItemId: args.itemId,
                 topic: target.metadata.topic,
-                previousState: change.event.previousState,
-                state: change.memory.state,
+                state: change.state,
               };
               state.memoryChanges.push(memoryChange);
               output = { accepted: true, memoryChange };
-            }
-          }
-        } else if (call.function?.name === "update_response_preferences") {
-          if (state.preferencesUpdated) {
-            output = { error: "本轮最多允许一次偏好更新" };
-          } else {
-            state.preferencesUpdated = true;
-            try {
-              const profileUpdate = await updatePreferences({ userId, preferences: args });
-              const fields = Object.keys(args);
-              state.preferenceChanges.push({ fields });
-              output = { accepted: true, fields, profile: profileUpdate };
-            } catch (error) {
-              output = { error: error.message };
             }
           }
         } else {
@@ -251,9 +210,9 @@ const chatWithLearningAgent = createLearningAgent();
 module.exports = {
   LEARNING_TOOLS,
   MAX_TOOL_ROUNDS,
-  buildSystemPrompt,
-  createChatResult,
-  inferResponsePreferenceUpdate,
+  MAX_HISTORY_MESSAGES,
+  MAX_HISTORY_CHARACTERS,
+  normalizeConversationHistory,
   createLearningAgent,
   chatWithLearningAgent,
 };

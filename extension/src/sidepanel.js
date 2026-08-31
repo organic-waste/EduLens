@@ -3,7 +3,6 @@ import { authManager } from "./services/index.js";
 import {
   chatWithLearningAgent,
   generateLearningSummary,
-  undoLearningMemory,
 } from "./services/learningClient.js";
 import {
   loadRemoteSummaryDocuments,
@@ -55,6 +54,7 @@ const CHAT_ICON = `<svg class="action-icon" viewBox="0 0 1024 1024" aria-hidden=
 closeSummaryButton.innerHTML = CHAT_ICON;
 
 const conversation = [];
+const MAX_CONVERSATION_HISTORY = 8;
 let showingHistory = false;
 let selectedPage = null;
 let activeSummaryItem = null;
@@ -128,21 +128,28 @@ function normalizeSummaryDocument(summary) {
     groups: groups.map((group) => ({
       ...group,
       topic: group.topic || "知识点",
-      items: (group.items || []).map((item) => ({
-        ...item,
-        citation: {
-          ...source.citation,
-          ...item.citation,
-          pageUrl: item.citation?.pageUrl || sourceUrl,
-          quote: item.citation?.quote || item.quote || source.citation?.quote,
-        },
-      })),
+      items: (group.items || []).map((item) => {
+        if (item.sourceType === "ai-supplement") {
+          const { citation, quote, ...plainItem } = item;
+          return plainItem;
+        }
+        return {
+          ...item,
+          citation: {
+            ...source.citation,
+            ...item.citation,
+            pageUrl: item.citation?.pageUrl || sourceUrl,
+            quote: item.citation?.quote || item.quote || source.citation?.quote,
+          },
+        };
+      }),
     })),
   };
 }
 
 function sourceKey(summary) {
-  return summary.sourceUrl?.split("#")[0].replace(/\/$/, "");
+  if (!summary.sourceUrl) return "";
+  return summary.sourceUrl.split("#")[0].replace(/\/$/, "");
 }
 
 function mergeSummaryDocuments(existing, incoming) {
@@ -216,11 +223,15 @@ function showCitationResult(result) {
   statusEl.textContent = result?.located ? "已定位网页引用" : "未找到对应网页引用";
 }
 
+function renderMarkdown(content) {
+  const markdown = String(content || "").replace(/</g, "&lt;");
+  return marked.parse(markdown, { async: false, gfm: true, breaks: true });
+}
+
 function addMessage(role, content, {
   onSupplement,
   citations = [],
   memoryChanges = [],
-  preferenceChanges = [],
   uncovered = false,
 } = {}) {
   messagesEl.querySelector(".empty-state")?.remove();
@@ -232,7 +243,7 @@ function addMessage(role, content, {
   const body = document.createElement(role === "assistant" ? "div" : "p");
   if (role === "assistant") {
     body.className = "markdown-body";
-    body.innerHTML = marked.parse(content, { async: false, gfm: true, breaks: true });
+    body.innerHTML = renderMarkdown(content);
   } else {
     body.textContent = content;
   }
@@ -264,37 +275,7 @@ function addMessage(role, content, {
       tag.textContent = `${change.topic || "知识点"}：${({ mastered: "已掌握", confusing: "易混淆", review: "稍后复习" })[change.state] || change.state}`;
       memoryPanel.appendChild(tag);
     });
-    const undoButton = document.createElement("button");
-    undoButton.type = "button";
-    undoButton.textContent = "撤销本次记忆变更";
-    undoButton.addEventListener("click", async () => {
-      undoButton.disabled = true;
-      try {
-        await undoLearningMemory();
-        undoButton.textContent = "已撤销";
-        statusEl.textContent = "已撤销最近一次学习状态变更";
-      } catch (error) {
-        undoButton.disabled = false;
-        statusEl.textContent = error.message;
-      }
-    });
-    memoryPanel.appendChild(undoButton);
     item.appendChild(memoryPanel);
-  }
-  if (preferenceChanges.length) {
-    const preferencePanel = document.createElement("div");
-    preferencePanel.className = "memory-changes";
-    const fields = preferenceChanges.flatMap((change) => change.fields || []);
-    const labels = {
-      answerDepth: "回答深度",
-      preferExamples: "示例偏好",
-      preferInterviewView: "面试视角",
-      includeInterviewQa: "面试常考题与参考答案",
-    };
-    const tag = document.createElement("span");
-    tag.textContent = `已保存回答偏好：${fields.map((field) => labels[field] || field).join("、")}`;
-    preferencePanel.appendChild(tag);
-    item.appendChild(preferencePanel);
   }
   if (onSupplement) {
     const supplement = document.createElement("button");
@@ -341,26 +322,29 @@ function renderSummary(summary) {
     group.items.forEach((item, index) => {
       const row = document.createElement("article");
       row.className = "summary-item";
-      const text = document.createElement("button");
-      text.className = "summary-content";
-      text.type = "button";
+      const isAiSupplement = item.sourceType === "ai-supplement";
+      const text = document.createElement(isAiSupplement ? "p" : "button");
+      text.className = `summary-content${isAiSupplement ? " summary-content--plain" : ""}`;
+      if (!isAiSupplement) text.type = "button";
       text.textContent = `${index + 1}. ${item.content}`;
-      text.title = "回到网页引用位置";
-      text.addEventListener("click", async () => {
-        activeSummaryItem = item;
-        activeSummaryDocument = summary;
-        renderSummaryContext();
-        const citation = getCitation(summary, item);
-        if (!citation.pageUrl) {
-          statusEl.textContent = "该旧摘要未保存来源页面，请重新生成摘要";
-          return;
-        }
-        const result = await chrome.runtime.sendMessage({
-          type: "JUMP_TO_CITATION",
-          citation,
+      if (!isAiSupplement) {
+        text.title = "回到网页引用位置";
+        text.addEventListener("click", async () => {
+          activeSummaryItem = item;
+          activeSummaryDocument = summary;
+          renderSummaryContext();
+          const citation = getCitation(summary, item);
+          if (!citation.pageUrl) {
+            statusEl.textContent = "该旧摘要未保存来源页面，请重新生成摘要";
+            return;
+          }
+          const result = await chrome.runtime.sendMessage({
+            type: "JUMP_TO_CITATION",
+            citation,
+          });
+          showCitationResult(result);
         });
-        showCitationResult(result);
-      });
+      }
       row.append(text);
       section.appendChild(row);
     });
@@ -375,13 +359,20 @@ function renderConversation() {
     messagesEl.innerHTML = `<div class="empty-state"><strong>从一个问题开始</strong><span>让 AI 帮你理解当前学习内容。</span></div>`;
     return;
   }
-  conversation.forEach(({ role, content, citations, memoryChanges, preferenceChanges, uncovered }) =>
-    addMessage(role, content, { citations, memoryChanges, preferenceChanges, uncovered }),
+  conversation.forEach(({ role, content, citations, memoryChanges, uncovered }) =>
+    addMessage(role, content, { citations, memoryChanges, uncovered }),
   );
 }
 
 async function persistConversation() {
   await chrome.storage.local.set({ edulensActiveConversation: [...conversation] });
+}
+
+function getRecentConversationHistory() {
+  return conversation
+    .slice(0, -1)
+    .slice(-MAX_CONVERSATION_HISTORY)
+    .map(({ role, content }) => ({ role, content }));
 }
 
 async function restoreConversation() {
@@ -434,7 +425,7 @@ async function saveSummaryDocument(summary) {
     return syncedSummary;
   } catch (error) {
     console.warn("摘要远程同步失败，已保留本地摘要", error);
-    return summary;
+    return document;
   }
 }
 
@@ -650,22 +641,16 @@ clearSummaryContextButton.addEventListener("click", () => {
   clearSummaryContext();
 });
 
-async function supplementSummary(answer, { uncovered = false } = {}) {
+async function supplementSummary(answer) {
   if (!activeSummaryDocument) return;
   const activeTopic = activeSummaryDocument.groups.find((group) =>
     group.items.includes(activeSummaryItem),
   )?.topic;
-  const citation = activeSummaryItem
-    ? getCitation(activeSummaryDocument, activeSummaryItem)
-    : getCitation(activeSummaryDocument, activeSummaryDocument.groups[0]?.items[0] || {});
   const item = {
     id: crypto.randomUUID(),
     content: answer,
-    quote: citation.quote,
-    citation,
-    level: Math.min((activeSummaryItem?.level || 1) + 1, 3),
     generated: true,
-    ...(uncovered ? { sourceType: "ai-supplement" } : {}),
+    sourceType: "ai-supplement",
   };
   activeSummaryDocument.updatedAt = new Date().toISOString();
   activeSummaryDocument = normalizeSummaryDocument(activeSummaryDocument);
@@ -705,14 +690,15 @@ composer.addEventListener("submit", async (event) => {
     const result = await chatWithLearningAgent({
       message: prompt,
       activeSummaryId: activeSummaryDocument?.remoteId,
+      history: getRecentConversationHistory(),
     });
     const answer = result.answer;
+    const canSupplement = Boolean(activeSummaryItem || (result.uncovered && activeSummaryDocument));
     conversation.push({
       role: "assistant",
       content: answer,
       citations: result.citations,
       memoryChanges: result.memoryChanges,
-      preferenceChanges: result.preferenceChanges,
       uncovered: result.uncovered,
     });
     await persistConversation();
@@ -720,12 +706,9 @@ composer.addEventListener("submit", async (event) => {
       "assistant",
       answer,
       {
-        onSupplement: (activeSummaryItem || (result.uncovered && activeSummaryDocument))
-          ? () => supplementSummary(answer, { uncovered: result.uncovered })
-          : undefined,
+        onSupplement: canSupplement ? () => supplementSummary(answer) : undefined,
         citations: result.citations,
         memoryChanges: result.memoryChanges,
-        preferenceChanges: result.preferenceChanges,
         uncovered: result.uncovered,
       },
     );

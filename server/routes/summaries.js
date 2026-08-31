@@ -22,15 +22,21 @@ function normalizeSummarySource(source, sourceUrl, groups) {
 function attachSourceToItems(groups, source) {
   return groups.map((group) => ({
     ...group,
-    items: (group.items || []).map((item) => ({
-      ...item,
-      citation: {
-        ...source.citation,
-        ...item.citation,
-        pageUrl: item.citation?.pageUrl || source.pageUrl,
-        quote: item.citation?.quote || item.quote || source.citation?.quote,
-      },
-    })),
+    items: (group.items || []).map((item) => {
+      if (item.sourceType === "ai-supplement") {
+        const { citation, quote, ...plainItem } = item;
+        return plainItem;
+      }
+      return {
+        ...item,
+        citation: {
+          ...source.citation,
+          ...item.citation,
+          pageUrl: item.citation?.pageUrl || source.pageUrl,
+          quote: item.citation?.quote || item.quote || source.citation?.quote,
+        },
+      };
+    }),
   }));
 }
 

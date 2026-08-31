@@ -1,7 +1,5 @@
 const UserLearningProfile = require("../models/userLearningProfile");
-const UserPreference = require("../models/userPreference");
 const LearningMemory = require("../models/learningMemory");
-const LearningMemoryEvent = require("../models/learningMemoryEvent");
 
 describe("learning persistence models", () => {
   it("applies profile defaults and restricts the declared enum values", () => {
@@ -9,21 +7,15 @@ describe("learning persistence models", () => {
     expect(profile.experienceLevel).toBe("beginner");
     expect(profile.answerDepth).toBe("balanced");
     expect(profile.preferExamples).toBe(true);
-    expect(profile.includeInterviewQa).toBe(false);
     expect(UserLearningProfile.schema.path("experienceLevel").enumValues).toEqual([
       "beginner", "intermediate", "advanced",
     ]);
   });
 
-  it("uses user-scoped unique compound indexes for preferences and memory", () => {
-    expect(UserPreference.schema.indexes()).toContainEqual([
-      { userId: 1, topic: 1 },
-      { unique: true, background: true },
-    ]);
+  it("uses a user-scoped unique compound index for learning memory", () => {
     expect(LearningMemory.schema.indexes()).toContainEqual([
       { userId: 1, summaryItemId: 1 },
       { unique: true, background: true },
     ]);
-    expect(LearningMemoryEvent.schema.path("previousState").enumValues).toContain("mastered");
   });
 });

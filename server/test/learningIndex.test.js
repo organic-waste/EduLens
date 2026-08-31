@@ -43,4 +43,22 @@ describe("learning index nodes", () => {
       textPosition: { start: 1, end: 29 },
     });
   });
+
+  it("excludes AI supplements without source citations from the retrieval index", () => {
+    const nodes = createLearningNodes([
+      {
+        _id: "summary-1",
+        groups: [{
+          topic: "AI 补充",
+          items: [{
+            id: "supplement-1",
+            content: "模型生成的普通摘要文本",
+            sourceType: "ai-supplement",
+          }],
+        }],
+      },
+    ]);
+
+    expect(nodes).toEqual([]);
+  });
 });

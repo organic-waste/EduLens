@@ -25,7 +25,7 @@
         </section>
 
         <form id="learning-profile-form" class="card form-card">
-          <div class="section-heading"><h2>学习画像</h2><span>影响回答风格与检索排序</span></div>
+          <div class="section-heading"><h2>学习画像</h2><span>影响 AI 回答风格</span></div>
           <label>目标方向<input id="target-direction" name="targetDirection" placeholder="例如：前端工程师" /></label>
           <label>经验等级
             <select id="experience-level" name="experienceLevel">
@@ -33,9 +33,6 @@
               <option value="intermediate">进阶</option>
               <option value="advanced">高级</option>
             </select>
-          </label>
-          <label>关注主题
-            <input id="focus-topics" name="focusTopics" placeholder="输入关注的学习主题（使用逗号分隔）" />
           </label>
           <label>回答深度
             <select id="answer-depth" name="answerDepth">
@@ -46,17 +43,11 @@
           </label>
           <label class="checkbox"><input id="prefer-examples" type="checkbox" name="preferExamples" />偏好示例辅助理解</label>
           <label class="checkbox"><input id="prefer-interview-view" type="checkbox" name="preferInterviewView" />偏好面试视角</label>
-          <label class="checkbox"><input id="include-interview-qa" type="checkbox" name="includeInterviewQa" />每次回答末尾附面试常考题及参考答案</label>
           <div class="form-footer"><span id="save-status"></span><button class="primary-button" type="submit">保存学习画像</button></div>
         </form>
 
-        <section class="card">
-          <div class="section-heading"><div><h2>用户偏好</h2><span>影响相关主题的检索排序，可手动调整权重</span></div><button id="add-preference" class="secondary-button" type="button">新增偏好</button></div>
-          <div id="user-preferences" class="preference-list"></div>
-        </section>
-
         <section class="card memory-card">
-          <div class="section-heading"><div><h2>学习记忆</h2><span>可随时手动调整</span></div><button id="undo-memory" class="secondary-button" type="button">撤销最近变更</button></div>
+          <div class="section-heading"><div><h2>学习记忆</h2></div></div>
           <div id="memory-list" class="memory-list"></div>
         </section>
       </div>
