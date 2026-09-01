@@ -1,55 +1,22 @@
-const {
-  createDeepSeekChatCompletion,
-  createDeepSeekChatCompletionStream,
-} = require("./modelClient");
+const { createAgent, tool } = require("langchain");
+const { ChatOpenAI } = require("@langchain/openai");
+const { z } = require("zod");
+const { getModelConfig } = require("./modelClient");
 const { searchLearningKnowledge } = require("./learningSearch");
 const { updateLearningMemory } = require("./learningMemoryService");
 
 const MAX_TOOL_ROUNDS = 3;
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_CHARACTERS = 6000;
-
-const LEARNING_TOOLS = [
-  {
-    type: "function",
-    function: {
-      name: "search_learning_knowledge",
-      description:
-        "检索当前用户学习摘要库中的知识点和原文引用。教育类知识问题应优先调用。",
-      parameters: {
-        type: "object",
-        properties: {
-          query: { type: "string", description: "用于检索学习库的具体问题" },
-        },
-        required: ["query"],
-        additionalProperties: false,
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "update_learning_memory",
-      description:
-        "仅在用户明确表达掌握、困惑或需要复习时更新本轮已检索知识点的学习状态。",
-      parameters: {
-        type: "object",
-        properties: {
-          itemId: { type: "string" },
-          state: { type: "string", enum: ["mastered", "confusing", "review"] },
-        },
-        required: ["itemId"],
-        additionalProperties: false,
-      },
-    },
-  },
-];
+const LEARNING_TOOL_NAMES = ["search_learning_knowledge", "update_learning_memory"];
 
 function buildSystemPrompt(profile = {}) {
   const depth = profile.answerDepth || "balanced";
   return [
     "你是 EduLens AI 学习助手。",
-    "教育类知识问题优先调用 search_learning_knowledge，再基于返回证据回答。",
+    "当用户询问学习或技术知识的概念、原理、比较、复习、面试表达时，必须先调用 search_learning_knowledge，再基于返回证据回答。",
+    "需要调用工具时，必须直接调用工具，不要先输出自然语言。",
+    "只有 search_learning_knowledge 实际返回结果后，才能声称已检索或引用学习库；未调用该工具时，绝不能作出这类表述。",
     "没有学习库证据时，直接基于通用知识回答问题；不要提及学习库、知识库覆盖范围、来源缺失，也不要建议用户加入学习库、展开话题或更新学习状态。",
     "回答必须使用 Markdown 格式输出；不要输出原始 HTML。",
     `回答深度：${depth}。`,
@@ -60,14 +27,6 @@ function buildSystemPrompt(profile = {}) {
   ]
     .filter(Boolean)
     .join("\n");
-}
-
-function parseArguments(raw) {
-  try {
-    return JSON.parse(raw || "{}");
-  } catch {
-    return null;
-  }
 }
 
 function toCitations(results) {
@@ -100,17 +59,10 @@ function normalizeConversationHistory(history) {
       throw new Error("history contains an invalid message");
     }
     const content = item.content.trim();
-    // Interrupted streaming can leave an empty placeholder in local storage.
-    // It contains no conversational context, so skip it instead of rejecting
-    // the whole request.
     return content ? [{ role: item.role, content }] : [];
   });
-  const characters = messages.reduce(
-    (count, item) => count + item.content.length,
-    0,
-  );
-  if (characters > MAX_HISTORY_CHARACTERS)
-    throw new Error("history is too long");
+  const characters = messages.reduce((count, item) => count + item.content.length, 0);
+  if (characters > MAX_HISTORY_CHARACTERS) throw new Error("history is too long");
   return messages;
 }
 
@@ -123,247 +75,139 @@ function createChatResult(answer, state) {
   };
 }
 
+function isRecursionLimitError(error) {
+  return error?.name === "GraphRecursionError" || /recursion limit/i.test(error?.message || "");
+}
+
+function createLearningTools({ userId, activeSummaryId, memories, state, search, updateMemory }) {
+  const searchTool = tool(
+    async ({ query }) => {
+      if (state.searched) return JSON.stringify({ error: "本轮最多允许一次检索" });
+      state.searched = true;
+      state.retrieved = await search({ userId, query, activeSummaryId, memories });
+      return JSON.stringify({ results: state.retrieved });
+    },
+    {
+      name: "search_learning_knowledge",
+      description: "检索当前用户学习摘要库中的知识点和原文引用。教育类知识问题应优先调用。",
+      schema: z.object({
+        query: z.string().min(1).describe("用于检索学习库的具体问题"),
+      }),
+    },
+  );
+
+  const memoryTool = tool(
+    async ({ itemId, state: memoryState }) => {
+      if (state.memoryUpdated) return JSON.stringify({ error: "本轮最多允许一次记忆更新" });
+      const target = findRetrievedItem(itemId, state.retrieved);
+      if (!target) return JSON.stringify({ error: "只能更新本轮已检索的知识点" });
+
+      state.memoryUpdated = true;
+      const change = await updateMemory({ userId, itemId, state: memoryState });
+      const memoryChange = {
+        summaryItemId: itemId,
+        topic: target.metadata.topic,
+        state: change.state,
+      };
+      state.memoryChanges.push(memoryChange);
+      return JSON.stringify({ accepted: true, memoryChange });
+    },
+    {
+      name: "update_learning_memory",
+      description: "仅在用户明确表达掌握、困惑或需要复习时更新本轮已检索知识点的学习状态。",
+      schema: z.object({
+        itemId: z.string().min(1),
+        state: z.enum(["mastered", "confusing", "review"]),
+      }),
+    },
+  );
+
+  return [searchTool, memoryTool];
+}
+
+function createLearningModel() {
+  const config = getModelConfig().deepseek;
+  if (!config.apiKey || config.apiKey.startsWith("YOUR_")) {
+    throw new Error("DeepSeek API Key 未配置");
+  }
+  return new ChatOpenAI({
+    apiKey: config.apiKey,
+    model: config.model,
+    temperature: 0.3,
+    configuration: { baseURL: config.baseUrl },
+  });
+}
+
+function createLangChainAgent({ profile, tools, model = createLearningModel() }) {
+  return createAgent({
+    model,
+    tools,
+    systemPrompt: buildSystemPrompt(profile),
+  });
+}
+
 function createLearningAgent({
-  chatCompletion = createDeepSeekChatCompletion,
-  streamCompletion = createDeepSeekChatCompletionStream,
   search = searchLearningKnowledge,
   updateMemory = updateLearningMemory,
+  agentFactory = createLangChainAgent,
 } = {}) {
-  const chat = async function chat({
-    userId,
-    message,
-    activeSummaryId,
-    profile,
-    memories,
-    history,
-  }) {
+  async function* streamChat({ userId, message, activeSummaryId, profile, memories, history }) {
     if (!userId) throw new Error("userId is required");
     if (!message?.trim()) throw new Error("message is required");
-    const historyMessages = normalizeConversationHistory(history);
+
     const state = {
       searched: false,
       memoryUpdated: false,
       retrieved: [],
       memoryChanges: [],
     };
-    const messages = [
-      { role: "system", content: buildSystemPrompt(profile) },
-      ...historyMessages,
-      { role: "user", content: message.trim() },
-    ];
-
-    for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
-      const response = await chatCompletion({
-        messages,
-        tools: LEARNING_TOOLS,
-      });
-      const assistant = response.choices?.[0]?.message;
-      if (!assistant) throw new Error("DeepSeek 返回内容为空");
-      const toolCalls = assistant.tool_calls || [];
-      messages.push({
-        role: "assistant",
-        content: assistant.content || "",
-        ...(toolCalls.length ? { tool_calls: toolCalls } : {}),
-      });
-
-      if (!toolCalls.length) {
-        return createChatResult(assistant.content, state);
-      }
-
-      for (const call of toolCalls) {
-        const args = parseArguments(call.function?.arguments);
-        let output;
-        if (!args) {
-          output = { error: "工具参数不是有效 JSON" };
-        } else if (call.function?.name === "search_learning_knowledge") {
-          if (state.searched) {
-            output = { error: "本轮最多允许一次检索" };
-          } else {
-            state.searched = true;
-            state.retrieved = await search({
-              userId,
-              query: args.query,
-              activeSummaryId,
-              memories,
-            });
-            output = { results: state.retrieved };
-          }
-        } else if (call.function?.name === "update_learning_memory") {
-          if (state.memoryUpdated) {
-            output = { error: "本轮最多允许一次记忆更新" };
-          } else {
-            const target = findRetrievedItem(args.itemId, state.retrieved);
-            if (!target) {
-              output = { error: "只能更新本轮已检索的知识点" };
-            } else if (!args.state) {
-              output = { error: "缺少学习状态" };
-            } else {
-              state.memoryUpdated = true;
-              const change = await updateMemory({
-                userId,
-                itemId: args.itemId,
-                state: args.state,
-              });
-              const memoryChange = {
-                summaryItemId: args.itemId,
-                topic: target.metadata.topic,
-                state: change.state,
-              };
-              state.memoryChanges.push(memoryChange);
-              output = { accepted: true, memoryChange };
-            }
-          }
-        } else {
-          output = { error: "未知工具" };
-        }
-        messages.push({
-          role: "tool",
-          tool_call_id: call.id,
-          content: JSON.stringify(output),
-        });
-      }
-    }
-
-    return createChatResult(
-      "已完成学习库检索，但工具调用轮次已达到上限。",
+    const tools = createLearningTools({
+      userId,
+      activeSummaryId,
+      memories,
       state,
+      search,
+      updateMemory,
+    });
+    const agent = await agentFactory({ profile, tools });
+    const run = await agent.streamEvents(
+      {
+        messages: [...normalizeConversationHistory(history), { role: "user", content: message.trim() }],
+      },
+      {
+        version: "v3",
+        // A model/tool cycle consumes two graph steps. The extra two steps allow a final answer.
+        recursionLimit: MAX_TOOL_ROUNDS * 2 + 2,
+      },
     );
-  };
 
-  async function* streamChat({
-    userId,
-    message,
-    activeSummaryId,
-    profile,
-    memories,
-    history,
-  }) {
-    if (!userId) throw new Error("userId is required");
-    if (!message?.trim()) throw new Error("message is required");
-    const historyMessages = normalizeConversationHistory(history);
-    const state = {
-      searched: false,
-      memoryUpdated: false,
-      retrieved: [],
-      memoryChanges: [],
-    };
-    const messages = [
-      { role: "system", content: buildSystemPrompt(profile) },
-      ...historyMessages,
-      { role: "user", content: message.trim() },
-    ];
-
-    async function readStreamedAssistant() {
-      const contentChunks = [];
-      const toolCalls = [];
-      for await (const chunk of streamCompletion({ messages, tools: LEARNING_TOOLS })) {
-        const delta = chunk.choices?.[0]?.delta || {};
-        if (delta.content) contentChunks.push(delta.content);
-        for (const rawCall of delta.tool_calls || []) {
-          const index = rawCall.index ?? toolCalls.length;
-          const call = toolCalls[index] || {
-            id: "",
-            type: "function",
-            function: { name: "", arguments: "" },
-          };
-          if (rawCall.id) call.id = rawCall.id;
-          if (rawCall.type) call.type = rawCall.type;
-          if (rawCall.function?.name) call.function.name += rawCall.function.name;
-          if (rawCall.function?.arguments) call.function.arguments += rawCall.function.arguments;
-          toolCalls[index] = call;
+    let answer = "";
+    try {
+      for await (const assistantMessage of run.messages) {
+        for await (const token of assistantMessage.text) {
+          if (!token) continue;
+          answer += token;
+          yield { type: "delta", content: token };
         }
       }
-      return {
-        content: contentChunks.join(""),
-        contentChunks,
-        toolCalls,
-      };
+      await run.output;
+    } catch (error) {
+      if (!isRecursionLimitError(error)) throw error;
+      const limitResult = createChatResult("已完成学习库检索，但工具调用轮次已达到上限。", state);
+      if (!answer) yield { type: "delta", content: limitResult.answer };
+      yield { type: "done", ...limitResult };
+      return;
     }
-
-    for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
-      const streamed = await readStreamedAssistant();
-      const toolCalls = streamed.toolCalls;
-      messages.push({
-        role: "assistant",
-        content: streamed.content,
-        ...(toolCalls.length ? { tool_calls: toolCalls } : {}),
-      });
-
-      if (!toolCalls.length) {
-        const result = createChatResult(streamed.content, state);
-        if (streamed.contentChunks.length) {
-          for (const content of streamed.contentChunks) {
-            yield { type: "delta", content };
-          }
-        } else {
-          yield { type: "delta", content: result.answer };
-        }
-        yield { type: "done", ...result };
-        return;
-      }
-
-      for (const call of toolCalls) {
-        const args = parseArguments(call.function?.arguments);
-        let output;
-        if (!args) {
-          output = { error: "工具参数不是有效 JSON" };
-        } else if (call.function?.name === "search_learning_knowledge") {
-          if (state.searched) {
-            output = { error: "本轮最多允许一次检索" };
-          } else {
-            state.searched = true;
-            state.retrieved = await search({
-              userId,
-              query: args.query,
-              activeSummaryId,
-              memories,
-            });
-            output = { results: state.retrieved };
-          }
-        } else if (call.function?.name === "update_learning_memory") {
-          if (state.memoryUpdated) {
-            output = { error: "本轮最多允许一次记忆更新" };
-          } else {
-            const target = findRetrievedItem(args.itemId, state.retrieved);
-            if (!target) {
-              output = { error: "只能更新本轮已检索的知识点" };
-            } else if (!args.state) {
-              output = { error: "缺少学习状态" };
-            } else {
-              state.memoryUpdated = true;
-              const change = await updateMemory({
-                userId,
-                itemId: args.itemId,
-                state: args.state,
-              });
-              const memoryChange = {
-                summaryItemId: args.itemId,
-                topic: target.metadata.topic,
-                state: change.state,
-              };
-              state.memoryChanges.push(memoryChange);
-              output = { accepted: true, memoryChange };
-            }
-          }
-        } else {
-          output = { error: "未知工具" };
-        }
-        messages.push({
-          role: "tool",
-          tool_call_id: call.id,
-          content: JSON.stringify(output),
-        });
-      }
-    }
-
-    const result = createChatResult(
-      "已完成学习库检索，但工具调用轮次已达到上限。",
-      state,
-    );
-    yield { type: "delta", content: result.answer };
-    yield { type: "done", ...result };
+    yield { type: "done", ...createChatResult(answer, state) };
   }
 
+  const chat = async function chat(input) {
+    let result;
+    for await (const event of streamChat(input)) {
+      if (event.type === "done") result = event;
+    }
+    return result;
+  };
   chat.stream = streamChat;
   return chat;
 }
@@ -371,10 +215,13 @@ function createLearningAgent({
 const chatWithLearningAgent = createLearningAgent();
 
 module.exports = {
-  LEARNING_TOOLS,
+  LEARNING_TOOL_NAMES,
   MAX_TOOL_ROUNDS,
   MAX_HISTORY_MESSAGES,
   MAX_HISTORY_CHARACTERS,
+  buildSystemPrompt,
+  createLearningTools,
+  isRecursionLimitError,
   normalizeConversationHistory,
   createLearningAgent,
   createLearningAgentStream: (options) => createLearningAgent(options).stream,

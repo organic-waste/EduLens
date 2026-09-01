@@ -388,6 +388,31 @@ h1 {
   color: var(--emphasis-color);
   font-size: 11px;
 }
+.message-summary-reference {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 9px;
+  border: 1px solid #bfd5d9;
+  border-radius: 4px;
+  padding: 5px 7px;
+  background: #f4fafb;
+  color: #486b78;
+  font-size: 11px;
+  text-align: left;
+}
+.message-summary-reference:hover {
+  background: var(--lighter-color);
+}
+.message-summary-reference strong {
+  overflow: hidden;
+  color: var(--emphasis-color);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .memory-changes span {
   border-radius: 999px;
   padding: 4px 7px;

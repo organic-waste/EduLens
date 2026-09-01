@@ -22,6 +22,11 @@ export interface ConversationMessage {
   id: string;
   role: ChatRole;
   content: string;
+  summaryReference?: {
+    id: string;
+    serverId?: string;
+    title: string;
+  };
   citations?: Citation[];
   memoryChanges?: MemoryChange[];
   uncovered?: boolean;

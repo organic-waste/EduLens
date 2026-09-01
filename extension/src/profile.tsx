@@ -61,7 +61,9 @@ function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [updatingMemory, setUpdatingMemory] = useState<string | null>(null);
 
-  useEffect(() => { void initialize(); }, []);
+  useEffect(() => {
+    void initialize();
+  }, []);
 
   async function initialize() {
     if (!globalThis.chrome?.runtime) {
@@ -80,7 +82,10 @@ function ProfilePage() {
 
   async function refresh() {
     try {
-      const data = await loadLearningProfile() as { profile: LearningProfile; memories: LearningMemory[] };
+      const data = (await loadLearningProfile()) as {
+        profile: LearningProfile;
+        memories: LearningMemory[];
+      };
       setProfile({ ...defaultProfile, ...data.profile });
       setMemories(data.memories || []);
       setStatus("");
@@ -94,7 +99,10 @@ function ProfilePage() {
     setSaving(true);
     setStatus("保存中...");
     try {
-      const result = await saveLearningProfile({ ...profile, targetDirection: profile.targetDirection.trim() }) as { profile: LearningProfile };
+      const result = (await saveLearningProfile({
+        ...profile,
+        targetDirection: profile.targetDirection.trim(),
+      })) as { profile: LearningProfile };
       setProfile({ ...defaultProfile, ...result.profile });
       setStatus("已保存");
     } catch (error) {
@@ -116,29 +124,139 @@ function ProfilePage() {
     }
   }
 
-  return <main className="profile-shell">
-    <header className="profile-header">
-      <div><p>EDULENS</p><h1>个人学习主页</h1></div>
-      <button className="icon-button" type="button" title="关闭" aria-label="关闭" onClick={() => window.close()}><X aria-hidden="true" /></button>
-    </header>
-    {account && <section className="card account-card">
-      <div className="avatar">{account.username.slice(0, 1).toLocaleUpperCase()}</div>
-      <div><h2>{account.username}</h2><p>{account.email}</p><small>{account.createdAt ? `加入于 ${formatDate(account.createdAt)}` : ""}</small></div>
-    </section>}
-    <form className="card form-card" onSubmit={saveProfile}>
-      <div className="section-heading"><h2>学习画像</h2><span>影响 AI 回答风格</span></div>
-      <label>目标方向<input value={profile.targetDirection} onChange={(event) => setProfile({ ...profile, targetDirection: event.target.value })} placeholder="例如：前端工程师" /></label>
-      <label>经验等级<select value={profile.experienceLevel} onChange={(event) => setProfile({ ...profile, experienceLevel: event.target.value as LearningProfile["experienceLevel"] })}><option value="beginner">初学者</option><option value="intermediate">进阶</option><option value="advanced">高级</option></select></label>
-      <label>回答深度<select value={profile.answerDepth} onChange={(event) => setProfile({ ...profile, answerDepth: event.target.value as LearningProfile["answerDepth"] })}><option value="concise">简洁</option><option value="balanced">均衡</option><option value="detailed">详细</option></select></label>
-      <label className="checkbox"><input type="checkbox" checked={profile.preferExamples} onChange={(event) => setProfile({ ...profile, preferExamples: event.target.checked })} />偏好示例辅助理解</label>
-      <label className="checkbox"><input type="checkbox" checked={profile.preferInterviewView} onChange={(event) => setProfile({ ...profile, preferInterviewView: event.target.checked })} />偏好面试视角</label>
-      <div className="form-footer"><span>{status}</span><button className="primary-button" type="submit" disabled={saving || !account}>{saving ? "保存中..." : "保存学习画像"}</button></div>
-    </form>
-    <section className="card memory-card">
-      <div className="section-heading"><div><h2>学习记忆</h2></div></div>
-      <div className="memory-list">{memories.length ? memories.map((memory) => <article className="memory-item" key={memory.summaryItemId}><div><strong>{memory.topic || "知识点"}</strong><p>{memory.content || memory.summaryItemId}</p></div><select value={memory.state} disabled={updatingMemory === memory.summaryItemId} onChange={(event) => void updateMemory(memory, event.target.value as LearningState)}><option value="mastered">已掌握</option><option value="confusing">易混淆</option><option value="review">稍后复习</option></select></article>) : <p className="empty-copy">还没有学习状态。与 AI 对话或在摘要中学习后，记忆会显示在这里。</p>}</div>
-    </section>
-  </main>;
+  return (
+    <main className="profile-shell">
+      <header className="profile-header">
+        <div>
+          <p>EDULENS</p>
+          <h1>个人学习主页</h1>
+        </div>
+        <button
+          className="icon-button"
+          type="button"
+          title="关闭"
+          aria-label="关闭"
+          onClick={() => window.close()}
+        >
+          <X aria-hidden="true" />
+        </button>
+      </header>
+      {account && (
+        <section className="card account-card">
+          <div className="avatar">{account.username.slice(0, 1).toLocaleUpperCase()}</div>
+          <div>
+            <h2>{account.username}</h2>
+            <p>{account.email}</p>
+            <small>{account.createdAt ? `加入于 ${formatDate(account.createdAt)}` : ""}</small>
+          </div>
+        </section>
+      )}
+      <form className="card form-card" onSubmit={saveProfile}>
+        <div className="section-heading">
+          <h2>学习画像</h2>
+          <span>影响 AI 回答风格</span>
+        </div>
+        <label>
+          目标方向
+          <input
+            value={profile.targetDirection}
+            onChange={(event) => setProfile({ ...profile, targetDirection: event.target.value })}
+            placeholder="例如：前端工程师"
+          />
+        </label>
+        <label>
+          经验等级
+          <select
+            value={profile.experienceLevel}
+            onChange={(event) =>
+              setProfile({
+                ...profile,
+                experienceLevel: event.target.value as LearningProfile["experienceLevel"],
+              })
+            }
+          >
+            <option value="beginner">初学者</option>
+            <option value="intermediate">进阶</option>
+            <option value="advanced">高级</option>
+          </select>
+        </label>
+        <label>
+          回答深度
+          <select
+            value={profile.answerDepth}
+            onChange={(event) =>
+              setProfile({
+                ...profile,
+                answerDepth: event.target.value as LearningProfile["answerDepth"],
+              })
+            }
+          >
+            <option value="concise">简洁</option>
+            <option value="balanced">均衡</option>
+            <option value="detailed">详细</option>
+          </select>
+        </label>
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={profile.preferExamples}
+            onChange={(event) => setProfile({ ...profile, preferExamples: event.target.checked })}
+          />
+          偏好示例辅助理解
+        </label>
+        <label className="checkbox">
+          <input
+            type="checkbox"
+            checked={profile.preferInterviewView}
+            onChange={(event) =>
+              setProfile({ ...profile, preferInterviewView: event.target.checked })
+            }
+          />
+          偏好面试视角
+        </label>
+        <div className="form-footer">
+          <span>{status}</span>
+          <button className="primary-button" type="submit" disabled={saving || !account}>
+            {saving ? "保存中..." : "保存学习画像"}
+          </button>
+        </div>
+      </form>
+      <section className="card memory-card">
+        <div className="section-heading">
+          <div>
+            <h2>学习记忆</h2>
+          </div>
+        </div>
+        <div className="memory-list">
+          {memories.length ? (
+            memories.map((memory) => (
+              <article className="memory-item" key={memory.summaryItemId}>
+                <div>
+                  <strong>{memory.topic || "知识点"}</strong>
+                  <p>{memory.content || memory.summaryItemId}</p>
+                </div>
+                <select
+                  value={memory.state}
+                  disabled={updatingMemory === memory.summaryItemId}
+                  onChange={(event) =>
+                    void updateMemory(memory, event.target.value as LearningState)
+                  }
+                >
+                  <option value="mastered">已掌握</option>
+                  <option value="confusing">易混淆</option>
+                  <option value="review">稍后复习</option>
+                </select>
+              </article>
+            ))
+          ) : (
+            <p className="empty-copy">
+              还没有学习状态。与 AI 对话或在摘要中学习后，记忆会显示在这里。
+            </p>
+          )}
+        </div>
+      </section>
+    </main>
+  );
 }
 
 createRoot(document.getElementById("root")!).render(<ProfilePage />);
