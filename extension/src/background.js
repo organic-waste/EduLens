@@ -34,6 +34,7 @@ chrome.tabs.onUpdated.addListener((tabId, tab) => {
 
 const normalizePageUrl = (url) => url?.split("#")[0].replace(/\/$/, "");
 
+// 等待页面加载完成
 function waitForTabLoad(tab) {
   if (tab.status === "complete") return Promise.resolve();
 
@@ -85,6 +86,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return;
       }
       try {
+      // 注入网页选区脚本以读取选中文本、标题、URL、Selector、位置等信息
         await chrome.scripting.executeScript({
           target: { tabId: tab.id },
           func: () => {
@@ -181,11 +183,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     (async () => {
       try {
         const citation = request.citation || {};
+        // 先打开对应 URL
         const { tab: targetTab } = await resolveCitationTab(citation);
         if (!targetTab?.id) throw new Error("未找到可定位的网页标签页");
 
-        // 页面完成加载后，正文可能仍由前端异步渲染，注入函数内部会继续重试。
-
+        // 跳转回定位处
         const [result] = await chrome.scripting.executeScript({
           target: { tabId: targetTab.id },
           args: [citation],
@@ -201,6 +203,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 element.style.outlineOffset = previousOffset;
               }, 1800);
             };
+            // 匹配项加个边框强调
             const highlightRange = (range, method) => {
               const selection = window.getSelection();
               selection.removeAllRanges();
@@ -209,6 +212,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               setTimeout(() => selection.removeAllRanges(), 1800);
               return { located: true, method };
             };
+            // 用 TreeWalker 遍历节点找出对应位置 DOM 
             const rangeFromTextOffsets = (start, end) => {
               const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
               let cursor = 0;
@@ -250,6 +254,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               }
               return null;
             };
+            // 找到位置后再匹配quote文本和前后缀，否则匹配 CSS Selector
             const quote = citation.quote?.trim();
             const normalizedQuote = quote?.replace(/\s+/g, " ");
             for (let attempt = 0; attempt < 12; attempt += 1) {

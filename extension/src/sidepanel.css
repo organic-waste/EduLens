@@ -211,6 +211,10 @@ h1 {
   height: 20px;
   fill: currentColor;
 }
+.action-icon.lucide {
+  fill: none;
+  stroke: currentColor;
+}
 .icon-button .action-icon {
   width: 24px;
   height: 24px;

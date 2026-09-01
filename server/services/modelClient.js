@@ -126,7 +126,7 @@ async function* streamOpenAICompatible({ baseUrl, apiKey, path, body, label }) {
   }
 }
 
-function createDeepSeekChatCompletionStream({ messages, temperature = 0.3 }) {
+function createDeepSeekChatCompletionStream({ messages, tools, temperature = 0.3 }) {
   const config = getModelConfig().deepseek;
   return streamOpenAICompatible({
     ...config,
@@ -135,6 +135,7 @@ function createDeepSeekChatCompletionStream({ messages, temperature = 0.3 }) {
     body: {
       model: config.model,
       messages,
+      ...(tools?.length ? { tools } : {}),
       temperature,
       stream: true,
     },

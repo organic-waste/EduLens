@@ -60,45 +60,81 @@ function applyOperationToData(data, operation) {
 }
 
 function resolveUpdateConflictLWW(clientOp, serverOp) {
-  return new Date(clientOp.timestamp).getTime() >
-    new Date(serverOp.timestamp).getTime()
+  const clientTime = getOperationTimestamp(clientOp);
+  const serverTime = getOperationTimestamp(serverOp);
+  return clientTime > serverTime
     ? clientOp
     : { type: "reject" };
 }
 
+function getOperationTimestamp(operation) {
+  const timestamp = new Date(operation?.timestamp).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function getOperationKind(operation) {
+  return operation?.type?.split("-")[0];
+}
+
+function getOperationEntityId(operation) {
+  return Array.isArray(operation?.data) ? null : operation?.data?.id;
+}
+
 function transformSingleOperation(clientOp, serverOp) {
-  // 不同矩形互不影响
-  if (
-    clientOp.type.startsWith("rectangle-") &&
-    serverOp.type.startsWith("rectangle-")
-  ) {
-    return clientOp.data.id === serverOp.data.id
-      ? resolveUpdateConflictLWW(clientOp, serverOp)
-      : clientOp;
-  }
+  const clientKind = getOperationKind(clientOp);
+  const serverKind = getOperationKind(serverOp);
+  // 不同资源互不影响,相同资源的不同 ID 也可以并存
+  if (clientKind !== serverKind) return clientOp;
+
+  const clientId = getOperationEntityId(clientOp);
+  const serverId = getOperationEntityId(serverOp);
+
   if (clientOp.type === "bookmark-add" && serverOp.type === "bookmark-add") {
+    // 同一个书签仍按时间戳解决，只有不同书签才做位置错开
+    if (clientId && serverId && clientId === serverId) {
+      return resolveUpdateConflictLWW(clientOp, serverOp);
+    }
     // 书签位置过近时向后顺延，避免多个书签渲染时重叠
     if (
       Math.abs(clientOp.data.scrollPercent - serverOp.data.scrollPercent) <
       0.005
     ) {
+      const scrollPercent = Math.min(
+        1,
+        Math.max(0, clientOp.data.scrollPercent + 0.005),
+      );
       return {
         ...clientOp,
         data: {
           ...clientOp.data,
-          scrollPercent: clientOp.data.scrollPercent + 0.005,
+          scrollPercent,
         },
       };
     }
     return clientOp;
   }
+
+  if (clientId && serverId && clientId !== serverId) return clientOp;
+
+  // 避免旧更新复活已删除对象
+  if (clientId && serverId && clientId === serverId) {
+    const clientIsDelete = clientOp.type.endsWith("-delete");
+    const serverIsDelete = serverOp.type.endsWith("-delete");
+    if (clientIsDelete !== serverIsDelete) {
+      return resolveUpdateConflictLWW(clientOp, serverOp);
+    }
+  }
+
   return clientOp.type === serverOp.type
     ? resolveUpdateConflictLWW(clientOp, serverOp)
     : clientOp;
 }
 
 function transformOperation(operation, operationQueue, clientVersion) {
-  let transformedOp = { ...operation };
+  let transformedOp = {
+    ...operation,
+    timestamp: operation.timestamp || new Date().toISOString(),
+  };
   // 只转换客户端版本之后的服务端操作
   for (let index = clientVersion; index < operationQueue.length; index += 1) {
     if (transformedOp.type === "reject") break;

@@ -152,7 +152,7 @@ router.put("/memory/:summaryItemId", auth, async (req, res) => {
 });
 
 function writeSse(res, event, payload) {
-  if (res.writableEnded) return;
+  if (res.writableEnded || res.destroyed) return;
   res.write(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`);
   res.flush?.();
 }
@@ -162,7 +162,6 @@ router.post("/chat", auth, async (req, res) => {
     "message is required",
     "history must be an array",
     "history contains an invalid message",
-    "history contains an empty message",
     "history is too long",
   ];
   try {
@@ -183,10 +182,6 @@ router.post("/chat", auth, async (req, res) => {
   });
   res.flushHeaders?.();
   writeSse(res, "ready", { status: "ok" });
-  let closed = false;
-  req.on("close", () => {
-    closed = true;
-  });
 
   try {
     const context = await loadLearningContext(req.userId);
@@ -197,12 +192,11 @@ router.post("/chat", auth, async (req, res) => {
       history: req.body.history,
       ...context,
     })) {
-      if (closed) break;
       const { type, ...payload } = event;
       writeSse(res, type || "message", payload);
     }
   } catch (error) {
-    if (!closed) writeSse(res, "error", { message: error.message });
+    writeSse(res, "error", { message: error.message });
   } finally {
     if (!res.writableEnded) res.end();
   }

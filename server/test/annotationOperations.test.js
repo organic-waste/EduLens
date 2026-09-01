@@ -82,4 +82,74 @@ describe("transformOperation", () => {
     );
     expect(result.data.scrollPercent).toBeCloseTo(0.105);
   });
+
+  it("keeps updates to different bookmark IDs even when their types match", () => {
+    const operation = {
+      type: "bookmark-update",
+      timestamp: "2026-01-01T00:00:00.000Z",
+      data: { id: "b2", text: "client" },
+    };
+    expect(
+      transformOperation(
+        operation,
+        [
+          {
+            type: "bookmark-update",
+            timestamp: "2026-01-01T00:01:00.000Z",
+            data: { id: "b1", text: "server" },
+          },
+        ],
+        0,
+      ),
+    ).toEqual(operation);
+  });
+
+  it("applies the same ID conflict rule to images", () => {
+    const operation = {
+      type: "image-update",
+      timestamp: "2026-01-01T00:00:00.000Z",
+      data: { id: "image-2", x: 10 },
+    };
+    expect(
+      transformOperation(
+        operation,
+        [
+          {
+            type: "image-update",
+            timestamp: "2026-01-01T00:01:00.000Z",
+            data: { id: "image-1", x: 20 },
+          },
+        ],
+        0,
+      ),
+    ).toEqual(operation);
+  });
+
+  it("does not revive an annotation after a newer delete", () => {
+    const result = transformOperation(
+      {
+        type: "image-update",
+        timestamp: "2026-01-01T00:00:00.000Z",
+        data: { id: "image-1", x: 10 },
+      },
+      [
+        {
+          type: "image-delete",
+          timestamp: "2026-01-01T00:01:00.000Z",
+          data: { id: "image-1" },
+        },
+      ],
+      0,
+    );
+    expect(result).toEqual({ type: "reject" });
+  });
+
+  it("clamps bookmark offsets at the end of the page", () => {
+    const result = transformOperation(
+      { type: "bookmark-add", data: { id: "b2", scrollPercent: 0.999 } },
+      [{ type: "bookmark-add", data: { id: "b1", scrollPercent: 0.997 } }],
+      0,
+    );
+    expect(result.data.scrollPercent).toBe(1);
+  });
 });

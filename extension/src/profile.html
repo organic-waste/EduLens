@@ -6,52 +6,7 @@
     <title>EduLens 个人主页</title>
   </head>
   <body>
-    <main class="profile-shell">
-      <header class="profile-header">
-        <div>
-          <p>EDULENS</p>
-          <h1>个人学习主页</h1>
-        </div>
-        <button id="close-page" class="icon-button" type="button" title="关闭">×</button>
-      </header>
-      <div id="profile-content">
-        <section class="card account-card">
-          <div class="avatar" id="account-avatar"></div>
-          <div>
-            <h2 id="account-name"></h2>
-            <p id="account-email"></p>
-            <small id="account-created-at"></small>
-          </div>
-        </section>
-
-        <form id="learning-profile-form" class="card form-card">
-          <div class="section-heading"><h2>学习画像</h2><span>影响 AI 回答风格</span></div>
-          <label>目标方向<input id="target-direction" name="targetDirection" placeholder="例如：前端工程师" /></label>
-          <label>经验等级
-            <select id="experience-level" name="experienceLevel">
-              <option value="beginner">初学者</option>
-              <option value="intermediate">进阶</option>
-              <option value="advanced">高级</option>
-            </select>
-          </label>
-          <label>回答深度
-            <select id="answer-depth" name="answerDepth">
-              <option value="concise">简洁</option>
-              <option value="balanced">均衡</option>
-              <option value="detailed">详细</option>
-            </select>
-          </label>
-          <label class="checkbox"><input id="prefer-examples" type="checkbox" name="preferExamples" />偏好示例辅助理解</label>
-          <label class="checkbox"><input id="prefer-interview-view" type="checkbox" name="preferInterviewView" />偏好面试视角</label>
-          <div class="form-footer"><span id="save-status"></span><button class="primary-button" type="submit">保存学习画像</button></div>
-        </form>
-
-        <section class="card memory-card">
-          <div class="section-heading"><div><h2>学习记忆</h2></div></div>
-          <div id="memory-list" class="memory-list"></div>
-        </section>
-      </div>
-    </main>
-    <script type="module" src="./profile.js"></script>
+    <div id="root"></div>
+    <script type="module" src="./profile.tsx"></script>
   </body>
 </html>

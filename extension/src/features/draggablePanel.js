@@ -135,7 +135,7 @@ function DraggablePanel() {
   eventStore.on(panelDiv, "mousedown", (e) => {
     isMoved = false;
     filterStore.isDragging = true;
-    //e.clientX —— 鼠标相对于视口的横坐标。
+    //e.clientX —— 鼠标相对于视口的横坐标
     //box.offsetLeft —— 方块相对于定位祖先的横坐标
     //二者相减得到“鼠标点击点距离方块左边框”的距离,这样拖动时按钮不会瞬间跳到鼠标位置
     ({ x: offsetX, y: offsetY } = getOffsetPos(e, panelDiv));

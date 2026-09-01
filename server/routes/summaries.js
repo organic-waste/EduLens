@@ -64,20 +64,38 @@ router.get("/", auth, async (req, res) => {
 
 router.post("/upsert", auth, async (req, res) => {
   try {
-    const { id, title, groups, source, sourceUrl } = req.body;
+    const {
+      serverId,
+      clientId,
+      id: legacyServerId,
+      title,
+      groups,
+      source,
+      sourceUrl,
+    } = req.body;
+    const targetServerId = serverId || legacyServerId;
     const normalizedSource = Array.isArray(groups)
       ? normalizeSummarySource(source, sourceUrl, groups)
       : null;
-    if (!title || !Array.isArray(groups) || !normalizedSource || !hasStableItemIds(groups)) {
+    if (
+      !title ||
+      !Array.isArray(groups) ||
+      !normalizedSource ||
+      !hasStableItemIds(groups)
+    ) {
       return res
         .status(400)
-        .json({ status: "error", message: "摘要数据不完整或缺少稳定知识点 ID" });
+        .json({
+          status: "error",
+          message: "摘要数据不完整或缺少稳定知识点 ID",
+        });
     }
     const document =
-      id &&
+      targetServerId &&
       (await SummaryDocument.findOneAndUpdate(
-        { _id: id, userId: req.userId },
+        { _id: targetServerId, userId: req.userId },
         {
+          ...(clientId ? { clientId } : {}),
           title,
           groups: attachSourceToItems(groups, normalizedSource),
           source: normalizedSource,
@@ -89,6 +107,7 @@ router.post("/upsert", auth, async (req, res) => {
       document ||
       (await SummaryDocument.create({
         userId: req.userId,
+        clientId,
         title,
         groups: attachSourceToItems(groups, normalizedSource),
         source: normalizedSource,

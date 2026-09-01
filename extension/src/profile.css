@@ -63,6 +63,11 @@ h2 {
   font-size: 22px;
   line-height: 1;
 }
+.icon-button svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
 .card {
   margin-bottom: 12px;
   border: 1px solid #d4e2e5;

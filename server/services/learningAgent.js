@@ -91,7 +91,7 @@ function findRetrievedItem(itemId, retrieved) {
 function normalizeConversationHistory(history) {
   if (history === undefined) return [];
   if (!Array.isArray(history)) throw new Error("history must be an array");
-  const messages = history.slice(-MAX_HISTORY_MESSAGES).map((item) => {
+  const messages = history.slice(-MAX_HISTORY_MESSAGES).flatMap((item) => {
     if (
       !item ||
       !["user", "assistant"].includes(item.role) ||
@@ -100,8 +100,10 @@ function normalizeConversationHistory(history) {
       throw new Error("history contains an invalid message");
     }
     const content = item.content.trim();
-    if (!content) throw new Error("history contains an empty message");
-    return { role: item.role, content };
+    // Interrupted streaming can leave an empty placeholder in local storage.
+    // It contains no conversational context, so skip it instead of rejecting
+    // the whole request.
+    return content ? [{ role: item.role, content }] : [];
   });
   const characters = messages.reduce(
     (count, item) => count + item.content.length,
@@ -245,46 +247,57 @@ function createLearningAgent({
       retrieved: [],
       memoryChanges: [],
     };
-    let usedTools = false;
     const messages = [
       { role: "system", content: buildSystemPrompt(profile) },
       ...historyMessages,
       { role: "user", content: message.trim() },
     ];
 
+    async function readStreamedAssistant() {
+      const contentChunks = [];
+      const toolCalls = [];
+      for await (const chunk of streamCompletion({ messages, tools: LEARNING_TOOLS })) {
+        const delta = chunk.choices?.[0]?.delta || {};
+        if (delta.content) contentChunks.push(delta.content);
+        for (const rawCall of delta.tool_calls || []) {
+          const index = rawCall.index ?? toolCalls.length;
+          const call = toolCalls[index] || {
+            id: "",
+            type: "function",
+            function: { name: "", arguments: "" },
+          };
+          if (rawCall.id) call.id = rawCall.id;
+          if (rawCall.type) call.type = rawCall.type;
+          if (rawCall.function?.name) call.function.name += rawCall.function.name;
+          if (rawCall.function?.arguments) call.function.arguments += rawCall.function.arguments;
+          toolCalls[index] = call;
+        }
+      }
+      return {
+        content: contentChunks.join(""),
+        contentChunks,
+        toolCalls,
+      };
+    }
+
     for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
-      const response = await chatCompletion({
-        messages,
-        tools: LEARNING_TOOLS,
-      });
-      const assistant = response.choices?.[0]?.message;
-      if (!assistant) throw new Error("DeepSeek 返回内容为空");
-      const toolCalls = assistant.tool_calls || [];
-      usedTools = usedTools || toolCalls.length > 0;
+      const streamed = await readStreamedAssistant();
+      const toolCalls = streamed.toolCalls;
       messages.push({
         role: "assistant",
-        content: assistant.content || "",
+        content: streamed.content,
         ...(toolCalls.length ? { tool_calls: toolCalls } : {}),
       });
 
       if (!toolCalls.length) {
-        let answer = assistant.content || "";
-        if (usedTools) {
-          answer = "";
-          for await (const chunk of streamCompletion({ messages })) {
-            const content = chunk.choices?.[0]?.delta?.content || "";
-            if (!content) continue;
-            answer += content;
+        const result = createChatResult(streamed.content, state);
+        if (streamed.contentChunks.length) {
+          for (const content of streamed.contentChunks) {
             yield { type: "delta", content };
           }
         } else {
-          // The first non-tool response is already complete; split it so the
-          // client still receives the same incremental SSE contract.
-          for (let index = 0; index < answer.length; index += 32) {
-            yield { type: "delta", content: answer.slice(index, index + 32) };
-          }
+          yield { type: "delta", content: result.answer };
         }
-        const result = createChatResult(answer, state);
         yield { type: "done", ...result };
         return;
       }

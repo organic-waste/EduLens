@@ -3,9 +3,12 @@ import { authManager } from "./authManager.js";
 
 export async function syncSummaryDocument(document) {
   if (!authManager.isAuthenticated()) return null;
-  const payload = { ...document };
-  if (!document.remoteId) delete payload.id;
-  else payload.id = document.remoteId;
+  // 前端的 id 与 MongoDB 主键分离：服务端只通过 serverId 判断是否更新。
+  const payload = {
+    ...document,
+    clientId: document.id,
+  };
+  delete payload.id;
   const response = await apiClient.request("/summaries/upsert", {
     method: "POST",
     body: JSON.stringify(payload),

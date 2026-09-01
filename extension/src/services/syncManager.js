@@ -83,7 +83,7 @@ class SyncManager {
     try {
       const roomId = roomManager.getCurrentRoom()._id;
       const response = await apiClient.request(
-        `/annotations/${roomId}/${encodeURIComponent(pageUrl)}`
+        `/annotations/${roomId}/${encodeURIComponent(pageUrl)}`,
       );
 
       const data = await response.json();
@@ -179,13 +179,21 @@ class SyncManager {
 
   // 使用HTTP来处理实时操作处理
   sendOperation(operation) {
+    // 统一补齐操作时间戳
+    const operationWithTimestamp = {
+      ...operation,
+      timestamp: operation.timestamp || new Date().toISOString(),
+    };
     // 如果WebSocket可用，优先使用WebSocket
     if (webSocketClient.isConnected()) {
-      return webSocketClient.sendOperation(operation, this.currentVersion);
+      return webSocketClient.sendOperation(
+        operationWithTimestamp,
+        this.currentVersion,
+      );
     } else {
       // WebSocket不可用时回退
       console.warn("WebSocket 不可用，操作将通过HTTP同步");
-      this.pendingOperations.push(operation);
+      this.pendingOperations.push(operationWithTimestamp);
       return false;
     }
   }
@@ -209,8 +217,8 @@ class SyncManager {
         case "bookmark-update":
           await this.mergeData("bookmarks", (bookmarks) =>
             bookmarks.map((b) =>
-              b.id === operation.data.id ? operation.data : b
-            )
+              b.id === operation.data.id ? operation.data : b,
+            ),
           );
           // 若已经在全局中保存了重新渲染函数时
           if (typeof window.__edulens_reloadBookmarks === "function") {
@@ -219,7 +227,7 @@ class SyncManager {
           break;
         case "bookmark-delete":
           await this.mergeData("bookmarks", (bookmarks) =>
-            bookmarks.filter((b) => b.id !== operation.data.id)
+            bookmarks.filter((b) => b.id !== operation.data.id),
           );
           break;
         case "canvas-update":
@@ -248,14 +256,14 @@ class SyncManager {
             // 如果是单个对象，则更新单个框选
             await this.mergeData("rectangles", (rectangles) =>
               rectangles.map((r) =>
-                r.id === operation.data.id ? operation.data : r
-              )
+                r.id === operation.data.id ? operation.data : r,
+              ),
             );
           }
           break;
         case "rectangle-delete":
           await this.mergeData("rectangles", (rectangles) =>
-            rectangles.filter((r) => r.id !== operation.data.id)
+            rectangles.filter((r) => r.id !== operation.data.id),
           );
           break;
         case "image-add":
@@ -266,7 +274,9 @@ class SyncManager {
           break;
         case "image-update":
           await this.mergeData("images", (images) =>
-            images.map((i) => (i.id === operation.data.id ? operation.data : i))
+            images.map((i) =>
+              i.id === operation.data.id ? operation.data : i,
+            ),
           );
 
           if (typeof window.__edulens_reloadImages === "function") {
@@ -275,7 +285,7 @@ class SyncManager {
           break;
         case "image-delete":
           await this.mergeData("images", (images) =>
-            images.filter((i) => i.id !== operation.data.id)
+            images.filter((i) => i.id !== operation.data.id),
           );
           break;
         default:

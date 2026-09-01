@@ -1,4 +1,5 @@
 const http = require("http");
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -6,9 +7,10 @@ const WebsocketServer = require("./webSocketServer");
 const requestLogger = require("./middleware/requestLogger");
 const { logger } = require("./utils/logger");
 
-// 根据 NODE_ENV 决定加载哪份配置
-const path = `.env.${process.env.NODE_ENV || 'development'}`;
-require('dotenv').config({ path });
+// 根据 NODE_ENV 加载 server 目录下的环境文件，避免启动目录影响配置读取。
+const environment = process.env.NODE_ENV || "development";
+const envPath = path.join(__dirname, `.env.${environment}`);
+require("dotenv").config({ path: envPath });
 
 const app = express();
 app.use(cors());
