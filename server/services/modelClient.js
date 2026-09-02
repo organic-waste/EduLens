@@ -66,82 +66,6 @@ function createDeepSeekChatCompletion({ messages, tools, temperature = 0.3 }) {
   });
 }
 
-async function* streamOpenAICompatible({ baseUrl, apiKey, path, body, label }) {
-  if (!apiKey || apiKey.startsWith("YOUR_")) {
-    throw new Error(`${label} API Key 未配置`);
-  }
-  const response = await fetch(`${baseUrl}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "text/event-stream",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(
-      `${label} 请求失败（${response.status}）${detail ? `：${detail.slice(0, 240)}` : ""}`,
-    );
-  }
-  if (!response.body) throw new Error(`${label} 未返回可读数据流`);
-
-  const decoder = new TextDecoder();
-  let buffer = "";
-  for await (const chunk of response.body) {
-    buffer += decoder.decode(chunk, { stream: true });
-    const events = buffer.split(/\r?\n\r?\n/);
-    buffer = events.pop() || "";
-    for (const event of events) {
-      const data = event
-        .split(/\r?\n/)
-        .filter((line) => line.startsWith("data:"))
-        .map((line) => line.slice(5).trimStart())
-        .join("\n")
-        .trim();
-      if (!data || data === "[DONE]") continue;
-      try {
-        yield JSON.parse(data);
-      } catch {
-        // Ignore provider keep-alive or non-JSON SSE frames.
-      }
-    }
-  }
-  buffer += decoder.decode();
-  if (buffer.trim()) {
-    const data = buffer
-      .split(/\r?\n/)
-      .filter((line) => line.startsWith("data:"))
-      .map((line) => line.slice(5).trimStart())
-      .join("\n")
-      .trim();
-    if (data && data !== "[DONE]") {
-      try {
-        yield JSON.parse(data);
-      } catch {
-        /* provider keep-alive */
-      }
-    }
-  }
-}
-
-function createDeepSeekChatCompletionStream({ messages, tools, temperature = 0.3 }) {
-  const config = getModelConfig().deepseek;
-  return streamOpenAICompatible({
-    ...config,
-    path: "/chat/completions",
-    label: "DeepSeek",
-    body: {
-      model: config.model,
-      messages,
-      ...(tools?.length ? { tools } : {}),
-      temperature,
-      stream: true,
-    },
-  });
-}
-
 function createSiliconFlowEmbeddings(input) {
   const config = getModelConfig().siliconflow;
   return postOpenAICompatible({
@@ -158,6 +82,5 @@ module.exports = {
   DEFAULT_EMBEDDING_MODEL,
   getModelConfig,
   createDeepSeekChatCompletion,
-  createDeepSeekChatCompletionStream,
   createSiliconFlowEmbeddings,
 };

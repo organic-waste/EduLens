@@ -29,13 +29,6 @@ export function updateLearningMemory(summaryItemId, state) {
   });
 }
 
-export function chatWithLearningAgent({ message, activeSummaryId, history }) {
-  return requestLearning("/chat", {
-    method: "POST",
-    body: JSON.stringify({ message, activeSummaryId, history }),
-  });
-}
-
 export async function streamLearningAgent({
   message,
   activeSummaryId,

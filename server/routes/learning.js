@@ -147,7 +147,8 @@ router.put("/memory/:summaryItemId", auth, async (req, res) => {
       itemId: summaryItemId,
       state,
     });
-    res.json({ memory: change.memory });
+    // 前端只需确认写入成功；避免暴露一个并不存在的 memory 嵌套字段。
+    res.json({ status: "success" });
   } catch (error) {
     res
       .status(500)

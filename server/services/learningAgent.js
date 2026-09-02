@@ -199,15 +199,7 @@ function createLearningAgent({
     yield { type: "done", ...createChatResult(answer, state) };
   }
 
-  const chat = async function chat(input) {
-    let result;
-    for await (const event of streamChat(input)) {
-      if (event.type === "done") result = event;
-    }
-    return result;
-  };
-  chat.stream = streamChat;
-  return chat;
+  return { stream: streamChat };
 }
 
 const chatWithLearningAgent = createLearningAgent();
@@ -222,6 +214,5 @@ module.exports = {
   isRecursionLimitError,
   normalizeConversationHistory,
   createLearningAgent,
-  createLearningAgentStream: (options) => createLearningAgent(options).stream,
   chatWithLearningAgent,
 };

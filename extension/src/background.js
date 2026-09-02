@@ -249,7 +249,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   end,
                   end + citation.suffix.length,
                 ) === citation.suffix;
-                if (prefixMatches || suffixMatches) return rangeFromTextOffsets(start, end);
+                // 两个锚点都存在时必须同时满足，否则重复段落会跳到错误位置。
+                if (prefixMatches && suffixMatches) return rangeFromTextOffsets(start, end);
                 start = pageText.indexOf(quote, start + 1);
               }
               return null;
