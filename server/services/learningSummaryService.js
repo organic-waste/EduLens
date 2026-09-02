@@ -4,6 +4,11 @@ const { getLearningSkill } = require("./learningSkills");
 
 const SUMMARY_SYSTEM_PROMPT = getLearningSkill("generate_summary").systemPrompt;
 
+function sourceQuote(text, quote) {
+  const candidate = String(quote || "").trim();
+  return candidate && text.includes(candidate) ? candidate : text.trim();
+}
+
 function parseSummary(content, { text, pageUrl, citation }) {
   const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/i);
   const summary = JSON.parse(fenced ? fenced[1] : content);
@@ -24,10 +29,8 @@ function parseSummary(content, { text, pageUrl, citation }) {
       id: randomUUID(),
       topic: group.topic,
       items: group.items.map((item) => {
-        const quote = String(item.quote || "").trim();
-        if (!item.content || !quote || !text.includes(quote)) {
-          throw new Error("摘要知识点缺少源文本中的准确引用");
-        }
+        if (!item.content?.trim()) throw new Error("摘要知识点内容为空");
+        const quote = sourceQuote(text, item.quote);
         return {
           id: randomUUID(),
           content: item.content,
@@ -72,6 +75,7 @@ const generateLearningSummary = createLearningSummaryGenerator();
 
 module.exports = {
   SUMMARY_SYSTEM_PROMPT,
+  sourceQuote,
   parseSummary,
   createLearningSummaryGenerator,
   generateLearningSummary,

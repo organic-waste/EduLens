@@ -30,6 +30,7 @@ function rerankLearningNodes(results, { memories = [], activeSummaryId } = {}) {
         semanticScore,
         metadata: {
           summaryId: metadata.summaryId,
+          summaryTitle: metadata.summaryTitle,
           summaryItemId: metadata.summaryItemId,
           topic: metadata.topic,
           pageUrl: metadata.pageUrl,

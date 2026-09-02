@@ -13,6 +13,7 @@ const searchedResult = [
     score: 1.05,
     metadata: {
       summaryId: "summary-rag",
+      summaryTitle: "RAG 学习笔记",
       summaryItemId: "item-rag",
       topic: "RAG",
       pageUrl: "https://example.com/rag",
@@ -110,7 +111,13 @@ describe("learning agent", () => {
       memories: [],
     });
     expect(events.at(-1)).toMatchObject({
-      citations: [expect.objectContaining({ summaryItemId: "item-rag", quote: "检索后生成" })],
+      citations: [
+        expect.objectContaining({
+          summaryItemId: "item-rag",
+          summaryTitle: "RAG 学习笔记",
+          quote: "检索后生成",
+        }),
+      ],
       uncovered: false,
     });
   });

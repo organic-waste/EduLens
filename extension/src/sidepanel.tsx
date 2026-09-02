@@ -14,6 +14,7 @@ import {
   generateLearningSupplement,
   generateLearningSummary,
   streamLearningAgent,
+  updateLearningMemory,
 } from "./services/learningClient.js";
 import { loadRemoteSummaryDocuments, syncSummaryDocument } from "./services/summaryClient.js";
 import "./sidepanel.css";
@@ -28,7 +29,9 @@ import {
 import type {
   Citation,
   ConversationMessage,
+  MemoryChange,
   PageSelection,
+  SummaryReference,
   StreamEvent,
   SummaryDocument,
   SummaryItem,
@@ -36,6 +39,7 @@ import type {
 
 type View = "chat" | "library" | "summary";
 type AuthMode = "login" | "register";
+type LearningMemoryState = "mastered" | "confusing" | "review";
 // MongoDB 的 `_id` 仅存在于 API 响应的适配边界，不能进入客户端摘要模型。
 type RemoteSummaryDocument = Omit<Partial<SummaryDocument>, "id" | "serverId"> & {
   _id?: string;
@@ -56,6 +60,17 @@ function toError(error: unknown) {
   return error instanceof Error ? error.message : "请求失败，请稍后重试";
 }
 
+function buildAgentMessage(question: string, pageSelection?: PageSelection | null) {
+  if (!pageSelection?.text) return question;
+  return `用户引用的网页选区：\n${pageSelection.text}\n\n用户的问题：\n${question}`;
+}
+
+function historyContent(message: ConversationMessage) {
+  return message.role === "user"
+    ? buildAgentMessage(message.content, message.pageSelection)
+    : message.content;
+}
+
 function App() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [environmentMessage, setEnvironmentMessage] = useState("");
@@ -70,6 +85,7 @@ function App() {
   const [status, setStatus] = useState("就绪");
   // 防止重复点击，否则嘚引入AbortControler
   const [busy, setBusy] = useState(false);
+  const [updatingMemoryItemId, setUpdatingMemoryItemId] = useState<string | null>(null);
   const messagesRef = useRef<HTMLElement>(null);
   const promptRef = useRef<HTMLTextAreaElement>(null);
 
@@ -83,7 +99,6 @@ function App() {
         return;
       }
       setSelectedPage(message);
-      setPrompt((current) => `${current}${current ? "\n\n" : ""}${message.text}`);
       setStatus("已引用网页选区");
       promptRef.current?.focus();
     };
@@ -222,6 +237,57 @@ function App() {
     setStatus(result?.error || (result?.located ? "已定位网页引用" : "未找到对应网页引用"));
   }
 
+  async function handleMemoryChange(messageId: string, change: MemoryChange) {
+    setUpdatingMemoryItemId(change.summaryItemId);
+    try {
+      await updateLearningMemory(change.summaryItemId, change.state);
+      setMessages((current) => {
+        const next = current.map((message) => {
+          if (message.id !== messageId) return message;
+          return {
+            ...message,
+            memoryChanges: [
+              ...(message.memoryChanges || []).filter(
+                (item) => item.summaryItemId !== change.summaryItemId,
+              ),
+              change,
+            ],
+          };
+        });
+        void persistConversation(next);
+        return next;
+      });
+      setStatus("学习状态已更新");
+    } catch (error) {
+      setStatus(toError(error));
+    } finally {
+      setUpdatingMemoryItemId(null);
+    }
+  }
+
+  function collectRelatedSummaries(
+    providedSummary: SummaryReference | undefined,
+    citations: Citation[] | undefined,
+  ): SummaryReference[] {
+    const references = new Map<string, SummaryReference>();
+    if (providedSummary) {
+      references.set(providedSummary.serverId || providedSummary.id, providedSummary);
+    }
+    for (const citation of citations || []) {
+      if (!citation.summaryId) continue;
+      const summary = documents.find(
+        (item) => item.serverId === citation.summaryId || item.id === citation.summaryId,
+      );
+      const reference: SummaryReference = {
+        id: summary?.id || citation.summaryId,
+        serverId: summary?.serverId || citation.summaryId,
+        title: summary?.title || citation.summaryTitle || "未命名摘要",
+      };
+      references.set(reference.serverId || reference.id, reference);
+    }
+    return [...references.values()];
+  }
+
   function handleOpenCitationSummary(citation: Citation) {
     const summary = documents.find(
       (item) => item.serverId === citation.summaryId || item.id === citation.summaryId,
@@ -268,8 +334,9 @@ function App() {
       setView("summary");
       setStatus("摘要已保存");
     } catch (error) {
-      setMessages((current) => [...current, errorMessage(toError(error))]);
-      setStatus("摘要失败");
+      const message = toError(error);
+      setMessages((current) => [...current, errorMessage(message)]);
+      setStatus(message);
     } finally {
       setBusy(false);
     }
@@ -279,17 +346,19 @@ function App() {
     event.preventDefault();
     const question = prompt.trim();
     if (!question || busy) return;
+    const providedSummaryReference: SummaryReference | undefined = activeSummary
+      ? {
+          id: activeSummary.id,
+          serverId: activeSummary.serverId,
+          title: activeSummary.title,
+        }
+      : undefined;
     const userMessage: ConversationMessage = {
       id: crypto.randomUUID(),
       role: "user",
       content: question,
-      summaryReference: activeSummary
-        ? {
-            id: activeSummary.id,
-            serverId: activeSummary.serverId,
-            title: activeSummary.title,
-          }
-        : undefined,
+      summaryReference: providedSummaryReference,
+      pageSelection: selectedPage || undefined,
     };
     const streamingMessage: ConversationMessage = {
       id: crypto.randomUUID(),
@@ -301,20 +370,21 @@ function App() {
     setMessages(nextMessages);
     await persistConversation([...messages, userMessage]);
     setPrompt("");
+    setSelectedPage(null);
     setBusy(true);
     setStatus("思考中...");
     let answer = "";
     let result: StreamEvent | null = null;
     try {
       await streamLearningAgent({
-        message: question,
+        message: buildAgentMessage(question, selectedPage),
         activeSummaryId: activeSummary?.serverId,
         history: messages
           .filter(
             (item) => (item.role === "user" || item.role === "assistant") && item.content.trim(),
           )
           .slice(-MAX_HISTORY)
-          .map(({ role, content }) => ({ role, content })),
+          .map((item) => ({ role: item.role, content: historyContent(item) })),
         onEvent: (event: StreamEvent) => {
           if (event.type === "delta") {
             answer += event.content || "";
@@ -338,6 +408,7 @@ function App() {
         role: "assistant",
         content: completed.answer || answer,
         citations: completed.citations,
+        summaryReferences: collectRelatedSummaries(providedSummaryReference, completed.citations),
         memoryChanges: completed.memoryChanges,
         uncovered: completed.uncovered,
       };
@@ -476,12 +547,15 @@ function App() {
           onSend={handleSend}
           onSelectPage={() => void handleSelectPage()}
           onSummarize={() => void handleSummarize()}
+          onClearSelection={() => setSelectedPage(null)}
           onClearSummary={() => {
             setActiveSummary(null);
             setActiveItem(null);
           }}
           onCitation={handleOpenCitationSummary}
           onSupplement={(answer) => void supplementSummary(answer)}
+          onMemoryChange={(messageId, change) => void handleMemoryChange(messageId, change)}
+          updatingMemoryItemId={updatingMemoryItemId}
         />
       )}
     </main>
@@ -626,9 +700,12 @@ function ChatPanel({
   onSend,
   onSelectPage,
   onSummarize,
+  onClearSelection,
   onClearSummary,
   onCitation,
   onSupplement,
+  onMemoryChange,
+  updatingMemoryItemId,
 }: {
   messages: ConversationMessage[];
   documents: SummaryDocument[];
@@ -643,12 +720,31 @@ function ChatPanel({
   onSend: (event: FormEvent) => void;
   onSelectPage: () => void;
   onSummarize: () => void;
+  onClearSelection: () => void;
   onClearSummary: () => void;
   onCitation: (citation: Citation) => void;
   onSupplement: (answer: string) => void;
+  onMemoryChange: (messageId: string, change: MemoryChange) => void;
+  updatingMemoryItemId: string | null;
 }) {
   return (
     <>
+      {activeSummary && (
+        <div className="summary-context" aria-label="当前关联摘要">
+          <BookOpen size={14} aria-hidden="true" />
+          <span>相关摘要</span>
+          <strong>{activeSummary.title}</strong>
+          <button
+            className="summary-context-close"
+            type="button"
+            title="移除摘要上下文"
+            aria-label="移除摘要上下文"
+            onClick={onClearSummary}
+          >
+            <X size={16} aria-hidden="true" />
+          </button>
+        </div>
+      )}
       <section ref={messagesRef} className="messages" aria-live="polite">
         {messages.length === 0 ? (
           <div className="empty-state">
@@ -663,24 +759,31 @@ function ChatPanel({
               documents={documents}
               onCitation={onCitation}
               onSupplement={onSupplement}
+              onMemoryChange={onMemoryChange}
+              updatingMemoryItemId={updatingMemoryItemId}
               activeSummary={activeSummary}
             />
           ))
         )}
       </section>
       <form className="composer" onSubmit={onSend}>
-        {activeSummary && (
-          <div className="summary-context">
-            <span>关联摘要：</span>
-            <strong>{activeSummary.title}</strong>
+        {selectedPage?.text && (
+          <div
+            className="page-selection-chip"
+            title={selectedPage.text}
+            aria-label="已引用网页选区"
+          >
+            <span className="page-selection-chip-label">已引用网页选区</span>
+            <span className="page-selection-chip-text">{selectedPage.text}</span>
             <button
-              className="summary-context-close"
               type="button"
-              title="移除摘要上下文"
-              aria-label="移除摘要上下文"
-              onClick={onClearSummary}
+              className="page-selection-chip-remove"
+              title="移除网页选区"
+              aria-label="移除网页选区"
+              disabled={busy}
+              onClick={onClearSelection}
             >
-              <X size={16} aria-hidden="true" />
+              <X size={14} aria-hidden="true" />
             </button>
           </div>
         )}
@@ -733,29 +836,54 @@ function Message({
   documents,
   onCitation,
   onSupplement,
+  onMemoryChange,
+  updatingMemoryItemId,
   activeSummary,
 }: {
   message: ConversationMessage;
   documents: SummaryDocument[];
   onCitation: (citation: Citation) => void;
   onSupplement: (answer: string) => void;
+  onMemoryChange: (messageId: string, change: MemoryChange) => void;
+  updatingMemoryItemId: string | null;
   activeSummary: SummaryDocument | null;
 }) {
   const canSupplement =
     message.role === "assistant" &&
     !message.streaming &&
     Boolean(activeSummary && (message.uncovered || activeSummary));
-  const citations = [
-    ...new Map(
-      (message.citations || []).map((citation, index) => [
-        citation.summaryId || `unknown-${index}`,
-        citation,
-      ]),
-    ).values(),
-  ];
+  const relatedSummaryMap = new Map<string, SummaryReference>();
+  for (const reference of message.summaryReferences || []) {
+    relatedSummaryMap.set(reference.serverId || reference.id, reference);
+  }
+  // 兼容迁移前仅保存 citations 的历史对话。
+  for (const citation of message.citations || []) {
+    if (!citation.summaryId) continue;
+    const summary = documents.find(
+      (item) => item.serverId === citation.summaryId || item.id === citation.summaryId,
+    );
+    const reference: SummaryReference = {
+      id: summary?.id || citation.summaryId,
+      serverId: summary?.serverId || citation.summaryId,
+      title: summary?.title || citation.summaryTitle || "未命名摘要",
+    };
+    relatedSummaryMap.set(reference.serverId || reference.id, reference);
+  }
+  const relatedSummaries = [...relatedSummaryMap.values()];
+  const memoryTargets = new Map<string, { summaryItemId: string; topic?: string }>();
+  for (const citation of message.citations || []) {
+    if (!citation.summaryItemId) continue;
+    memoryTargets.set(citation.summaryItemId, {
+      summaryItemId: citation.summaryItemId,
+      topic: citation.topic,
+    });
+  }
+  const memoryStates = new Map(
+    (message.memoryChanges || []).map((change) => [change.summaryItemId, change.state]),
+  );
   return (
     <article className={`message ${message.role}`}>
-      <span className="message-label">{message.role === "user" ? "你" : "AI 助手"}</span>
+      <span className="message-label">{message.role === "user" ? "我" : "AI 助手"}</span>
       {message.role === "assistant" ? (
         <div
           className="markdown-body"
@@ -779,23 +907,18 @@ function Message({
           <strong>{message.summaryReference.title}</strong>
         </button>
       )}
-      {citations.length ? (
-        <div className="message-citations">
-          <span>学习库引用</span>
-          {citations.map((citation) => {
-            const summary = documents.find(
-              (item) => item.serverId === citation.summaryId || item.id === citation.summaryId,
-            );
-            return (
-              <button
-                type="button"
-                key={citation.summaryId || citation.summaryItemId}
-                onClick={() => onCitation(citation)}
-              >
-                {summary?.title || "未命名摘要"}
-              </button>
-            );
-          })}
+      {message.role === "assistant" && relatedSummaries.length ? (
+        <div className="message-summary-references">
+          <span>相关摘要</span>
+          {relatedSummaries.map((reference) => (
+            <button
+              type="button"
+              key={reference.serverId || reference.id}
+              onClick={() => onCitation({ summaryId: reference.serverId || reference.id })}
+            >
+              {reference.title}
+            </button>
+          ))}
         </div>
       ) : null}
       {message.memoryChanges?.length ? (
@@ -818,6 +941,44 @@ function Message({
           {message.uncovered ? "补充到当前摘要库" : "补充到当前摘要"}
         </button>
       )}
+      {message.role === "assistant" && !message.streaming && memoryTargets.size ? (
+        <div className="message-memory-actions">
+          <span>标记学习状态</span>
+          {[...memoryTargets.values()].map((target) => {
+            const currentState = memoryStates.get(target.summaryItemId);
+            return (
+              <div className="memory-action-row" key={target.summaryItemId}>
+                <strong>{target.topic || "知识点"}</strong>
+                {(
+                  [
+                    ["mastered", "已掌握"],
+                    ["confusing", "易混淆"],
+                    ["review", "稍后复习"],
+                  ] as const
+                ).map(([state, label]) => (
+                  <button
+                    className={`memory-action memory-action--${state}${
+                      currentState === state ? " is-active" : ""
+                    }`}
+                    type="button"
+                    key={state}
+                    disabled={updatingMemoryItemId === target.summaryItemId}
+                    onClick={() =>
+                      onMemoryChange(message.id, {
+                        summaryItemId: target.summaryItemId,
+                        topic: target.topic,
+                        state: state as LearningMemoryState,
+                      })
+                    }
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
     </article>
   );
 }

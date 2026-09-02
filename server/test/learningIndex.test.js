@@ -5,6 +5,7 @@ describe("learning index nodes", () => {
     const nodes = createLearningNodes([
       {
         _id: "summary-1",
+        title: "RAG 学习笔记",
         sourceUrl: "https://example.com/article",
         groups: [
           {
@@ -33,6 +34,7 @@ describe("learning index nodes", () => {
     expect(nodes[0].getText()).toContain("检索增强生成");
     expect(nodes[0].metadata).toMatchObject({
       summaryId: "summary-1",
+      summaryTitle: "RAG 学习笔记",
       summaryItemId: "item-1",
       topic: "RAG",
       pageUrl: "https://example.com/article#rag",

@@ -12,6 +12,7 @@ function node(id, topic, score, summaryId = "summary-1") {
       text: `${topic} knowledge ${id}`,
       metadata: {
         summaryId,
+        summaryTitle: `${topic} 学习笔记`,
         summaryItemId: id,
         topic,
         pageUrl: "https://example.com/article",
@@ -45,7 +46,11 @@ describe("learning search", () => {
 
     expect(result[0].summaryItemId).toBe("focused");
     expect(result[0].semanticScore).toBe(0.82);
-    expect(result[0].metadata).toMatchObject({ summaryItemId: "focused", quote: "focused" });
+    expect(result[0].metadata).toMatchObject({
+      summaryItemId: "focused",
+      summaryTitle: "RAG 学习笔记",
+      quote: "focused",
+    });
   });
 
   it("recalls only the top three results in the fixed evaluator", async () => {

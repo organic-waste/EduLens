@@ -2,6 +2,7 @@ export type ChatRole = "user" | "assistant" | "error";
 
 export interface Citation {
   summaryId?: string;
+  summaryTitle?: string;
   summaryItemId?: string;
   topic?: string;
   pageUrl?: string;
@@ -18,15 +19,22 @@ export interface MemoryChange {
   state: "mastered" | "confusing" | "review" | string;
 }
 
+export interface SummaryReference {
+  id: string;
+  serverId?: string;
+  title: string;
+}
+
 export interface ConversationMessage {
   id: string;
   role: ChatRole;
   content: string;
-  summaryReference?: {
-    id: string;
-    serverId?: string;
-    title: string;
-  };
+  // 只读网页引用：对话界面保持简洁，发送和后续历史中仍保留完整上下文。
+  pageSelection?: PageSelection;
+  // 用户在提问时主动关联的摘要。
+  summaryReference?: SummaryReference;
+  // 助手本轮回答的相关摘要，包含主动关联与检索命中的摘要。
+  summaryReferences?: SummaryReference[];
   citations?: Citation[];
   memoryChanges?: MemoryChange[];
   uncovered?: boolean;
@@ -63,7 +71,9 @@ export interface SummaryDocument {
 
 export interface PageSelection {
   text: string;
+  pageTitle?: string;
   pageUrl?: string;
+  citation?: Citation;
   selector?: string;
   prefix?: string;
   suffix?: string;

@@ -1,6 +1,4 @@
-const {
-  createLearningSummaryGenerator,
-} = require("../services/learningSummaryService");
+const { createLearningSummaryGenerator } = require("../services/learningSummaryService");
 
 describe("learning summary generator", () => {
   const source = {
@@ -49,7 +47,7 @@ describe("learning summary generator", () => {
     });
   });
 
-  it("rejects a model quote that is not present in the selected source", async () => {
+  it("falls back to the selected source when a model quote is not an exact match", async () => {
     const generate = createLearningSummaryGenerator({
       chatCompletion: vi.fn().mockResolvedValue({
         choices: [{ message: { content: JSON.stringify({
@@ -59,6 +57,9 @@ describe("learning summary generator", () => {
       }),
     });
 
-    await expect(generate(source)).rejects.toThrow("准确引用");
+    const summary = await generate(source);
+
+    expect(summary.groups[0].items[0].quote).toBe(source.text);
+    expect(summary.groups[0].items[0].citation.quote).toBe(source.text);
   });
 });

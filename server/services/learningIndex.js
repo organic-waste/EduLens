@@ -25,6 +25,7 @@ function createLearningNodes(summaries) {
           text,
           metadata: {
             summaryId,
+            summaryTitle: summary.title,
             summaryItemId: item.id,
             topic: group.topic,
             pageUrl: citation.pageUrl,

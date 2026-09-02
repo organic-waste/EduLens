@@ -29,6 +29,7 @@ function buildSystemPrompt(profile = {}) {
 function toCitations(results) {
   return results.map((result) => ({
     summaryId: result.metadata.summaryId,
+    summaryTitle: result.metadata.summaryTitle,
     summaryItemId: result.metadata.summaryItemId,
     topic: result.metadata.topic,
     pageUrl: result.metadata.pageUrl,

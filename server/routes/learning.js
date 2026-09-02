@@ -14,6 +14,7 @@ const {
   generateLearningSupplement,
 } = require("../services/learningSupplementService");
 const { updateLearningMemory } = require("../services/learningMemoryService");
+const { logger } = require("../utils/logger");
 
 const router = express.Router();
 const PROFILE_FIELDS = [
@@ -210,6 +211,7 @@ router.post("/summarize", auth, async (req, res) => {
     const summary = await generateLearningSummary(req.body);
     res.json({ summary });
   } catch (error) {
+    logger.error("learning.summary.failed", { requestId: req.requestId, error });
     const isBadRequest = error.message === "摘要来源信息不完整";
     res
       .status(isBadRequest ? 400 : 500)
