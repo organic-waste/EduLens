@@ -104,3 +104,10 @@ export function generateLearningSummary(source) {
     body: JSON.stringify(source),
   }).then((result) => result.summary);
 }
+
+export function generateLearningSupplement(source) {
+  return requestLearning("/supplement", {
+    method: "POST",
+    body: JSON.stringify(source),
+  }).then((result) => result.supplement);
+}

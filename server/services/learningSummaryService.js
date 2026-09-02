@@ -1,13 +1,8 @@
 const { randomUUID } = require("crypto");
 const { createDeepSeekChatCompletion } = require("./modelClient");
+const { getLearningSkill } = require("./learningSkills");
 
-const SUMMARY_SYSTEM_PROMPT = [
-  "You are EduLens Summary Skill.",
-  "Return JSON only, without Markdown.",
-  "Group related knowledge into topics.",
-  "Each item must include an exact quote copied from the source.",
-  "Do not invent facts.",
-].join(" ");
+const SUMMARY_SYSTEM_PROMPT = getLearningSkill("generate_summary").systemPrompt;
 
 function parseSummary(content, { text, pageUrl, citation }) {
   const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/i);

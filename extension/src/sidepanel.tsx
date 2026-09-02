@@ -10,7 +10,11 @@ import {
   X,
 } from "lucide-react";
 import { authManager } from "./services/authManager.js";
-import { generateLearningSummary, streamLearningAgent } from "./services/learningClient.js";
+import {
+  generateLearningSupplement,
+  generateLearningSummary,
+  streamLearningAgent,
+} from "./services/learningClient.js";
 import { loadRemoteSummaryDocuments, syncSummaryDocument } from "./services/summaryClient.js";
 import "./sidepanel.css";
 import {
@@ -352,26 +356,36 @@ function App() {
   }
 
   async function supplementSummary(answer: string) {
-    if (!activeSummary) return;
+    if (!activeSummary || busy) return;
     const next = cloneSummary(activeSummary);
     const topic =
       next.groups.find((group) => group.items.some((item) => item.id === activeItem?.id))?.topic ||
       "AI 补充";
-    let group = next.groups.find((item) => item.topic === topic);
-    if (!group) {
-      group = { id: crypto.randomUUID(), topic, items: [] };
-      next.groups.push(group);
+    setBusy(true);
+    setStatus("正在整理补充内容...");
+    try {
+      const supplement = (await generateLearningSupplement({
+        answer,
+        summaryId: next.serverId,
+        summaryTitle: next.title,
+        topic,
+        activeItemId: activeItem?.id,
+      })) as { topic: string; item: SummaryItem };
+      let group = next.groups.find((item) => item.topic === supplement.topic);
+      if (!group) {
+        group = { id: crypto.randomUUID(), topic: supplement.topic, items: [] };
+        next.groups.push(group);
+      }
+      group.items.push(supplement.item);
+      next.updatedAt = new Date().toISOString();
+      const saved = await persistSummary(next, true);
+      setActiveSummary(saved);
+      setStatus("已补充到摘要");
+    } catch (error) {
+      setStatus(toError(error));
+    } finally {
+      setBusy(false);
     }
-    group.items.push({
-      id: crypto.randomUUID(),
-      content: answer,
-      generated: true,
-      sourceType: "ai-supplement",
-    });
-    next.updatedAt = new Date().toISOString();
-    const saved = await persistSummary(next, true);
-    setActiveSummary(saved);
-    setStatus("已补充到摘要");
   }
 
   if (authenticated === null) return null;
@@ -676,6 +690,11 @@ function ChatPanel({
           value={prompt}
           disabled={busy}
           onChange={(event) => onPrompt(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+            event.preventDefault();
+            event.currentTarget.form?.requestSubmit();
+          }}
           placeholder="输入你的问题..."
           required
         />

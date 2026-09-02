@@ -18,4 +18,5 @@ extension/dist/
 .DS_Store
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/settings.json

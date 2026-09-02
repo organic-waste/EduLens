@@ -10,6 +10,9 @@ const {
 const {
   generateLearningSummary,
 } = require("../services/learningSummaryService");
+const {
+  generateLearningSupplement,
+} = require("../services/learningSupplementService");
 const { updateLearningMemory } = require("../services/learningMemoryService");
 
 const router = express.Router();
@@ -211,6 +214,34 @@ router.post("/summarize", auth, async (req, res) => {
     res
       .status(isBadRequest ? 400 : 500)
       .json({ status: "error", message: error.message });
+  }
+});
+
+router.post("/supplement", auth, async (req, res) => {
+  try {
+    const { answer, summaryId, summaryTitle, topic, activeItemId } = req.body;
+    let resolvedTitle = summaryTitle;
+    let resolvedTopic = topic;
+    if (summaryId) {
+      const summary = await SummaryDocument.findOne({ _id: summaryId, userId: req.userId }).lean();
+      if (!summary) {
+        return res.status(404).json({ status: "error", message: "未找到要补充的摘要" });
+      }
+      resolvedTitle = summary.title;
+      const group = summary.groups.find(
+        (item) => item.topic === topic || item.items.some((item) => item.id === activeItemId),
+      );
+      resolvedTopic = group?.topic || topic;
+    }
+    const item = await generateLearningSupplement({
+      answer,
+      summaryTitle: resolvedTitle,
+      topic: resolvedTopic,
+    });
+    res.json({ supplement: { topic: resolvedTopic, item } });
+  } catch (error) {
+    const isBadRequest = error.message === "补充摘要所需上下文不完整";
+    res.status(isBadRequest ? 400 : 500).json({ status: "error", message: error.message });
   }
 });
 

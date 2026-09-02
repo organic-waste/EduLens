@@ -4,21 +4,18 @@ const { z } = require("zod");
 const { getModelConfig } = require("./modelClient");
 const { searchLearningKnowledge } = require("./learningSearch");
 const { updateLearningMemory } = require("./learningMemoryService");
+const { getLearningSkill } = require("./learningSkills");
 
 const MAX_TOOL_ROUNDS = 3;
 const MAX_HISTORY_MESSAGES = 8;
 const MAX_HISTORY_CHARACTERS = 6000;
-const LEARNING_TOOL_NAMES = ["search_learning_knowledge", "update_learning_memory"];
+const ANSWER_SKILL = getLearningSkill("answer_from_summary");
+const LEARNING_TOOL_NAMES = ANSWER_SKILL.allowedTools;
 
 function buildSystemPrompt(profile = {}) {
   const depth = profile.answerDepth || "balanced";
   return [
-    "你是 EduLens AI 学习助手。",
-    "当用户询问学习或技术知识的概念、原理、比较、复习、面试表达时，必须先调用 search_learning_knowledge，再基于返回证据回答。",
-    "需要调用工具时，必须直接调用工具，不要先输出自然语言。",
-    "只有 search_learning_knowledge 实际返回结果后，才能声称已检索或引用学习库；未调用该工具时，绝不能作出这类表述。",
-    "没有学习库证据时，直接基于通用知识回答问题；不要提及学习库、知识库覆盖范围、来源缺失，也不要建议用户加入学习库、展开话题或更新学习状态。",
-    "回答必须使用 Markdown 格式输出；不要输出原始 HTML。",
+    ANSWER_SKILL.systemPrompt,
     `回答深度：${depth}。`,
     profile.preferExamples ? "回答偏好：在有证据时使用简短示例。" : "",
     profile.preferInterviewView ? "回答偏好：补充面试表达。" : "",
