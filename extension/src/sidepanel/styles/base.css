@@ -1,0 +1,118 @@
+:root {
+  --main-color: #7090ab;
+  --panel-color: #7dbcc7;
+  --hover-color: #5fa6c0;
+  --lighter-color: #deeaec;
+  --background-color: #f5f8fa;
+  --emphasis-color: #4275a4;
+  --error-color: #b85e68;
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  min-width: 280px;
+  height: 100%;
+  background: var(--background-color);
+  color: #1d2a33;
+}
+button,
+textarea,
+input {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+.ai-shell[hidden] {
+  display: none;
+}
+.ai-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 18px 14px 14px;
+  gap: 14px;
+}
+.ai-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #d6e3e6;
+  padding-bottom: 12px;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.eyebrow {
+  margin: 0 0 3px;
+  color: var(--panel-color);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+h1 {
+  margin: 0;
+  color: var(--emphasis-color);
+  font-size: 20px;
+}
+.icon-button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid #c5d8dc;
+  border-radius: 5px;
+  background: white;
+  display: inline-grid;
+  place-items: center;
+  color: #666;
+}
+.icon-button:hover {
+  background: var(--lighter-color);
+}
+.action-icon {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+.action-icon.lucide {
+  fill: none;
+  stroke: currentColor;
+}
+.icon-button .action-icon {
+  width: 24px;
+  height: 24px;
+}
+.icon-button .action-icon[hidden] {
+  display: none !important;
+}
+textarea,
+input {
+  width: 100%;
+  border: 1px solid #d1e0e3;
+  border-radius: 4px;
+  outline: none;
+  background: #fbfdfd;
+  color: #1d2a33;
+}
+textarea {
+  resize: vertical;
+  min-height: 58px;
+  padding: 8px;
+  line-height: 1.45;
+}
+textarea:focus,
+input:focus {
+  border-color: var(--hover-color);
+  box-shadow: 0 0 0 2px rgba(95, 166, 192, 0.16);
+}

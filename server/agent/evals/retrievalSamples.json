@@ -1,0 +1,44 @@
+[
+  { "id": "semantic-1", "query": "什么是闭包以及它如何保存变量", "targetSummaryItemId": "11111111-1111-5111-8111-111111111111" },
+  { "id": "semantic-2", "query": "解释 RAG 的检索增强生成流程", "targetSummaryItemId": "22222222-2222-5222-8222-222222222222" },
+  { "id": "semantic-3", "query": "JWT 如何验证用户身份", "targetSummaryItemId": "33333333-3333-5333-8333-333333333333" },
+  { "id": "semantic-4", "query": "MongoDB 文档与集合的关系", "targetSummaryItemId": "44444444-4444-5444-8444-444444444444" },
+  { "id": "semantic-5", "query": "什么是向量余弦相似度", "targetSummaryItemId": "55555555-5555-5555-8555-555555555555" },
+  { "id": "semantic-6", "query": "解释 JavaScript Promise 的状态", "targetSummaryItemId": "66666666-6666-5666-8666-666666666666" }
+  ,{ "id": "semantic-7", "query": "词法作用域是由什么决定的", "targetSummaryItemId": "13131313-1313-5313-8313-131313131313" }
+  ,{ "id": "semantic-8", "query": "怎样针对特定任务继续训练预训练模型", "targetSummaryItemId": "15151515-1515-5515-8515-151515151515" }
+  ,{ "id": "semantic-9", "query": "第三方登录为什么不需要把密码交给应用", "targetSummaryItemId": "17171717-1717-5717-8717-171717171717" }
+  ,{ "id": "semantic-10", "query": "关系型数据库如何用表和主键组织记录", "targetSummaryItemId": "19191919-1919-5919-8919-191919191919" }
+  ,{ "id": "semantic-11", "query": "欧氏距离表达的是什么含义", "targetSummaryItemId": "21212121-2121-5121-8121-212121212121" }
+  ,{ "id": "semantic-12", "query": "await 会怎样影响 async 函数中的后续语句", "targetSummaryItemId": "24242424-2424-5424-8424-242424242424" }
+  ,{ "id": "semantic-13", "query": "Embedding 为什么能用于语义检索", "targetSummaryItemId": "26262626-2626-5626-8626-262626262626" }
+  ,{ "id": "semantic-14", "query": "MongoDB 索引有什么收益和代价", "targetSummaryItemId": "28282828-2828-5828-8828-282828282828" }
+  ,{ "id": "semantic-15", "query": "闭包和词法作用域有什么联系，函数为什么能记住外部变量", "targetSummaryItemId": "11111111-1111-5111-8111-111111111111" }
+  ,{ "id": "semantic-16", "query": "向量夹角相似和向量编码文本分别解决什么问题", "targetSummaryItemId": "55555555-5555-5555-8555-555555555555" },
+  { "id": "semantic-17", "query": "闭包为什么能让内部函数继续使用外层变量", "targetSummaryItemId": "11111111-1111-5111-8111-111111111111" },
+  { "id": "semantic-18", "query": "RAG 怎么把知识库内容提供给大模型回答", "targetSummaryItemId": "22222222-2222-5222-8222-222222222222" },
+  { "id": "semantic-19", "query": "令牌被篡改后 JWT 如何识别", "targetSummaryItemId": "33333333-3333-5333-8333-333333333333" },
+  { "id": "semantic-20", "query": "MongoDB 里文档通常存放在什么结构中", "targetSummaryItemId": "44444444-4444-5444-8444-444444444444" },
+  { "id": "semantic-21", "query": "两个文本向量方向越接近，余弦相似度代表什么", "targetSummaryItemId": "55555555-5555-5555-8555-555555555555" },
+  { "id": "semantic-22", "query": "Promise 失败时会处于哪种状态", "targetSummaryItemId": "66666666-6666-5666-8666-666666666666" },
+  { "id": "semantic-23", "query": "嵌套函数查找变量的范围由什么决定", "targetSummaryItemId": "13131313-1313-5313-8313-131313131313" },
+  { "id": "semantic-24", "query": "如何在预训练模型基础上适配一个新任务", "targetSummaryItemId": "15151515-1515-5515-8515-151515151515" },
+  { "id": "semantic-25", "query": "使用 OAuth 登录时，为什么第三方拿不到我的密码", "targetSummaryItemId": "17171717-1717-5717-8717-171717171717" },
+  { "id": "semantic-26", "query": "关系型数据库怎样唯一标识一条记录", "targetSummaryItemId": "19191919-1919-5919-8919-191919191919" },
+  { "id": "semantic-27", "query": "欧氏距离变小表示两个向量怎样", "targetSummaryItemId": "21212121-2121-5121-8121-212121212121" },
+  { "id": "semantic-28", "query": "await 会在 Promise 完成之前做什么", "targetSummaryItemId": "24242424-2424-5424-8424-242424242424" },
+  { "id": "semantic-29", "query": "Embedding 是怎样把一句话变成可比较表示的", "targetSummaryItemId": "26262626-2626-5626-8626-262626262626" },
+  { "id": "semantic-30", "query": "数据库索引除了加速读取还有什么代价", "targetSummaryItemId": "28282828-2828-5828-8828-282828282828" },
+  { "id": "semantic-31", "query": "检索增强生成的检索步骤有什么用", "targetSummaryItemId": "22222222-2222-5222-8222-222222222222" },
+  { "id": "semantic-32", "query": "async 函数里的 await 对后面的代码有什么影响", "targetSummaryItemId": "24242424-2424-5424-8424-242424242424" },
+  { "id": "personalized-1", "query": "JavaScript 的异步处理", "targetSummaryItemId": "66666666-6666-5666-8666-666666666666", "memories": [{ "summaryItemId": "66666666-6666-5666-8666-666666666666", "state": "confusing" }, { "summaryItemId": "24242424-2424-5424-8424-242424242424", "state": "mastered" }] },
+  { "id": "personalized-2", "query": "大模型知识问答", "targetSummaryItemId": "22222222-2222-5222-8222-222222222222", "memories": [{ "summaryItemId": "22222222-2222-5222-8222-222222222222", "state": "confusing" }, { "summaryItemId": "15151515-1515-5515-8515-151515151515", "state": "mastered" }] },
+  { "id": "personalized-3", "query": "机器学习知识", "targetSummaryItemId": "55555555-5555-5555-8555-555555555555", "memories": [{ "summaryItemId": "55555555-5555-5555-8555-555555555555", "state": "confusing" }, { "summaryItemId": "26262626-2626-5626-8626-262626262626", "state": "mastered" }] },
+  { "id": "personalized-4", "query": "机器学习知识", "targetSummaryItemId": "21212121-2121-5121-8121-212121212121", "memories": [{ "summaryItemId": "21212121-2121-5121-8121-212121212121", "state": "confusing" }, { "summaryItemId": "55555555-5555-5555-8555-555555555555", "state": "mastered" }] },
+  { "id": "personalized-5", "query": "机器学习知识", "targetSummaryItemId": "26262626-2626-5626-8626-262626262626", "memories": [{ "summaryItemId": "26262626-2626-5626-8626-262626262626", "state": "review" }, { "summaryItemId": "55555555-5555-5555-8555-555555555555", "state": "mastered" }] },
+  { "id": "personalized-6", "query": "数据库知识", "targetSummaryItemId": "44444444-4444-5444-8444-444444444444", "memories": [{ "summaryItemId": "44444444-4444-5444-8444-444444444444", "state": "confusing" }, { "summaryItemId": "19191919-1919-5919-8919-191919191919", "state": "mastered" }] },
+  { "id": "personalized-7", "query": "数据库知识", "targetSummaryItemId": "28282828-2828-5828-8828-282828282828", "memories": [{ "summaryItemId": "28282828-2828-5828-8828-282828282828", "state": "review" }, { "summaryItemId": "19191919-1919-5919-8919-191919191919", "state": "mastered" }] },
+  { "id": "personalized-8", "query": "JavaScript 知识", "targetSummaryItemId": "13131313-1313-5313-8313-131313131313", "memories": [{ "summaryItemId": "13131313-1313-5313-8313-131313131313", "state": "review" }, { "summaryItemId": "11111111-1111-5111-8111-111111111111", "state": "mastered" }] },
+  { "id": "personalized-9", "query": "JavaScript 知识", "targetSummaryItemId": "66666666-6666-5666-8666-666666666666", "memories": [{ "summaryItemId": "66666666-6666-5666-8666-666666666666", "state": "confusing" }, { "summaryItemId": "11111111-1111-5111-8111-111111111111", "state": "mastered" }] },
+  { "id": "personalized-10", "query": "数据库基础知识", "targetSummaryItemId": "28282828-2828-5828-8828-282828282828", "memories": [{ "summaryItemId": "28282828-2828-5828-8828-282828282828", "state": "confusing" }, { "summaryItemId": "19191919-1919-5919-8919-191919191919", "state": "mastered" }] }
+]

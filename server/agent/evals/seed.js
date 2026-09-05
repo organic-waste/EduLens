@@ -2,10 +2,10 @@ const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const User = require("../models/user");
-const SummaryDocument = require("../models/summaryDocument");
+const User = require("../../models/user");
+const SummaryDocument = require("../../models/summaryDocument");
 
-dotenv.config({ path: path.join(__dirname, `../.env.${process.env.NODE_ENV || "development"}`) });
+dotenv.config({ path: path.join(__dirname, `../../.env.${process.env.NODE_ENV || "development"}`) });
 
 const FIXTURE_EMAIL = "edulens-retrieval-eval@example.test";
 const FIXTURE_USERNAME = "edulens_eval";

@@ -1,6 +1,6 @@
 const { randomUUID } = require("crypto");
-const { createDeepSeekChatCompletion } = require("./modelClient");
-const { getLearningSkill } = require("./learningSkills");
+const { createDeepSeekChatCompletion } = require("../../services/modelClient");
+const { getLearningSkill } = require("../prompts/skills");
 
 const SUMMARY_SYSTEM_PROMPT = getLearningSkill("generate_summary").systemPrompt;
 const CITATION_CONTEXT_LENGTH = 80;
@@ -13,7 +13,8 @@ function sourceQuote(text, quote) {
   const candidate = String(quote || "").trim();
   if (!candidate) return null;
   const directIndex = text.indexOf(candidate);
-  if (directIndex >= 0) return text.slice(directIndex, directIndex + candidate.length);
+  if (directIndex >= 0)
+    return text.slice(directIndex, directIndex + candidate.length);
   // 模型通常会合并换行或连续空格；保留源文本中的原始片段以保证后续 DOM 定位可靠。
   const whitespaceTolerant = new RegExp(
     candidate.split(/\s+/).map(escapeRegExp).join("\\s+"),
@@ -54,24 +55,31 @@ function parseSummary(content, { text, pageUrl, citation }) {
   );
 
   if (!summary?.title || !groups?.length) throw new Error("摘要结果格式无效");
-  const normalizedGroups = groups.map((group) => ({
-    id: randomUUID(),
-    topic: group.topic,
-    items: group.items.flatMap((item) => {
-      if (!item.content?.trim()) throw new Error("摘要知识点内容为空");
-      const quote = sourceQuote(text, item.quote);
-      // 没有可验证原文的模型输出不能进入学习库，避免伪造引用污染检索结果。
-      if (!quote) return [];
-      const itemCitation = buildItemCitation(text, quote, { ...citation, pageUrl });
-      if (!itemCitation) return [];
-      return [{
-        id: randomUUID(),
-        content: item.content,
-        quote,
-        citation: itemCitation,
-      }];
-    }),
-  })).filter((group) => group.items.length);
+  const normalizedGroups = groups
+    .map((group) => ({
+      id: randomUUID(),
+      topic: group.topic,
+      items: group.items.flatMap((item) => {
+        if (!item.content?.trim()) throw new Error("摘要知识点内容为空");
+        const quote = sourceQuote(text, item.quote);
+        // 没有可验证原文的模型输出不能进入学习库，避免伪造引用污染检索结果。
+        if (!quote) return [];
+        const itemCitation = buildItemCitation(text, quote, {
+          ...citation,
+          pageUrl,
+        });
+        if (!itemCitation) return [];
+        return [
+          {
+            id: randomUUID(),
+            content: item.content,
+            quote,
+            citation: itemCitation,
+          },
+        ];
+      }),
+    }))
+    .filter((group) => group.items.length);
   if (!normalizedGroups.length) throw new Error("摘要结果缺少可验证的原文引用");
 
   return {
@@ -85,8 +93,15 @@ function parseSummary(content, { text, pageUrl, citation }) {
   };
 }
 
-function createLearningSummaryGenerator({ chatCompletion = createDeepSeekChatCompletion } = {}) {
-  return async function generateLearningSummary({ text, pageTitle, pageUrl, citation }) {
+function createLearningSummaryGenerator({
+  chatCompletion = createDeepSeekChatCompletion,
+} = {}) {
+  return async function generateLearningSummary({
+    text,
+    pageTitle,
+    pageUrl,
+    citation,
+  }) {
     if (!text?.trim() || !pageUrl || !citation?.quote) {
       throw new Error("摘要来源信息不完整");
     }
@@ -102,7 +117,12 @@ function createLearningSummaryGenerator({ chatCompletion = createDeepSeekChatCom
             source: text,
             output: {
               title: "string",
-              groups: [{ topic: "string", items: [{ content: "string", quote: "exact source quote" }] }],
+              groups: [
+                {
+                  topic: "string",
+                  items: [{ content: "string", quote: "exact source quote" }],
+                },
+              ],
             },
           }),
         },

@@ -1,7 +1,7 @@
 const {
   parseSupplement,
   createLearningSupplementGenerator,
-} = require("../services/learningSupplementService");
+} = require("../application/supplement");
 
 describe("learning supplement skill", () => {
   it("returns a plain AI supplement without inventing a citation", async () => {

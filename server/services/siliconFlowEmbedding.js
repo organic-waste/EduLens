@@ -3,6 +3,9 @@ const { createSiliconFlowEmbeddings } = require("./modelClient");
 
 function contentToText(value) {
   if (typeof value === "string") return value;
+  if (value && typeof value === "object" && typeof value.text === "string") {
+    return value.text;
+  }
   if (Array.isArray(value)) {
     return value
       .map((part) => (typeof part === "string" ? part : part?.text || ""))

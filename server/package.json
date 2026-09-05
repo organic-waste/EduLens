@@ -11,8 +11,8 @@
     "start": "cross-env NODE_ENV=production node app.js",
     "dev": "cross-env NODE_ENV=development nodemon app.js",
     "test": "vitest run",
-    "eval:seed": "node evals/seedRetrievalFixture.js",
-    "eval:retrieval": "node evals/runRetrievalEval.js",
+    "eval:seed": "node agent/evals/seed.js",
+    "eval:retrieval": "node agent/evals/run.js",
     "test:watch": "vitest"
   },
   "keywords": [

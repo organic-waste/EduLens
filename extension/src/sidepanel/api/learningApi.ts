@@ -1,7 +1,34 @@
-import { apiClient } from "./apiClient.js";
-import { authManager } from "./authManager.js";
+import { apiClient } from "../../services/apiClient.js";
+import { authManager } from "../../services/authManager.js";
+import type {
+  ConversationMessage,
+  ConversationMemory,
+  MemoryChange,
+  PageSelection,
+  StreamEvent,
+  SummaryDocument,
+} from "../learning.types";
 
-async function requestLearning(endpoint, options = {}) {
+export interface LearningProfile {
+  targetDirection?: string;
+  experienceLevel?: "beginner" | "intermediate" | "advanced";
+  answerDepth?: "concise" | "balanced" | "detailed";
+  preferExamples?: boolean;
+  preferInterviewView?: boolean;
+}
+
+export interface LearningContextResponse {
+  profile: LearningProfile;
+  memories: MemoryChange[];
+}
+
+export interface LearningSummarySource extends PageSelection {
+  text: string;
+}
+
+type LearningRequestOptions = RequestInit;
+
+async function requestLearning(endpoint: string, options: LearningRequestOptions = {}) {
   if (!authManager.isAuthenticated()) {
     throw new Error("登录后使用 AI 学习助手");
   }
@@ -11,18 +38,18 @@ async function requestLearning(endpoint, options = {}) {
   return result;
 }
 
-export function loadLearningProfile() {
+export function loadLearningProfile(): Promise<LearningContextResponse> {
   return requestLearning("/profile");
 }
 
-export function saveLearningProfile(profile) {
+export function saveLearningProfile(profile: LearningProfile) {
   return requestLearning("/profile", {
     method: "PUT",
     body: JSON.stringify(profile),
   });
 }
 
-export function updateLearningMemory(summaryItemId, state) {
+export function updateLearningMemory(summaryItemId: string, state: MemoryChange["state"]) {
   return requestLearning(`/memory/${encodeURIComponent(summaryItemId)}`, {
     method: "PUT",
     body: JSON.stringify({ state }),
@@ -36,7 +63,14 @@ export async function streamLearningAgent({
   conversationSummary,
   onEvent,
   signal,
-}) {
+}: {
+  message: string;
+  activeSummaryId?: string;
+  history?: Array<Pick<ConversationMessage, "role" | "content">>;
+  conversationSummary?: ConversationMemory["summary"];
+  onEvent?: (event: StreamEvent) => void;
+  signal?: AbortSignal;
+}): Promise<void> {
   if (!authManager.isAuthenticated()) {
     throw new Error("登录后使用 AI 学习助手");
   }
@@ -92,14 +126,14 @@ export async function streamLearningAgent({
   if (buffer.trim()) emit(buffer);
 }
 
-export function generateLearningSummary(source) {
+export function generateLearningSummary(source: LearningSummarySource): Promise<SummaryDocument> {
   return requestLearning("/summarize", {
     method: "POST",
     body: JSON.stringify(source),
   }).then((result) => result.summary);
 }
 
-export function generateLearningSupplement(source) {
+export function generateLearningSupplement(source: Record<string, unknown>) {
   return requestLearning("/supplement", {
     method: "POST",
     body: JSON.stringify(source),

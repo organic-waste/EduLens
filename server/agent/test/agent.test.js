@@ -6,7 +6,7 @@ const {
   MAX_HISTORY_MESSAGES,
   RECENT_HISTORY_MESSAGES,
   normalizeConversationHistory,
-} = require("../services/learningAgent");
+} = require("../application/agent");
 
 const searchedResult = [
   {
@@ -45,7 +45,21 @@ function fakeRun(tokens) {
         yield tokenMessage(tokens);
       },
     },
+    toolCalls: {
+      async *[Symbol.asyncIterator]() {},
+    },
     output: Promise.resolve({ messages: [] }),
+  };
+}
+
+function fakeRunWithToolCall(tokens, call) {
+  return {
+    ...fakeRun(tokens),
+    toolCalls: {
+      async *[Symbol.asyncIterator]() {
+        yield call;
+      },
+    },
   };
 }
 
@@ -92,6 +106,24 @@ describe("learning agent", () => {
       },
       expect.objectContaining({ version: "v3" }),
     );
+  });
+
+  it("adapts LangChain tool lifecycles into user-facing status events", async () => {
+    const streamEvents = vi.fn().mockResolvedValue(fakeRunWithToolCall(
+      ["RAG 会先检索，再生成回答。"],
+      {
+        name: "search_learning_knowledge",
+        status: Promise.resolve("finished"),
+        output: Promise.resolve(JSON.stringify({ results: searchedResult })),
+        error: Promise.resolve(undefined),
+      },
+    ));
+    const events = await collectEvents(createLearningAgent({
+      agentFactory: vi.fn().mockResolvedValue({ streamEvents }),
+    }), { userId: "user-1", message: "RAG 是什么" });
+
+    expect(events).toContainEqual({ type: "status", message: "正在检索学习知识库..." });
+    expect(events).toContainEqual({ type: "status", message: "已找到 1 条可靠学习资料" });
   });
 
   it("compresses older history once and retains the latest raw messages", async () => {

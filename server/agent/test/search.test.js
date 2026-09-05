@@ -1,12 +1,12 @@
 const { TextNode } = require("llamaindex");
 const fs = require("fs");
 const path = require("path");
-const learningIndex = require("../services/learningIndex");
+const learningIndex = require("../retrieval");
 const {
   MIN_RELIABLE_SEMANTIC_SCORE,
   rerankLearningNodes,
   searchLearningKnowledge,
-} = require("../services/learningSearch");
+} = require("../retrieval/search");
 const { evaluateRecallAt3 } = require("../evals/retrieval");
 
 function node(id, topic, score, summaryId = "summary-1") {
@@ -68,7 +68,13 @@ describe("learning search", () => {
     const report = await evaluateRecallAt3(samples, async (_query, sample) => [
       { summaryItemId: sample.targetSummaryItemId },
     ]);
-    expect(report).toEqual({ hits: 5, total: 5, recallAt3: 1 });
+    expect(report).toEqual({
+      hits: 5,
+      total: 5,
+      recallAt3: 1,
+      top1Accuracy: 1,
+      meanReciprocalRankAt3: 1,
+    });
   });
 
   it("uses semantic top 12 but returns the top 4 reranked results", async () => {

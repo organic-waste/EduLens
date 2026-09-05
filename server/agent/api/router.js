@@ -1,21 +1,17 @@
 const express = require("express");
-const auth = require("../middleware/auth");
-const SummaryDocument = require("../models/summaryDocument");
-const UserLearningProfile = require("../models/userLearningProfile");
-const LearningMemory = require("../models/learningMemory");
+const auth = require("../../middleware/auth");
+const SummaryDocument = require("../../models/summaryDocument");
+const UserLearningProfile = require("../../models/profile");
+const LearningMemory = require("../../models/memory");
 const {
   chatWithLearningAgent,
   normalizeConversationHistory,
   normalizeConversationSummary,
-} = require("../services/learningAgent");
-const {
-  generateLearningSummary,
-} = require("../services/learningSummaryService");
-const {
-  generateLearningSupplement,
-} = require("../services/learningSupplementService");
-const { updateLearningMemory } = require("../services/learningMemoryService");
-const { logger } = require("../utils/logger");
+} = require("../application/agent");
+const { generateLearningSummary } = require("../application/summary");
+const { generateLearningSupplement } = require("../application/supplement");
+const { updateLearningMemory } = require("../persistence/memory");
+const { logger } = require("../../utils/logger");
 
 const router = express.Router();
 const PROFILE_FIELDS = [
@@ -217,7 +213,10 @@ router.post("/summarize", auth, async (req, res) => {
     const summary = await generateLearningSummary(req.body);
     res.json({ summary });
   } catch (error) {
-    logger.error("learning.summary.failed", { requestId: req.requestId, error });
+    logger.error("learning.summary.failed", {
+      requestId: req.requestId,
+      error,
+    });
     const isBadRequest = error.message === "摘要来源信息不完整";
     res
       .status(isBadRequest ? 400 : 500)
@@ -231,13 +230,20 @@ router.post("/supplement", auth, async (req, res) => {
     let resolvedTitle = summaryTitle;
     let resolvedTopic = topic;
     if (summaryId) {
-      const summary = await SummaryDocument.findOne({ _id: summaryId, userId: req.userId }).lean();
+      const summary = await SummaryDocument.findOne({
+        _id: summaryId,
+        userId: req.userId,
+      }).lean();
       if (!summary) {
-        return res.status(404).json({ status: "error", message: "未找到要补充的摘要" });
+        return res
+          .status(404)
+          .json({ status: "error", message: "未找到要补充的摘要" });
       }
       resolvedTitle = summary.title;
       const group = summary.groups.find(
-        (item) => item.topic === topic || item.items.some((item) => item.id === activeItemId),
+        (item) =>
+          item.topic === topic ||
+          item.items.some((item) => item.id === activeItemId),
       );
       resolvedTopic = group?.topic || topic;
     }
@@ -249,7 +255,9 @@ router.post("/supplement", auth, async (req, res) => {
     res.json({ supplement: { topic: resolvedTopic, item } });
   } catch (error) {
     const isBadRequest = error.message === "补充摘要所需上下文不完整";
-    res.status(isBadRequest ? 400 : 500).json({ status: "error", message: error.message });
+    res
+      .status(isBadRequest ? 400 : 500)
+      .json({ status: "error", message: error.message });
   }
 });
 

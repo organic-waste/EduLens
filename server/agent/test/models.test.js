@@ -1,5 +1,5 @@
-const UserLearningProfile = require("../models/userLearningProfile");
-const LearningMemory = require("../models/learningMemory");
+const UserLearningProfile = require("../../models/profile");
+const LearningMemory = require("../../models/memory");
 
 describe("learning persistence models", () => {
   it("applies profile defaults and restricts the declared enum values", () => {

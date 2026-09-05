@@ -1,4 +1,6 @@
-const { createLearningNodes } = require("../services/learningIndex");
+const {
+  createLearningNodes,
+} = require("../retrieval");
 
 describe("learning index nodes", () => {
   it("creates one retrievable node per knowledge item with citation metadata", () => {

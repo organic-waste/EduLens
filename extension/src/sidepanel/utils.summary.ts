@@ -1,4 +1,4 @@
-import type { Citation, SummaryDocument, SummaryItem } from "./types";
+import type { Citation, SummaryDocument, SummaryItem } from "./learning.types";
 
 type SummaryInput = Partial<SummaryDocument> & {
   _id?: string;

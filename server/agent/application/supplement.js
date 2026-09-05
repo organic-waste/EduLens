@@ -1,8 +1,9 @@
 const { randomUUID } = require("crypto");
-const { createDeepSeekChatCompletion } = require("./modelClient");
-const { getLearningSkill } = require("./learningSkills");
+const { createDeepSeekChatCompletion } = require("../../services/modelClient");
+const { getLearningSkill } = require("../prompts/skills");
 
-const SUPPLEMENT_SYSTEM_PROMPT = getLearningSkill("supplement_summary").systemPrompt;
+const SUPPLEMENT_SYSTEM_PROMPT =
+  getLearningSkill("supplement_summary").systemPrompt;
 
 function parseSupplement(content) {
   const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -17,8 +18,14 @@ function parseSupplement(content) {
   };
 }
 
-function createLearningSupplementGenerator({ chatCompletion = createDeepSeekChatCompletion } = {}) {
-  return async function generateLearningSupplement({ answer, summaryTitle, topic }) {
+function createLearningSupplementGenerator({
+  chatCompletion = createDeepSeekChatCompletion,
+} = {}) {
+  return async function generateLearningSupplement({
+    answer,
+    summaryTitle,
+    topic,
+  }) {
     if (!answer?.trim() || !summaryTitle?.trim() || !topic?.trim()) {
       throw new Error("补充摘要所需上下文不完整");
     }

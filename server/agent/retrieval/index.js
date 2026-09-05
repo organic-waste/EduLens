@@ -1,12 +1,15 @@
 const { TextNode, VectorStoreIndex, Settings } = require("llamaindex");
-const SummaryDocument = require("../models/summaryDocument");
-const { SiliconFlowEmbedding } = require("./siliconFlowEmbedding");
+const SummaryDocument = require("../../models/summaryDocument");
+const { SiliconFlowEmbedding } = require("../../services/siliconFlowEmbedding");
 
 const indexCache = new Map();
 
 function fingerprintSummaries(summaries) {
   return summaries
-    .map((summary) => `${summary._id}:${summary.updatedAt?.toISOString?.() || summary.updatedAt || ""}`)
+    .map(
+      (summary) =>
+        `${summary._id}:${summary.updatedAt?.toISOString?.() || summary.updatedAt || ""}`,
+    )
     .sort()
     .join("|");
 }
@@ -15,28 +18,30 @@ function createLearningNodes(summaries) {
   return summaries.flatMap((summary) => {
     const summaryId = String(summary._id || summary.id);
     return summary.groups.flatMap((group) =>
-      group.items.filter((item) => item.sourceType !== "ai-supplement").map((item) => {
-        const citation = item.citation || {};
-        const text = [group.topic, item.content, citation.quote]
-          .filter(Boolean)
-          .join("\n");
-        return new TextNode({
-          id_: item.id,
-          text,
-          metadata: {
-            summaryId,
-            summaryTitle: summary.title,
-            summaryItemId: item.id,
-            topic: group.topic,
-            pageUrl: citation.pageUrl,
-            quote: citation.quote,
-            selector: citation.selector,
-            prefix: citation.prefix,
-            suffix: citation.suffix,
-            textPosition: citation.textPosition,
-          },
-        });
-      }),
+      group.items
+        .filter((item) => item.sourceType !== "ai-supplement")
+        .map((item) => {
+          const citation = item.citation || {};
+          const text = [group.topic, item.content, citation.quote]
+            .filter(Boolean)
+            .join("\n");
+          return new TextNode({
+            id_: item.id,
+            text,
+            metadata: {
+              summaryId,
+              summaryTitle: summary.title,
+              summaryItemId: item.id,
+              topic: group.topic,
+              pageUrl: citation.pageUrl,
+              quote: citation.quote,
+              selector: citation.selector,
+              prefix: citation.prefix,
+              suffix: citation.suffix,
+              textPosition: citation.textPosition,
+            },
+          });
+        }),
     );
   });
 }
@@ -48,7 +53,11 @@ async function loadUserSummaries(userId) {
 async function buildUserLearningIndex(userId, summaries) {
   const nodes = createLearningNodes(summaries);
   if (!nodes.length) {
-    const empty = { index: null, nodes, fingerprint: fingerprintSummaries(summaries) };
+    const empty = {
+      index: null,
+      nodes,
+      fingerprint: fingerprintSummaries(summaries),
+    };
     indexCache.set(String(userId), empty);
     return empty;
   }

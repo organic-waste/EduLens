@@ -1,7 +1,7 @@
 const {
   CITATION_CONTEXT_LENGTH,
   createLearningSummaryGenerator,
-} = require("../services/learningSummaryService");
+} = require("../application/summary");
 
 describe("learning summary generator", () => {
   const source = {
@@ -20,13 +20,26 @@ describe("learning summary generator", () => {
   it("generates stable knowledge item ids and preserves citation metadata", async () => {
     const generate = createLearningSummaryGenerator({
       chatCompletion: vi.fn().mockResolvedValue({
-        choices: [{ message: { content: JSON.stringify({
-          title: "RAG 入门",
-          groups: [{ topic: "RAG", items: [{
-            content: "RAG 先检索知识后生成回答。",
-            quote: "RAG 会先检索外部知识，再让模型生成回答。",
-          }] }],
-        }) } }],
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                title: "RAG 入门",
+                groups: [
+                  {
+                    topic: "RAG",
+                    items: [
+                      {
+                        content: "RAG 先检索知识后生成回答。",
+                        quote: "RAG 会先检索外部知识，再让模型生成回答。",
+                      },
+                    ],
+                  },
+                ],
+              }),
+            },
+          },
+        ],
       }),
     });
 
@@ -53,10 +66,21 @@ describe("learning summary generator", () => {
   it("does not index a model item whose quote is not present in the selected source", async () => {
     const generate = createLearningSummaryGenerator({
       chatCompletion: vi.fn().mockResolvedValue({
-        choices: [{ message: { content: JSON.stringify({
-          title: "RAG 入门",
-          groups: [{ topic: "RAG", items: [{ content: "错误", quote: "不存在的引用" }] }],
-        }) } }],
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                title: "RAG 入门",
+                groups: [
+                  {
+                    topic: "RAG",
+                    items: [{ content: "错误", quote: "不存在的引用" }],
+                  },
+                ],
+              }),
+            },
+          },
+        ],
       }),
     });
 
@@ -67,16 +91,32 @@ describe("learning summary generator", () => {
     const selectedText = `开头${"甲".repeat(100)}目标引用${"乙".repeat(100)}结尾`;
     const generate = createLearningSummaryGenerator({
       chatCompletion: vi.fn().mockResolvedValue({
-        choices: [{ message: { content: JSON.stringify({
-          title: "锚点",
-          groups: [{ topic: "测试", items: [{ content: "内容", quote: "目标引用" }] }],
-        }) } }],
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                title: "锚点",
+                groups: [
+                  {
+                    topic: "测试",
+                    items: [{ content: "内容", quote: "目标引用" }],
+                  },
+                ],
+              }),
+            },
+          },
+        ],
       }),
     });
     const summary = await generate({
       ...source,
       text: selectedText,
-      citation: { ...source.citation, prefix: "选区前", suffix: "选区后", textPosition: { start: 50, end: 50 + selectedText.length } },
+      citation: {
+        ...source.citation,
+        prefix: "选区前",
+        suffix: "选区后",
+        textPosition: { start: 50, end: 50 + selectedText.length },
+      },
     });
     const citation = summary.groups[0].items[0].citation;
     expect(citation.prefix).toHaveLength(CITATION_CONTEXT_LENGTH);

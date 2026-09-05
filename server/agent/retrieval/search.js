@@ -1,4 +1,4 @@
-const learningIndex = require("./learningIndex");
+const learningIndex = require(".");
 
 const STATE_BONUS = {
   confusing: 0.2,
@@ -9,7 +9,9 @@ const STATE_BONUS = {
 const MIN_RELIABLE_SEMANTIC_SCORE = 0.45;
 
 function toMemoryMap(memories) {
-  return new Map(memories.map((memory) => [String(memory.summaryItemId), memory]));
+  return new Map(
+    memories.map((memory) => [String(memory.summaryItemId), memory]),
+  );
 }
 
 function rerankLearningNodes(results, { memories = [], activeSummaryId } = {}) {

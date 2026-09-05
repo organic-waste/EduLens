@@ -1,4 +1,4 @@
-const LearningMemory = require("../models/learningMemory");
+const LearningMemory = require("../../models/memory");
 
 async function updateLearningMemory({ userId, itemId, state }) {
   return LearningMemory.findOneAndUpdate(

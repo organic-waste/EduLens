@@ -6,7 +6,7 @@ import {
   loadLearningProfile,
   saveLearningProfile,
   updateLearningMemory,
-} from "./services/learningClient.js";
+} from "./sidepanel/api/learningApi";
 import "./profile.css";
 
 type LearningState = "mastered" | "confusing" | "review";

@@ -1,7 +1,9 @@
 const express = require("express");
 const SummaryDocument = require("../models/summaryDocument");
 const auth = require("../middleware/auth");
-const { invalidateUserLearningIndex } = require("../services/learningIndex");
+const {
+  invalidateUserLearningIndex,
+} = require("../agent/retrieval");
 
 const router = express.Router();
 

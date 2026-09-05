@@ -39,4 +39,16 @@ describe("SiliconFlowEmbedding", () => {
 
     expect(embeddings).toEqual([[1], [2]]);
   });
+
+  it("extracts text from the query object used by the retriever", async () => {
+    let requestBody;
+    global.fetch = async (_url, options) => {
+      requestBody = JSON.parse(options.body);
+      return { ok: true, json: async () => ({ data: [{ index: 0, embedding: [0.1] }] }) };
+    };
+
+    await new SiliconFlowEmbedding().getQueryEmbedding({ type: "text", text: "JWT 如何验证身份" });
+
+    expect(requestBody.input).toEqual(["JWT 如何验证身份"]);
+  });
 });
