@@ -15,6 +15,7 @@ interface LearningProfile {
   targetDirection: string;
   experienceLevel: "beginner" | "intermediate" | "advanced";
   answerDepth: "concise" | "balanced" | "detailed";
+  summaryDepth: "concise" | "balanced" | "detailed";
   preferExamples: boolean;
   preferInterviewView: boolean;
 }
@@ -36,6 +37,7 @@ const defaultProfile: LearningProfile = {
   targetDirection: "",
   experienceLevel: "beginner",
   answerDepth: "balanced",
+  summaryDepth: "balanced",
   preferExamples: false,
   preferInterviewView: false,
 };
@@ -194,6 +196,22 @@ function ProfilePage() {
             <option value="concise">简洁</option>
             <option value="balanced">均衡</option>
             <option value="detailed">详细</option>
+          </select>
+        </label>
+        <label>
+          摘要详细程度
+          <select
+            value={profile.summaryDepth}
+            onChange={(event) =>
+              setProfile({
+                ...profile,
+                summaryDepth: event.target.value as LearningProfile["summaryDepth"],
+              })
+            }
+          >
+            <option value="concise">核心观点</option>
+            <option value="balanced">均衡</option>
+            <option value="detailed">详细学习笔记</option>
           </select>
         </label>
         <label className="checkbox">

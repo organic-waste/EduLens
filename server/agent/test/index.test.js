@@ -1,10 +1,10 @@
 const {
-  createLearningNodes,
+  createLearningVectorDocuments,
 } = require("../retrieval");
 
-describe("learning index nodes", () => {
-  it("creates one retrievable node per knowledge item with citation metadata", () => {
-    const nodes = createLearningNodes([
+describe("learning vector documents", () => {
+  it("creates one retrievable vector document per knowledge item with citation metadata", () => {
+    const documents = createLearningVectorDocuments(
       {
         _id: "summary-1",
         title: "RAG 学习笔记",
@@ -29,12 +29,11 @@ describe("learning index nodes", () => {
           },
         ],
       },
-    ]);
+      "user-1",
+    );
 
-    expect(nodes).toHaveLength(1);
-    expect(nodes[0].id_).toBe("item-1");
-    expect(nodes[0].getText()).toContain("检索增强生成");
-    expect(nodes[0].metadata).toMatchObject({
+    expect(documents).toHaveLength(1);
+    expect(documents[0]).toMatchObject({
       summaryId: "summary-1",
       summaryTitle: "RAG 学习笔记",
       summaryItemId: "item-1",
@@ -45,11 +44,13 @@ describe("learning index nodes", () => {
       prefix: "before ",
       suffix: " after",
       textPosition: { start: 1, end: 29 },
+      content: "检索增强生成",
+      evidenceLevel: "source-backed",
     });
   });
 
-  it("excludes AI supplements without source citations from the retrieval index", () => {
-    const nodes = createLearningNodes([
+  it("includes AI supplements as generated, non-citable retrieval documents", () => {
+    const documents = createLearningVectorDocuments(
       {
         _id: "summary-1",
         groups: [{
@@ -61,8 +62,14 @@ describe("learning index nodes", () => {
           }],
         }],
       },
-    ]);
+      "user-1",
+    );
 
-    expect(nodes).toEqual([]);
+    expect(documents).toHaveLength(1);
+    expect(documents[0]).toMatchObject({
+      summaryItemId: "supplement-1",
+      evidenceLevel: "generated",
+      sourceType: "ai-supplement",
+    });
   });
 });

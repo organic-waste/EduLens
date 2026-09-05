@@ -2,7 +2,7 @@ const express = require("express");
 const SummaryDocument = require("../models/summaryDocument");
 const auth = require("../middleware/auth");
 const {
-  invalidateUserLearningIndex,
+  syncSummaryVectors,
 } = require("../agent/retrieval");
 
 const router = express.Router();
@@ -115,7 +115,7 @@ router.post("/upsert", auth, async (req, res) => {
         source: normalizedSource,
         sourceUrl: normalizedSource.pageUrl,
       }));
-    invalidateUserLearningIndex(req.userId);
+    await syncSummaryVectors(saved, req.userId);
     res.json({ status: "success", data: { summary: saved } });
   } catch (error) {
     res

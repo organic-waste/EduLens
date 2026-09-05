@@ -33,7 +33,6 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "langchain": "^1.5.10",
-    "llamaindex": "^0.12.1",
     "mongodb": "^7.0.0",
     "mongoose": "^8.19.1",
     "uuid": "^13.0.0",

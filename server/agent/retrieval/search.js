@@ -1,4 +1,4 @@
-const learningIndex = require(".");
+const learningVectors = require(".");
 
 const STATE_BONUS = {
   confusing: 0.2,
@@ -20,7 +20,7 @@ function rerankLearningNodes(results, { memories = [], activeSummaryId } = {}) {
 
   return results
     .map((result, index) => {
-      const metadata = result.node.metadata || {};
+      const metadata = result.metadata || result;
       const memory = memoryByItem.get(String(metadata.summaryItemId));
       const semanticScore = Number(result.score) || 0;
       let score = semanticScore;
@@ -29,7 +29,7 @@ function rerankLearningNodes(results, { memories = [], activeSummaryId } = {}) {
 
       return {
         summaryItemId: metadata.summaryItemId,
-        content: result.node.getText(),
+        content: result.content,
         score,
         semanticScore,
         metadata: {
@@ -43,6 +43,7 @@ function rerankLearningNodes(results, { memories = [], activeSummaryId } = {}) {
           prefix: metadata.prefix,
           suffix: metadata.suffix,
           textPosition: metadata.textPosition,
+          evidenceLevel: metadata.evidenceLevel,
         },
         _index: index,
       };
@@ -60,11 +61,11 @@ async function searchLearningKnowledge({
   if (!userId) throw new Error("userId is required");
   if (!query?.trim()) throw new Error("query is required");
 
-  const cached = await learningIndex.getUserLearningIndex(userId);
-  if (!cached.index) return [];
-  const retrieved = await cached.index
-    .asRetriever({ similarityTopK: 12 })
-    .retrieve(query.trim());
+  const retrieved = await learningVectors.searchLearningVectors({
+    userId,
+    query: query.trim(),
+    limit: 12,
+  });
   return rerankLearningNodes(retrieved, {
     memories,
     activeSummaryId,

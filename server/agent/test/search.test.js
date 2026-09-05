@@ -1,4 +1,3 @@
-const { TextNode } = require("llamaindex");
 const fs = require("fs");
 const path = require("path");
 const learningIndex = require("../retrieval");
@@ -11,19 +10,15 @@ const { evaluateRecallAt3 } = require("../evals/retrieval");
 
 function node(id, topic, score, summaryId = "summary-1") {
   return {
-    node: new TextNode({
-      id_: id,
-      text: `${topic} knowledge ${id}`,
-      metadata: {
-        summaryId,
-        summaryTitle: `${topic} 学习笔记`,
-        summaryItemId: id,
-        topic,
-        pageUrl: "https://example.com/article",
-        quote: id,
-        selector: "#content",
-      },
-    }),
+    summaryId,
+    summaryTitle: `${topic} 学习笔记`,
+    summaryItemId: id,
+    topic,
+    content: `${topic} knowledge ${id}`,
+    pageUrl: "https://example.com/article",
+    quote: id,
+    selector: "#content",
+    evidenceLevel: "source-backed",
     score,
   };
 }
@@ -78,33 +73,31 @@ describe("learning search", () => {
   });
 
   it("uses semantic top 12 but returns the top 4 reranked results", async () => {
-    const retrieve = vi.fn(async () => [
+    const searchLearningVectors = vi.fn(async () => [
       node("item-1", "JavaScript", 0.99),
       node("item-2", "RAG", 0.8),
       node("item-3", "RAG", 0.79),
       node("item-4", "RAG", 0.78),
       node("item-5", "RAG", 0.77),
     ]);
-    vi.spyOn(learningIndex, "getUserLearningIndex").mockResolvedValue({
-      index: { asRetriever: vi.fn(() => ({ retrieve })) },
-    });
+    vi.spyOn(learningIndex, "searchLearningVectors").mockImplementation(searchLearningVectors);
 
     const result = await searchLearningKnowledge({
       userId: "user-1",
       query: "RAG",
       memories: [{ summaryItemId: "item-2", state: "confusing" }],
     });
-    expect(retrieve).toHaveBeenCalledWith("RAG");
+    expect(searchLearningVectors).toHaveBeenCalledWith({ userId: "user-1", query: "RAG", limit: 12 });
     expect(result).toHaveLength(4);
     expect(result[0].summaryItemId).toBe("item-2");
     vi.restoreAllMocks();
   });
 
   it("does not treat business reranking bonuses as reliable RAG evidence", async () => {
-    const retrieve = vi.fn(async () => [node("weak", "RAG", MIN_RELIABLE_SEMANTIC_SCORE - 0.01)]);
-    vi.spyOn(learningIndex, "getUserLearningIndex").mockResolvedValue({
-      index: { asRetriever: vi.fn(() => ({ retrieve })) },
-    });
+    const searchLearningVectors = vi.fn(async () => [
+      node("weak", "RAG", MIN_RELIABLE_SEMANTIC_SCORE - 0.01),
+    ]);
+    vi.spyOn(learningIndex, "searchLearningVectors").mockImplementation(searchLearningVectors);
 
     const result = await searchLearningKnowledge({
       userId: "user-1",

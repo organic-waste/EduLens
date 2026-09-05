@@ -1,6 +1,7 @@
 const {
   CITATION_CONTEXT_LENGTH,
   createLearningSummaryGenerator,
+  summaryDepthInstruction,
 } = require("../application/summary");
 
 describe("learning summary generator", () => {
@@ -16,6 +17,12 @@ describe("learning summary generator", () => {
       textPosition: { start: 10, end: 31 },
     },
   };
+
+  it("uses semantic depth guidance without a fixed knowledge-point count", () => {
+    expect(summaryDepthInstruction("concise")).toContain("central conclusion");
+    expect(summaryDepthInstruction("balanced")).toContain("causal relationships");
+    expect(summaryDepthInstruction("detailed")).toContain("mechanisms");
+  });
 
   it("generates stable knowledge item ids and preserves citation metadata", async () => {
     const generate = createLearningSummaryGenerator({

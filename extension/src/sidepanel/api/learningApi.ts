@@ -13,6 +13,7 @@ export interface LearningProfile {
   targetDirection?: string;
   experienceLevel?: "beginner" | "intermediate" | "advanced";
   answerDepth?: "concise" | "balanced" | "detailed";
+  summaryDepth?: "concise" | "balanced" | "detailed";
   preferExamples?: boolean;
   preferInterviewView?: boolean;
 }

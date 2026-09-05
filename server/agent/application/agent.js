@@ -32,18 +32,21 @@ function buildSystemPrompt(profile = {}) {
 }
 
 function toCitations(results) {
-  return results.map((result) => ({
-    summaryId: result.metadata.summaryId,
-    summaryTitle: result.metadata.summaryTitle,
-    summaryItemId: result.metadata.summaryItemId,
-    topic: result.metadata.topic,
-    pageUrl: result.metadata.pageUrl,
-    quote: result.metadata.quote,
-    selector: result.metadata.selector,
-    prefix: result.metadata.prefix,
-    suffix: result.metadata.suffix,
-    textPosition: result.metadata.textPosition,
-  }));
+  return results
+    // AI 补充可以帮助回答，但没有原网页可回跳，因此不作为 citation 输出。
+    .filter((result) => result.metadata.evidenceLevel === "source-backed")
+    .map((result) => ({
+      summaryId: result.metadata.summaryId,
+      summaryTitle: result.metadata.summaryTitle,
+      summaryItemId: result.metadata.summaryItemId,
+      topic: result.metadata.topic,
+      pageUrl: result.metadata.pageUrl,
+      quote: result.metadata.quote,
+      selector: result.metadata.selector,
+      prefix: result.metadata.prefix,
+      suffix: result.metadata.suffix,
+      textPosition: result.metadata.textPosition,
+    }));
 }
 
 function findRetrievedItem(itemId, retrieved) {

@@ -24,6 +24,7 @@ const searchedResult = [
       prefix: "before ",
       suffix: " after",
       textPosition: { start: 1, end: 9 },
+      evidenceLevel: "source-backed",
     },
   },
 ];
@@ -215,6 +216,33 @@ describe("learning agent", () => {
       citations: [],
       retrievalStatus: "no_reliable_evidence",
     });
+  });
+
+  it("uses generated supplements as context but never exposes them as webpage citations", async () => {
+    const generatedResult = [{
+      ...searchedResult[0],
+      summaryItemId: "supplement-rag",
+      metadata: {
+        ...searchedResult[0].metadata,
+        summaryItemId: "supplement-rag",
+        evidenceLevel: "generated",
+        pageUrl: undefined,
+        quote: undefined,
+      },
+    }];
+    const agentFactory = vi.fn(async ({ tools }) => ({
+      streamEvents: async () => {
+        await tools.find((item) => item.name === "search_learning_knowledge").invoke({ query: "RAG" });
+        return fakeRun(["补充说明。"]);
+      },
+    }));
+
+    const events = await collectEvents(createLearningAgent({
+      search: vi.fn().mockResolvedValue(generatedResult),
+      agentFactory,
+    }), { userId: "user-1", message: "解释 RAG" });
+
+    expect(events.at(-1)).toMatchObject({ uncovered: false, citations: [] });
   });
 
   it("only permits memory changes for this turn's retrieved item", async () => {

@@ -5,6 +5,15 @@ const { getLearningSkill } = require("../prompts/skills");
 const SUMMARY_SYSTEM_PROMPT = getLearningSkill("generate_summary").systemPrompt;
 const CITATION_CONTEXT_LENGTH = 80;
 
+function summaryDepthInstruction(summaryDepth = "balanced") {
+  const instructions = {
+    concise: "Prioritize only the central conclusion of each topic. Keep each item to the minimum wording needed to preserve its meaning.",
+    balanced: "Cover the main concepts, causal relationships, key steps, and meaningful constraints while omitting repetition.",
+    detailed: "Preserve useful definitions, mechanisms, conditions, steps, boundaries, and examples when the source supports them.",
+  };
+  return instructions[summaryDepth] || instructions.balanced;
+}
+
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -101,6 +110,7 @@ function createLearningSummaryGenerator({
     pageTitle,
     pageUrl,
     citation,
+    summaryDepth,
   }) {
     if (!text?.trim() || !pageUrl || !citation?.quote) {
       throw new Error("摘要来源信息不完整");
@@ -108,7 +118,10 @@ function createLearningSummaryGenerator({
     const response = await chatCompletion({
       temperature: 0.2,
       messages: [
-        { role: "system", content: SUMMARY_SYSTEM_PROMPT },
+        {
+          role: "system",
+          content: `${SUMMARY_SYSTEM_PROMPT} ${summaryDepthInstruction(summaryDepth)} Do not invent, duplicate, or split facts merely to change summary length.`,
+        },
         {
           role: "user",
           content: JSON.stringify({
@@ -139,6 +152,7 @@ const generateLearningSummary = createLearningSummaryGenerator();
 module.exports = {
   SUMMARY_SYSTEM_PROMPT,
   CITATION_CONTEXT_LENGTH,
+  summaryDepthInstruction,
   sourceQuote,
   buildItemCitation,
   parseSummary,

@@ -18,6 +18,7 @@ const PROFILE_FIELDS = [
   "targetDirection",
   "experienceLevel",
   "answerDepth",
+  "summaryDepth",
   "preferExamples",
   "preferInterviewView",
 ];
@@ -42,6 +43,12 @@ function validateProfile(body) {
     !["concise", "balanced", "detailed"].includes(body.answerDepth)
   ) {
     return "回答深度无效";
+  }
+  if (
+    body.summaryDepth &&
+    !["concise", "balanced", "detailed"].includes(body.summaryDepth)
+  ) {
+    return "摘要详细程度无效";
   }
   return null;
 }
@@ -210,7 +217,11 @@ router.post("/chat", auth, async (req, res) => {
 
 router.post("/summarize", auth, async (req, res) => {
   try {
-    const summary = await generateLearningSummary(req.body);
+    const { profile } = await loadLearningContext(req.userId);
+    const summary = await generateLearningSummary({
+      ...req.body,
+      summaryDepth: profile.summaryDepth,
+    });
     res.json({ summary });
   } catch (error) {
     logger.error("learning.summary.failed", {
