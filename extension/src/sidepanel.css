@@ -376,6 +376,11 @@ h1 {
   padding-top: 8px;
   border-top: 1px solid #e1ecee;
 }
+.message-retrieval-notice {
+  margin: 8px 0 0;
+  color: #8a6517;
+  font-size: 12px;
+}
 .message-citations > span,
 .message-summary-references > span,
 .message-memory-actions > span {

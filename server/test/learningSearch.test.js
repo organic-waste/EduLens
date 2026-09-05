@@ -2,7 +2,11 @@ const { TextNode } = require("llamaindex");
 const fs = require("fs");
 const path = require("path");
 const learningIndex = require("../services/learningIndex");
-const { rerankLearningNodes, searchLearningKnowledge } = require("../services/learningSearch");
+const {
+  MIN_RELIABLE_SEMANTIC_SCORE,
+  rerankLearningNodes,
+  searchLearningKnowledge,
+} = require("../services/learningSearch");
 const { evaluateRecallAt3 } = require("../evals/retrieval");
 
 function node(id, topic, score, summaryId = "summary-1") {
@@ -87,6 +91,23 @@ describe("learning search", () => {
     expect(retrieve).toHaveBeenCalledWith("RAG");
     expect(result).toHaveLength(4);
     expect(result[0].summaryItemId).toBe("item-2");
+    vi.restoreAllMocks();
+  });
+
+  it("does not treat business reranking bonuses as reliable RAG evidence", async () => {
+    const retrieve = vi.fn(async () => [node("weak", "RAG", MIN_RELIABLE_SEMANTIC_SCORE - 0.01)]);
+    vi.spyOn(learningIndex, "getUserLearningIndex").mockResolvedValue({
+      index: { asRetriever: vi.fn(() => ({ retrieve })) },
+    });
+
+    const result = await searchLearningKnowledge({
+      userId: "user-1",
+      query: "RAG",
+      memories: [{ summaryItemId: "weak", state: "confusing" }],
+      activeSummaryId: "summary-1",
+    });
+
+    expect(result).toEqual([]);
     vi.restoreAllMocks();
   });
 });

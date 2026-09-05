@@ -29,6 +29,7 @@ import {
 import type {
   Citation,
   ConversationMessage,
+  ConversationMemory,
   MemoryChange,
   PageSelection,
   SummaryReference,
@@ -46,7 +47,7 @@ type RemoteSummaryDocument = Omit<Partial<SummaryDocument>, "id" | "serverId"> &
   clientId?: string;
 };
 type SyncSummaryResponse = { _id?: string };
-const MAX_HISTORY = 8;
+const EMPTY_CONVERSATION_MEMORY: ConversationMemory = { summary: "", coveredMessageCount: 0 };
 
 function markdown(content: string) {
   return marked.parse(content.replace(/</g, "&lt;"), {
@@ -84,6 +85,9 @@ function App() {
   const [environmentMessage, setEnvironmentMessage] = useState("");
   const [view, setView] = useState<View>("chat");
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [conversationMemory, setConversationMemory] = useState<ConversationMemory>(
+    EMPTY_CONVERSATION_MEMORY,
+  );
   const [documents, setDocuments] = useState<SummaryDocument[]>([]);
   const [currentSummary, setCurrentSummary] = useState<SummaryDocument | null>(null);
   const [activeSummary, setActiveSummary] = useState<SummaryDocument | null>(null);
@@ -137,10 +141,12 @@ function App() {
       { edulensActiveConversation = [] },
       { edulensCurrentSummary = null },
       { edulensSummaryDocuments = [] },
+      { edulensConversationMemory = EMPTY_CONVERSATION_MEMORY },
     ] = await Promise.all([
       chrome.storage.local.get({ edulensActiveConversation: [] }),
       chrome.storage.local.get({ edulensCurrentSummary: null }),
       chrome.storage.local.get({ edulensSummaryDocuments: [] }),
+      chrome.storage.local.get({ edulensConversationMemory: EMPTY_CONVERSATION_MEMORY }),
     ]);
     const restoredMessages = (edulensActiveConversation as ConversationMessage[])
       .filter(
@@ -154,6 +160,12 @@ function App() {
       .map(normalizeSummaryDocument)
       .filter((item): item is SummaryDocument => Boolean(item));
     setMessages(restoredMessages);
+    setConversationMemory({
+      summary: typeof edulensConversationMemory.summary === "string"
+        ? edulensConversationMemory.summary
+        : "",
+      coveredMessageCount: Math.max(0, Number(edulensConversationMemory.coveredMessageCount) || 0),
+    });
     setDocuments(localDocuments);
     setCurrentSummary(normalizeSummaryDocument(edulensCurrentSummary as Partial<SummaryDocument>));
     await restoreRemoteSummaries(localDocuments);
@@ -188,9 +200,13 @@ function App() {
     }
   }
 
-  async function persistConversation(next: ConversationMessage[]) {
+  async function persistConversation(
+    next: ConversationMessage[],
+    memory: ConversationMemory = conversationMemory,
+  ) {
     await chrome.storage.local.set({
       edulensActiveConversation: next.map(({ streaming: _streaming, ...message }) => message),
+      edulensConversationMemory: memory,
     });
   }
 
@@ -378,6 +394,12 @@ function App() {
       content: "",
       streaming: true,
     };
+    const historicalMessages = messages
+      .filter((item) => (item.role === "user" || item.role === "assistant") && item.content.trim());
+    const coveredMessageCount = Math.min(
+      conversationMemory.coveredMessageCount,
+      historicalMessages.length,
+    );
     setMessages([...messages, userMessage, streamingMessage]);
     await persistConversation([...messages, userMessage]);
     setPrompt("");
@@ -390,12 +412,10 @@ function App() {
       await streamLearningAgent({
         message: buildAgentMessage(question, selectedPage),
         activeSummaryId: activeSummary?.serverId,
-        history: messages
-          .filter(
-            (item) => (item.role === "user" || item.role === "assistant") && item.content.trim(),
-          )
-          .slice(-MAX_HISTORY)
+        history: historicalMessages
+          .slice(coveredMessageCount)
           .map((item) => ({ role: item.role, content: historyContent(item) })),
+        conversationSummary: conversationMemory.summary,
         onEvent: (event: StreamEvent) => {
           if (event.type === "delta") {
             answer += event.content || "";
@@ -405,6 +425,8 @@ function App() {
               ),
             );
             setStatus("正在生成...");
+          } else if (event.type === "status") {
+            setStatus(event.message || "正在处理...");
           } else if (event.type === "done") {
             result = event;
           } else if (event.type === "error") {
@@ -421,10 +443,18 @@ function App() {
         summaryReferences: collectRelatedSummaries(providedSummaryReference, completed.citations),
         memoryChanges: completed.memoryChanges,
         uncovered: completed.uncovered,
+        retrievalStatus: completed.retrievalStatus,
       };
       const finalMessages = [...messages, userMessage, assistantMessage];
+      const nextConversationMemory = completed.conversationSummary
+        ? {
+            summary: completed.conversationSummary,
+            coveredMessageCount: coveredMessageCount + (completed.compressedMessageCount || 0),
+          }
+        : conversationMemory;
       setMessages(finalMessages);
-      await persistConversation(finalMessages);
+      setConversationMemory(nextConversationMemory);
+      await persistConversation(finalMessages, nextConversationMemory);
       setStatus("就绪");
     } catch (error) {
       const finalMessages = [...messages, userMessage, errorMessage(toError(error))];
@@ -948,9 +978,12 @@ function Message({
           type="button"
           onClick={() => onSupplement(message.content)}
         >
-          {message.uncovered ? "补充到当前摘要库" : "补充到当前摘要"}
-        </button>
-      )}
+              {message.uncovered ? "补充到当前摘要库" : "补充到当前摘要"}
+            </button>
+          )}
+      {message.retrievalStatus === "no_reliable_evidence" ? (
+        <p className="message-retrieval-notice">知识库无可靠依据，本回答未引用学习资料。</p>
+      ) : null}
       {message.role === "assistant" && !message.streaming && memoryTargets.size ? (
         <div className="message-memory-actions">
           <span>标记学习状态</span>

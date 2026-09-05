@@ -38,7 +38,13 @@ export interface ConversationMessage {
   citations?: Citation[];
   memoryChanges?: MemoryChange[];
   uncovered?: boolean;
+  retrievalStatus?: "no_reliable_evidence";
   streaming?: boolean;
+}
+
+export interface ConversationMemory {
+  summary: string;
+  coveredMessageCount: number;
 }
 
 export interface SummaryItem {
@@ -81,11 +87,14 @@ export interface PageSelection {
 }
 
 export interface StreamEvent {
-  type: "ready" | "delta" | "done" | "error" | "message";
+  type: "ready" | "status" | "delta" | "done" | "error" | "message";
   content?: string;
   answer?: string;
   citations?: Citation[];
   memoryChanges?: MemoryChange[];
   uncovered?: boolean;
+  retrievalStatus?: "no_reliable_evidence";
+  conversationSummary?: string;
+  compressedMessageCount?: number;
   message?: string;
 }

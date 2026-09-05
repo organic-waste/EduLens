@@ -33,6 +33,7 @@ export async function streamLearningAgent({
   message,
   activeSummaryId,
   history,
+  conversationSummary,
   onEvent,
   signal,
 }) {
@@ -42,7 +43,7 @@ export async function streamLearningAgent({
   const response = await apiClient.request("/learning/chat", {
     method: "POST",
     headers: { Accept: "text/event-stream" },
-    body: JSON.stringify({ message, activeSummaryId, history }),
+    body: JSON.stringify({ message, activeSummaryId, history, conversationSummary }),
     signal,
   });
   if (!response.ok) {

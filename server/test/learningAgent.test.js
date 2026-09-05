@@ -4,6 +4,7 @@ const {
   buildSystemPrompt,
   LEARNING_TOOL_NAMES,
   MAX_HISTORY_MESSAGES,
+  RECENT_HISTORY_MESSAGES,
   normalizeConversationHistory,
 } = require("../services/learningAgent");
 
@@ -93,6 +94,44 @@ describe("learning agent", () => {
     );
   });
 
+  it("compresses older history once and retains the latest raw messages", async () => {
+    const summarize = vi.fn().mockResolvedValue("用户在学习 RAG，已了解检索流程。");
+    const streamEvents = vi.fn().mockResolvedValue(fakeRun(["继续讲解。"]));
+    const agent = createLearningAgent({
+      summarize,
+      agentFactory: vi.fn().mockResolvedValue({ streamEvents }),
+    });
+    const history = Array.from({ length: RECENT_HISTORY_MESSAGES + 2 }, (_, index) => ({
+      role: index % 2 ? "assistant" : "user",
+      content: `历史消息 ${index}`,
+    }));
+
+    const events = await collectEvents(agent, {
+      userId: "user-1",
+      message: "继续",
+      history,
+      conversationSummary: "用户目标：准备前端面试。",
+    });
+
+    expect(summarize).toHaveBeenCalledWith(expect.objectContaining({
+      previousSummary: "用户目标：准备前端面试。",
+      messages: history.slice(0, -RECENT_HISTORY_MESSAGES),
+    }));
+    expect(streamEvents.mock.calls[0][0].messages).toEqual([
+      expect.objectContaining({ content: expect.stringContaining("用户在学习 RAG") }),
+      ...history.slice(-RECENT_HISTORY_MESSAGES),
+      { role: "user", content: "继续" },
+    ]);
+    expect(events).toContainEqual(expect.objectContaining({
+      type: "status",
+      message: "正在压缩历史对话...",
+    }));
+    expect(events.at(-1)).toMatchObject({
+      conversationSummary: "用户在学习 RAG，已了解检索流程。",
+      compressedMessageCount: 2,
+    });
+  });
+
   it("wraps RAG retrieval as a LangChain tool and returns citations", async () => {
     const search = vi.fn().mockResolvedValue(searchedResult);
     const agentFactory = vi.fn(async ({ tools }) => ({
@@ -139,7 +178,11 @@ describe("learning agent", () => {
       { userId: "user-1", message: "未知主题是什么" },
     );
 
-    expect(events.at(-1)).toMatchObject({ uncovered: true, citations: [] });
+    expect(events.at(-1)).toMatchObject({
+      uncovered: true,
+      citations: [],
+      retrievalStatus: "no_reliable_evidence",
+    });
   });
 
   it("only permits memory changes for this turn's retrieved item", async () => {

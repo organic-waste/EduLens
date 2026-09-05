@@ -5,6 +5,8 @@ const STATE_BONUS = {
   review: 0.12,
   mastered: -0.08,
 };
+// 以原始语义分数判断证据可靠性，学习状态和当前摘要的业务加分不能越过该门槛。
+const MIN_RELIABLE_SEMANTIC_SCORE = 0.45;
 
 function toMemoryMap(memories) {
   return new Map(memories.map((memory) => [String(memory.summaryItemId), memory]));
@@ -64,7 +66,13 @@ async function searchLearningKnowledge({
   return rerankLearningNodes(retrieved, {
     memories,
     activeSummaryId,
-  }).slice(0, 4);
+  })
+    .filter((item) => item.semanticScore >= MIN_RELIABLE_SEMANTIC_SCORE)
+    .slice(0, 4);
 }
 
-module.exports = { searchLearningKnowledge, rerankLearningNodes };
+module.exports = {
+  MIN_RELIABLE_SEMANTIC_SCORE,
+  searchLearningKnowledge,
+  rerankLearningNodes,
+};

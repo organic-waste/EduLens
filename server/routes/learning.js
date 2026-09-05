@@ -6,6 +6,7 @@ const LearningMemory = require("../models/learningMemory");
 const {
   chatWithLearningAgent,
   normalizeConversationHistory,
+  normalizeConversationSummary,
 } = require("../services/learningAgent");
 const {
   generateLearningSummary,
@@ -168,10 +169,13 @@ router.post("/chat", auth, async (req, res) => {
     "history must be an array",
     "history contains an invalid message",
     "history is too long",
+    "conversationSummary must be a string",
+    "conversationSummary is too long",
   ];
   try {
     if (!req.body.message?.trim()) throw new Error("message is required");
     normalizeConversationHistory(req.body.history);
+    normalizeConversationSummary(req.body.conversationSummary);
   } catch (error) {
     if (badRequestMessages.includes(error.message)) {
       return res.status(400).json({ status: "error", message: error.message });
@@ -195,6 +199,7 @@ router.post("/chat", auth, async (req, res) => {
       message: req.body.message,
       activeSummaryId: req.body.activeSummaryId,
       history: req.body.history,
+      conversationSummary: req.body.conversationSummary,
       ...context,
     })) {
       const { type, ...payload } = event;
