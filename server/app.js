@@ -28,8 +28,8 @@ mongoose
   .then(() => logger.info("database.connected"))
   .catch((error) => logger.error("database.connection_failed", { error }));
 
-app.use("/api/test", require("./routes/tests"));
-app.use("/api/auth", require("./routes/users"));
+app.use("/api/test", require("./routes/health"));
+app.use("/api/auth", require("./routes/auth"));
 app.use("/api/annotations", require("./routes/annotations"));
 app.use("/api/rooms", require("./routes/rooms"));
 app.use("/api/summaries", require("./routes/summaries"));

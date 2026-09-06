@@ -16,16 +16,20 @@ const RECENT_HISTORY_MESSAGES = 4;
 const MAX_CONVERSATION_SUMMARY_CHARACTERS = 2000;
 const ANSWER_SKILL = getLearningSkill("answer_from_summary");
 const LEARNING_TOOL_NAMES = ANSWER_SKILL.allowedTools;
+const EXPLANATION_INSTRUCTION = {
+  beginner: "讲解等级：入门。先解释术语和前置概念，再用清晰的步骤说明结论。",
+  intermediate: "讲解等级：进阶。默认用户理解基础术语，重点解释机制、实践方式和常见误区。",
+  advanced: "讲解等级：深入。聚焦设计取舍、边界条件、实现细节和面试表达。",
+};
 
 function buildSystemPrompt(profile = {}) {
-  const depth = profile.answerDepth || "balanced";
+  const explanationLevel = profile.explanationLevel || "beginner";
   return [
     ANSWER_SKILL.systemPrompt,
-    `回答深度：${depth}。`,
+    EXPLANATION_INSTRUCTION[explanationLevel],
     profile.preferExamples ? "回答偏好：在有证据时使用简短示例。" : "",
     profile.preferInterviewView ? "回答偏好：补充面试表达。" : "",
     profile.targetDirection ? `用户目标方向：${profile.targetDirection}。` : "",
-    profile.experienceLevel ? `用户经验等级：${profile.experienceLevel}。` : "",
   ]
     .filter(Boolean)
     .join("\n");

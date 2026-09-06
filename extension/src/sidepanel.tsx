@@ -23,7 +23,7 @@ import {
   mergeSummariesBySource,
   normalizeSummaryDocument,
   sourceKey,
-} from "./sidepanel/utils.summary";
+} from "./sidepanel/utils/summary";
 import type {
   Citation,
   ConversationMessage,

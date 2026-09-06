@@ -16,8 +16,7 @@ const { logger } = require("../../utils/logger");
 const router = express.Router();
 const PROFILE_FIELDS = [
   "targetDirection",
-  "experienceLevel",
-  "answerDepth",
+  "explanationLevel",
   "summaryDepth",
   "preferExamples",
   "preferInterviewView",
@@ -33,16 +32,10 @@ function profilePayload(profile) {
 
 function validateProfile(body) {
   if (
-    body.experienceLevel &&
-    !["beginner", "intermediate", "advanced"].includes(body.experienceLevel)
+    body.explanationLevel &&
+    !["beginner", "intermediate", "advanced"].includes(body.explanationLevel)
   ) {
-    return "经验等级无效";
-  }
-  if (
-    body.answerDepth &&
-    !["concise", "balanced", "detailed"].includes(body.answerDepth)
-  ) {
-    return "回答深度无效";
+    return "讲解等级无效";
   }
   if (
     body.summaryDepth &&
@@ -53,13 +46,17 @@ function validateProfile(body) {
   return null;
 }
 
+async function loadLearningProfile(userId) {
+  return UserLearningProfile.findOneAndUpdate(
+    { userId },
+    { $setOnInsert: { userId } },
+    { new: true, upsert: true, setDefaultsOnInsert: true },
+  ).lean();
+}
+
 async function loadLearningContext(userId) {
   const [profile, memories] = await Promise.all([
-    UserLearningProfile.findOneAndUpdate(
-      { userId },
-      { $setOnInsert: { userId } },
-      { new: true, upsert: true, setDefaultsOnInsert: true },
-    ).lean(),
+    loadLearningProfile(userId),
     LearningMemory.find({ userId }).sort({ updatedAt: -1 }).lean(),
   ]);
   return { profile: profilePayload(profile), memories };
@@ -237,6 +234,7 @@ router.post("/summarize", auth, async (req, res) => {
 
 router.post("/supplement", auth, async (req, res) => {
   try {
+    const profile = await loadLearningProfile(req.userId);
     const { answer, summaryId, summaryTitle, topic, activeItemId } = req.body;
     let resolvedTitle = summaryTitle;
     let resolvedTopic = topic;
@@ -262,6 +260,7 @@ router.post("/supplement", auth, async (req, res) => {
       answer,
       summaryTitle: resolvedTitle,
       topic: resolvedTopic,
+      summaryDepth: profile.summaryDepth,
     });
     res.json({ supplement: { topic: resolvedTopic, item } });
   } catch (error) {

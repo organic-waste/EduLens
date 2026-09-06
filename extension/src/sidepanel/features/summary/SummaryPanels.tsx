@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MessageCircle } from "lucide-react";
-import { cloneSummary, formatTime } from "../../utils.summary";
+import { cloneSummary, formatTime } from "../../utils/summary";
 import type { SummaryDocument, SummaryItem } from "../../learning.types";
 import "../../styles/summary.css";
 

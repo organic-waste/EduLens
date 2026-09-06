@@ -253,7 +253,7 @@ function Message({
           {message.memoryChanges.map((change) => (
             <span key={change.summaryItemId}>
               {change.topic || "知识点"}：
-              {{ mastered: "已掌握", confusing: "易混淆", review: "稍后复习" }[change.state] ||
+              {{ mastered: "已掌握", confusing: "未掌握", review: "待复习" }[change.state] ||
                 change.state}
             </span>
           ))}
@@ -265,9 +265,9 @@ function Message({
           type="button"
           onClick={() => onSupplement(message.content)}
         >
-              {message.uncovered ? "补充到当前摘要库" : "补充到当前摘要"}
-            </button>
-          )}
+          {message.uncovered ? "补充到当前摘要库" : "补充到当前摘要"}
+        </button>
+      )}
       {message.retrievalStatus === "no_reliable_evidence" ? (
         <p className="message-retrieval-notice">知识库无可靠依据，本回答未引用学习资料。</p>
       ) : null}
@@ -282,8 +282,8 @@ function Message({
                 {(
                   [
                     ["mastered", "已掌握"],
-                    ["confusing", "易混淆"],
-                    ["review", "稍后复习"],
+                    ["review", "待复习"],
+                    ["confusing", "未掌握"],
                   ] as const
                 ).map(([state, label]) => (
                   <button
@@ -312,4 +312,3 @@ function Message({
     </article>
   );
 }
-

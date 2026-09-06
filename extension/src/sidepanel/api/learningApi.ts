@@ -11,8 +11,7 @@ import type {
 
 export interface LearningProfile {
   targetDirection?: string;
-  experienceLevel?: "beginner" | "intermediate" | "advanced";
-  answerDepth?: "concise" | "balanced" | "detailed";
+  explanationLevel?: "beginner" | "intermediate" | "advanced";
   summaryDepth?: "concise" | "balanced" | "detailed";
   preferExamples?: boolean;
   preferInterviewView?: boolean;

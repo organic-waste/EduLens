@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const User = require("../../models/user");
 const SummaryDocument = require("../../models/summaryDocument");
+const { syncSummaryVectors } = require("../retrieval");
 
 dotenv.config({ path: path.join(__dirname, `../../.env.${process.env.NODE_ENV || "development"}`) });
 
@@ -29,7 +30,7 @@ async function main() {
   try {
     const user = await getOrCreateFixtureUser();
     for (const item of fixture) {
-      await SummaryDocument.findOneAndUpdate(
+      const summary = await SummaryDocument.findOneAndUpdate(
         { userId: user._id, sourceUrl: item.sourceUrl },
         {
           userId: user._id,
@@ -64,8 +65,10 @@ async function main() {
         },
         { upsert: true, new: true, setDefaultsOnInsert: true },
       );
+      // 评测直接写模型会绕过摘要 API；显式走同一向量同步逻辑，保证 Atlas 可检索这些种子。
+      await syncSummaryVectors(summary, user._id);
     }
-    console.log(`Seeded ${fixture.length} summaries for EVAL_USER_ID=${user._id}`);
+    console.log(`Seeded and indexed ${fixture.length} summaries for EVAL_USER_ID=${user._id}`);
   } finally {
     await mongoose.disconnect();
   }

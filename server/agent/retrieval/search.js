@@ -5,8 +5,8 @@ const STATE_BONUS = {
   review: 0.12,
   mastered: -0.08,
 };
-// 以原始语义分数判断证据可靠性，学习状态和当前摘要的业务加分不能越过该门槛。
-const MIN_RELIABLE_SEMANTIC_SCORE = 0.45;
+// 原始语义分数先判断一波证据可靠性
+const MIN_RELIABLE_SEMANTIC_SCORE = 0.55;
 
 function toMemoryMap(memories) {
   return new Map(
@@ -25,7 +25,7 @@ function rerankLearningNodes(results, { memories = [], activeSummaryId } = {}) {
       const semanticScore = Number(result.score) || 0;
       let score = semanticScore;
       score += STATE_BONUS[memory?.state] || 0;
-      if (activeId && String(metadata.summaryId) === activeId) score += 0.15;
+      if (activeId && String(metadata.summaryId) === activeId) score += 0.25;
 
       return {
         summaryItemId: metadata.summaryItemId,

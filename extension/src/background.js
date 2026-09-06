@@ -139,8 +139,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 pageUrl: location.href,
                 citation: {
                   quote: text,
-                  prefix: pageText.slice(Math.max(0, start - 80), start),
-                  suffix: pageText.slice(end, end + 80),
+                  prefix: pageText.slice(Math.max(0, start - 40), start),
+                  suffix: pageText.slice(end, end + 40),
                   selector: cssPath(range.startContainer.parentElement || element),
                   textPosition: { start, end },
                 },
@@ -258,7 +258,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             // 找到位置后再匹配quote文本和前后缀，否则匹配 CSS Selector
             const quote = citation.quote?.trim();
             const normalizedQuote = quote?.replace(/\s+/g, " ");
-            for (let attempt = 0; attempt < 12; attempt += 1) {
+            for (let attempt = 0; attempt < 8; attempt += 1) {
               if (citation.textPosition) {
                 const positionRange = rangeFromTextOffsets(
                   citation.textPosition.start,

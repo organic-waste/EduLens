@@ -4,10 +4,9 @@ const LearningMemory = require("../../models/memory");
 describe("learning persistence models", () => {
   it("applies profile defaults and restricts the declared enum values", () => {
     const profile = new UserLearningProfile({ userId: "507f1f77bcf86cd799439011" });
-    expect(profile.experienceLevel).toBe("beginner");
-    expect(profile.answerDepth).toBe("balanced");
+    expect(profile.explanationLevel).toBe("beginner");
     expect(profile.preferExamples).toBe(true);
-    expect(UserLearningProfile.schema.path("experienceLevel").enumValues).toEqual([
+    expect(UserLearningProfile.schema.path("explanationLevel").enumValues).toEqual([
       "beginner", "intermediate", "advanced",
     ]);
   });

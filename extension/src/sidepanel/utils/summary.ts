@@ -1,4 +1,4 @@
-import type { Citation, SummaryDocument, SummaryItem } from "./learning.types";
+import type { Citation, SummaryDocument, SummaryItem } from "../learning.types";
 
 type SummaryInput = Partial<SummaryDocument> & {
   _id?: string;
@@ -7,7 +7,6 @@ type SummaryInput = Partial<SummaryDocument> & {
 
 export function normalizeSummaryDocument(summary: SummaryInput | null): SummaryDocument | null {
   if (!summary) return null;
-  // 兼容迁移前已缓存的 `_id` / `remoteId`，但标准化后的前端对象只暴露 serverId。
   const { _id: legacyServerId, remoteId: legacyRemoteId, ...document } = summary;
   const source = document.source || {};
   const sourceUrl = source.pageUrl || document.sourceUrl || document.groups

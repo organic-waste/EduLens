@@ -13,8 +13,7 @@ type LearningState = "mastered" | "confusing" | "review";
 
 interface LearningProfile {
   targetDirection: string;
-  experienceLevel: "beginner" | "intermediate" | "advanced";
-  answerDepth: "concise" | "balanced" | "detailed";
+  explanationLevel: "beginner" | "intermediate" | "advanced";
   summaryDepth: "concise" | "balanced" | "detailed";
   preferExamples: boolean;
   preferInterviewView: boolean;
@@ -35,8 +34,7 @@ interface Account {
 
 const defaultProfile: LearningProfile = {
   targetDirection: "",
-  experienceLevel: "beginner",
-  answerDepth: "balanced",
+  explanationLevel: "beginner",
   summaryDepth: "balanced",
   preferExamples: false,
   preferInterviewView: false,
@@ -156,7 +154,7 @@ function ProfilePage() {
       <form className="card form-card" onSubmit={saveProfile}>
         <div className="section-heading">
           <h2>学习画像</h2>
-          <span>影响 AI 回答风格</span>
+          <span>影响 AI 讲解与摘要风格</span>
         </div>
         <label>
           目标方向
@@ -167,39 +165,23 @@ function ProfilePage() {
           />
         </label>
         <label>
-          经验等级
+          讲解等级
           <select
-            value={profile.experienceLevel}
+            value={profile.explanationLevel}
             onChange={(event) =>
               setProfile({
                 ...profile,
-                experienceLevel: event.target.value as LearningProfile["experienceLevel"],
+                explanationLevel: event.target.value as LearningProfile["explanationLevel"],
               })
             }
           >
-            <option value="beginner">初学者</option>
-            <option value="intermediate">进阶</option>
-            <option value="advanced">高级</option>
+            <option value="beginner">入门：概念与步骤</option>
+            <option value="intermediate">进阶：机制与实践</option>
+            <option value="advanced">深入：边界与面试</option>
           </select>
         </label>
         <label>
-          回答深度
-          <select
-            value={profile.answerDepth}
-            onChange={(event) =>
-              setProfile({
-                ...profile,
-                answerDepth: event.target.value as LearningProfile["answerDepth"],
-              })
-            }
-          >
-            <option value="concise">简洁</option>
-            <option value="balanced">均衡</option>
-            <option value="detailed">详细</option>
-          </select>
-        </label>
-        <label>
-          摘要详细程度
+          摘要概括程度
           <select
             value={profile.summaryDepth}
             onChange={(event) =>
@@ -261,8 +243,8 @@ function ProfilePage() {
                   }
                 >
                   <option value="mastered">已掌握</option>
-                  <option value="confusing">易混淆</option>
-                  <option value="review">稍后复习</option>
+                  <option value="review">待复习</option>
+                  <option value="confusing">未掌握</option>
                 </select>
               </article>
             ))

@@ -1,6 +1,7 @@
 const { randomUUID } = require("crypto");
 const { createDeepSeekChatCompletion } = require("../../services/modelClient");
 const { getLearningSkill } = require("../prompts/skills");
+const { summaryDepthInstruction } = require("./summary");
 
 const SUPPLEMENT_SYSTEM_PROMPT =
   getLearningSkill("supplement_summary").systemPrompt;
@@ -25,6 +26,7 @@ function createLearningSupplementGenerator({
     answer,
     summaryTitle,
     topic,
+    summaryDepth,
   }) {
     if (!answer?.trim() || !summaryTitle?.trim() || !topic?.trim()) {
       throw new Error("补充摘要所需上下文不完整");
@@ -32,7 +34,10 @@ function createLearningSupplementGenerator({
     const response = await chatCompletion({
       temperature: 0.1,
       messages: [
-        { role: "system", content: SUPPLEMENT_SYSTEM_PROMPT },
+        {
+          role: "system",
+          content: `${SUPPLEMENT_SYSTEM_PROMPT} ${summaryDepthInstruction(summaryDepth)} Do not invent, duplicate, or split facts merely to change summary length.`,
+        },
         {
           role: "user",
           content: JSON.stringify({
