@@ -214,7 +214,6 @@ describe("learning agent", () => {
     expect(events.at(-1)).toMatchObject({
       uncovered: true,
       citations: [],
-      retrievalStatus: "no_reliable_evidence",
     });
   });
 

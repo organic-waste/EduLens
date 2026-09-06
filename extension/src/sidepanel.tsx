@@ -431,7 +431,6 @@ function App() {
         summaryReferences: collectRelatedSummaries(providedSummaryReference, completed.citations),
         memoryChanges: completed.memoryChanges,
         uncovered: completed.uncovered,
-        retrievalStatus: completed.retrievalStatus,
       };
       const finalMessages = [...messages, userMessage, assistantMessage];
       const nextConversationMemory = completed.conversationSummary

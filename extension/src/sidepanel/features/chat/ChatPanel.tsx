@@ -268,9 +268,6 @@ function Message({
           {message.uncovered ? "补充到当前摘要库" : "补充到当前摘要"}
         </button>
       )}
-      {message.retrievalStatus === "no_reliable_evidence" ? (
-        <p className="message-retrieval-notice">知识库无可靠依据，本回答未引用学习资料。</p>
-      ) : null}
       {message.role === "assistant" && !message.streaming && memoryTargets.size ? (
         <div className="message-memory-actions">
           <span>标记学习状态</span>

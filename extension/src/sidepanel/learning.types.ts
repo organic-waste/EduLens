@@ -38,7 +38,6 @@ export interface ConversationMessage {
   citations?: Citation[];
   memoryChanges?: MemoryChange[];
   uncovered?: boolean;
-  retrievalStatus?: "no_reliable_evidence";
   streaming?: boolean;
 }
 
@@ -93,7 +92,6 @@ export interface StreamEvent {
   citations?: Citation[];
   memoryChanges?: MemoryChange[];
   uncovered?: boolean;
-  retrievalStatus?: "no_reliable_evidence";
   conversationSummary?: string;
   compressedMessageCount?: number;
   message?: string;

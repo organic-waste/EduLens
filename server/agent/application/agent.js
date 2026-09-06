@@ -18,7 +18,8 @@ const ANSWER_SKILL = getLearningSkill("answer_from_summary");
 const LEARNING_TOOL_NAMES = ANSWER_SKILL.allowedTools;
 const EXPLANATION_INSTRUCTION = {
   beginner: "讲解等级：入门。先解释术语和前置概念，再用清晰的步骤说明结论。",
-  intermediate: "讲解等级：进阶。默认用户理解基础术语，重点解释机制、实践方式和常见误区。",
+  intermediate:
+    "讲解等级：进阶。默认用户理解基础术语，重点解释机制、实践方式和常见误区。",
   advanced: "讲解等级：深入。聚焦设计取舍、边界条件、实现细节和面试表达。",
 };
 
@@ -36,21 +37,23 @@ function buildSystemPrompt(profile = {}) {
 }
 
 function toCitations(results) {
-  return results
-    // AI 补充可以帮助回答，但没有原网页可回跳，因此不作为 citation 输出。
-    .filter((result) => result.metadata.evidenceLevel === "source-backed")
-    .map((result) => ({
-      summaryId: result.metadata.summaryId,
-      summaryTitle: result.metadata.summaryTitle,
-      summaryItemId: result.metadata.summaryItemId,
-      topic: result.metadata.topic,
-      pageUrl: result.metadata.pageUrl,
-      quote: result.metadata.quote,
-      selector: result.metadata.selector,
-      prefix: result.metadata.prefix,
-      suffix: result.metadata.suffix,
-      textPosition: result.metadata.textPosition,
-    }));
+  return (
+    results
+      // AI 补充可以帮助回答，但没有原网页可回跳，因此不作为 citation 输出。
+      .filter((result) => result.metadata.evidenceLevel === "source-backed")
+      .map((result) => ({
+        summaryId: result.metadata.summaryId,
+        summaryTitle: result.metadata.summaryTitle,
+        summaryItemId: result.metadata.summaryItemId,
+        topic: result.metadata.topic,
+        pageUrl: result.metadata.pageUrl,
+        quote: result.metadata.quote,
+        selector: result.metadata.selector,
+        prefix: result.metadata.prefix,
+        suffix: result.metadata.suffix,
+        textPosition: result.metadata.textPosition,
+      }))
+  );
 }
 
 function findRetrievedItem(itemId, retrieved) {
@@ -121,10 +124,6 @@ function createChatResult(answer, state) {
     citations: toCitations(state.retrieved),
     memoryChanges: state.memoryChanges,
     uncovered: state.searched && state.retrieved.length === 0,
-    retrievalStatus:
-      state.searched && state.retrieved.length === 0
-        ? "no_reliable_evidence"
-        : undefined,
     conversationSummary: state.conversationSummary || undefined,
     compressedMessageCount: state.compressedMessageCount || undefined,
   };
@@ -196,7 +195,8 @@ function toolCompletionMessage(name, status, output, error) {
   if (status === "error") return error || "学习工具执行失败，将继续生成回答";
   const result = parseToolOutput(output);
   if (name === "search_learning_knowledge") {
-    if (!result.results?.length) return "知识库无可靠依据，将使用通用知识回答";
+    if (!result.results?.length)
+      return "未找到相关学习资料，将使用通用知识回答";
     return `已找到 ${result.results.length} 条可靠学习资料`;
   }
   if (name === "update_learning_memory") {
@@ -206,7 +206,6 @@ function toolCompletionMessage(name, status, output, error) {
 }
 
 async function observeToolCalls(toolCalls, events) {
-  // v3 AgentRunStream 提供工具生命周期；兼容单元测试中的精简 fake run。
   if (!toolCalls?.[Symbol.asyncIterator]) return;
   for await (const call of toolCalls) {
     events.push({ type: "status", message: toolStartMessage(call.name) });
@@ -249,13 +248,7 @@ function createLearningTools({
         activeSummaryId,
         memories,
       });
-      if (!state.retrieved.length) {
-        return JSON.stringify({ results: [], status: "no_reliable_evidence" });
-      }
-      return JSON.stringify({
-        results: state.retrieved,
-        status: "reliable_evidence",
-      });
+      return JSON.stringify({ results: state.retrieved });
     },
     {
       name: "search_learning_knowledge",
