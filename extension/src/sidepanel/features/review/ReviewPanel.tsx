@@ -1,31 +1,36 @@
 import { useEffect, useState } from "react";
 import { BookOpen, RotateCcw } from "lucide-react";
-import type { Citation, ReviewCard } from "../../learning.types";
+import type { Citation, ReviewCard, ReviewEvaluation } from "../../learning.types";
 import "../../styles/review.css";
 
 export function ReviewPanel({
   cards,
   onCitation,
   onReview,
+  onNext,
 }: {
   cards: ReviewCard[];
   onCitation: (citation: Citation) => void;
-  onReview: (card: ReviewCard, remembered: boolean) => Promise<void>;
+  onReview: (card: ReviewCard, answer: string) => Promise<ReviewEvaluation>;
+  onNext: (card: ReviewCard) => void;
 }) {
-  const [revealed, setRevealed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [answer, setAnswer] = useState("");
+  const [evaluation, setEvaluation] = useState<ReviewEvaluation | null>(null);
   const card = cards[0];
 
   useEffect(() => {
-    setRevealed(false);
     setSubmitting(false);
+    setAnswer("");
+    setEvaluation(null);
   }, [card?.learningUnitId]);
 
-  async function submitReview(remembered: boolean) {
+  async function submitReview() {
     if (!card || submitting) return;
     setSubmitting(true);
     try {
-      await onReview(card, remembered);
+      const result = await onReview(card, answer);
+      setEvaluation(result);
     } finally {
       // 请求失败时卡片仍在队列中，按钮恢复后可安全重试。
       setSubmitting(false);
@@ -54,12 +59,33 @@ export function ReviewPanel({
       <div className="review-card">
         <span className="review-label">主动回忆</span>
         <p>{card.question}</p>
-        {!revealed ? (
-          <button className="review-reveal" type="button" onClick={() => setRevealed(true)}>
-            查看答案
-          </button>
+        {!evaluation ? (
+          <>
+            <textarea
+              className="review-answer-input"
+              value={answer}
+              onChange={(event) => setAnswer(event.target.value)}
+              placeholder="写下你的回答..."
+              rows={4}
+              disabled={submitting}
+            />
+            <button
+              className="review-reveal"
+              type="button"
+              disabled={!answer.trim() || submitting}
+              onClick={() => void submitReview()}
+            >
+              {submitting ? "Agent 评估中..." : "提交回答"}
+            </button>
+          </>
         ) : (
           <>
+            <div className={`review-evaluation review-evaluation--${evaluation.state}`}>
+              <strong>
+                {{ mastered: "已掌握", review: "建议复习", confusing: "还需理解" }[evaluation.state]}
+              </strong>
+              <span>{evaluation.feedback}</span>
+            </div>
             <div className="review-answer">{card.content}</div>
             {card.citation?.pageUrl ? (
               <button
@@ -73,15 +99,9 @@ export function ReviewPanel({
             ) : (
               <p className="review-generated-note">AI 补充内容，无可回跳的网页原文</p>
             )}
-            <div className="review-feedback">
-              <span>刚才回忆得怎样？</span>
-              <button type="button" disabled={submitting} onClick={() => void submitReview(false)}>
-                没记住
-              </button>
-              <button type="button" disabled={submitting} onClick={() => void submitReview(true)}>
-                记住了
-              </button>
-            </div>
+            <button className="review-next" type="button" onClick={() => onNext(card)}>
+              下一张
+            </button>
           </>
         )}
       </div>

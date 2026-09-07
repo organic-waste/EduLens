@@ -10,7 +10,10 @@ const {
 } = require("../application/agent");
 const { generateLearningSummary } = require("../application/summary");
 const { generateLearningSupplement } = require("../application/supplement");
-const { generateLearningReviewQuestion } = require("../application/review");
+const {
+  generateLearningReviewQuestion,
+  evaluateLearningReview,
+} = require("../application/review");
 const {
   updateLearningMemory,
   recordLearningReview,
@@ -282,8 +285,10 @@ router.get("/review", auth, async (req, res) => {
 
 router.post("/review/:learningUnitId", auth, async (req, res) => {
   const { learningUnitId } = req.params;
-  if (typeof req.body.remembered !== "boolean") {
-    return res.status(400).json({ status: "error", message: "复习结果无效" });
+  const answer = typeof req.body.answer === "string" ? req.body.answer.trim() : "";
+  const question = typeof req.body.question === "string" ? req.body.question.trim() : "";
+  if (!answer || !question) {
+    return res.status(400).json({ status: "error", message: "复习回答不能为空" });
   }
   try {
     const summary = await SummaryDocument.findOne({
@@ -292,12 +297,23 @@ router.post("/review/:learningUnitId", auth, async (req, res) => {
     }).lean();
     if (!summary)
       return res.status(404).json({ status: "error", message: "学习主题不存在" });
+    const group = summary.groups.find((item) => item.id === learningUnitId);
+    const content = group.items
+      .filter((item) => item.content?.trim())
+      .map((item, index) => `${index + 1}. ${item.content}`)
+      .join("\n");
+    const evaluation = await evaluateLearningReview({
+      topic: group.topic,
+      content,
+      question,
+      answer,
+    });
     const memory = await recordLearningReview({
       userId: req.userId,
       learningUnitId,
-      remembered: req.body.remembered,
+      state: evaluation.state,
     });
-    res.json({ status: "success", memory });
+    res.json({ status: "success", evaluation, memory });
   } catch (error) {
     res.status(500).json({ status: "error", message: `复习结果保存失败：${error.message}` });
   }

@@ -1,10 +1,8 @@
 // 点击插件图标时打开侧边栏
 if (chrome.sidePanel?.setPanelBehavior) {
-  chrome.sidePanel
-    .setPanelBehavior({ openPanelOnActionClick: true })
-    .catch((error) => {
-      console.warn("配置侧边栏打开行为失败：", error);
-    });
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => {
+    console.warn("配置侧边栏打开行为失败：", error);
+  });
 }
 
 // 监听标签页切换
@@ -58,8 +56,7 @@ function delay(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-// content script 会随页面加载。新开标签页时，页面 complete 与脚本可收消息之间
-// 仍可能有一个极短窗口，因此只在这一层做有限重试。
+// 新开标签页时，等一下content-script的脚本加载
 async function sendToContentScript(tabId, message, attempts = 6) {
   let lastError;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -81,9 +78,7 @@ async function resolveCitationTab(citation) {
 
   const targetBaseUrl = normalizePageUrl(targetUrl);
   const tabs = await chrome.tabs.query({});
-  const sourceTab = tabs.find(
-    (tab) => normalizePageUrl(tab.url) === targetBaseUrl,
-  );
+  const sourceTab = tabs.find((tab) => normalizePageUrl(tab.url) === targetBaseUrl);
   if (sourceTab) {
     await chrome.windows.update(sourceTab.windowId, { focused: true });
     await chrome.tabs.update(sourceTab.id, { active: true });
@@ -154,13 +149,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === "SCREENSHOT") {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      chrome.tabs.captureVisibleTab(
-        tabs[0].windowId,
-        { format: "png" },
-        (dataUrl) => {
-          sendResponse({ image: dataUrl });
-        },
-      );
+      chrome.tabs.captureVisibleTab(tabs[0].windowId, { format: "png" }, (dataUrl) => {
+        sendResponse({ image: dataUrl });
+      });
     });
     return true; //告诉 Chrome 异步调用 sendResponse，否则会造成 await sendMessage 会永远 pending 而卡死
   }

@@ -6,6 +6,7 @@ import type {
   MemoryChange,
   PageSelection,
   ReviewCard,
+  ReviewEvaluation,
   StreamEvent,
   SummaryDocument,
 } from "../learning.types";
@@ -82,14 +83,18 @@ export function updateLearningMemories(
 }
 
 export function loadLearningReviewQueue(): Promise<ReviewCard[]> {
-  return requestLearning("/review").then((result) => result.cards || []);
+  return requestLearning("/review").then((result) => (result.cards as ReviewCard[]) || []);
 }
 
-export function submitLearningReview(learningUnitId: string, remembered: boolean) {
+export function submitLearningReview(
+  learningUnitId: string,
+  question: string,
+  answer: string,
+): Promise<{ evaluation: ReviewEvaluation }> {
   return requestLearning(`/review/${encodeURIComponent(learningUnitId)}`, {
     method: "POST",
-    body: JSON.stringify({ remembered }),
-  });
+    body: JSON.stringify({ question, answer }),
+  }).then((result) => result as { evaluation: ReviewEvaluation });
 }
 
 export async function streamLearningAgent({

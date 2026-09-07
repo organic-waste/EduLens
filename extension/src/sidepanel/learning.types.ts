@@ -30,6 +30,11 @@ export interface ReviewCard {
   reviewCount: number;
 }
 
+export interface ReviewEvaluation {
+  state: "mastered" | "review" | "confusing";
+  feedback: string;
+}
+
 export interface SummaryReference {
   id: string;
   serverId?: string;

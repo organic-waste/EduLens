@@ -39,11 +39,11 @@ async function updateLearningMemory({ userId, learningUnitId, state, now = new D
   ).lean();
 }
 
-async function recordLearningReview({ userId, learningUnitId, remembered, now = new Date() }) {
+async function recordLearningReview({ userId, learningUnitId, remembered, state, now = new Date() }) {
   return updateLearningMemory({
     userId,
     learningUnitId,
-    state: remembered ? "mastered" : "confusing",
+    state: state || (remembered ? "mastered" : "confusing"),
     now,
   });
 }

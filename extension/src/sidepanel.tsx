@@ -332,16 +332,23 @@ function App() {
     }
   }
 
-  async function handleReview(card: ReviewCard, remembered: boolean) {
+  async function handleReview(card: ReviewCard, answer: string) {
     try {
-      await submitLearningReview(card.learningUnitId, remembered);
-      setReviewCards((current) =>
-        current.filter((item) => item.learningUnitId !== card.learningUnitId),
+      const result = await submitLearningReview(card.learningUnitId, card.question, answer);
+      setStatus(
+        result.evaluation.state === "mastered" ? "已记录为掌握" : "已记录复习状态",
       );
-      setStatus(remembered ? "已安排下次复习" : "已安排明天复习");
+      return result.evaluation;
     } catch (error) {
       setStatus(toError(error));
+      throw error;
     }
+  }
+
+  function handleNextReview(card: ReviewCard) {
+    setReviewCards((current) =>
+      current.filter((item) => item.learningUnitId !== card.learningUnitId),
+    );
   }
 
   function collectRelatedSummaries(
@@ -607,7 +614,8 @@ function App() {
         <ReviewPanel
           cards={reviewCards}
           onCitation={(citation) => void handleCitation(citation)}
-          onReview={(card, remembered) => handleReview(card, remembered)}
+          onReview={(card, answer) => handleReview(card, answer)}
+          onNext={handleNextReview}
         />
       ) : view === "library" ? (
         <SummaryLibrary
