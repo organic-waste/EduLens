@@ -4,6 +4,7 @@ export interface Citation {
   summaryId?: string;
   summaryTitle?: string;
   summaryItemId?: string;
+  learningUnitId?: string;
   topic?: string;
   pageUrl?: string;
   quote?: string;
@@ -14,9 +15,19 @@ export interface Citation {
 }
 
 export interface MemoryChange {
-  summaryItemId: string;
+  learningUnitId: string;
   topic?: string;
   state: "mastered" | "confusing" | "review" | string;
+}
+
+export interface ReviewCard {
+  learningUnitId: string;
+  topic: string;
+  question: string;
+  content: string;
+  citation?: Citation;
+  sourceType?: SummaryItem["sourceType"];
+  reviewCount: number;
 }
 
 export interface SummaryReference {

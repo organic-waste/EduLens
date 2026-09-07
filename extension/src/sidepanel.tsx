@@ -4,19 +4,24 @@ import {
   ArrowLeft,
   BookOpen,
   CircleUserRound,
+  RotateCcw,
 } from "lucide-react";
 import { authManager } from "./services/authManager.js";
 import {
   generateLearningSupplement,
   generateLearningSummary,
+  loadLearningProfile,
+  loadLearningReviewQueue,
+  submitLearningReview,
   streamLearningAgent,
-  updateLearningMemory,
+  updateLearningMemories,
 } from "./sidepanel/api/learningApi";
 import { loadRemoteSummaryDocuments, syncSummaryDocument } from "./services/summaryClient.js";
 import "./sidepanel/styles/base.css";
 import { AuthScreen } from "./sidepanel/features/auth/AuthScreen";
 import { ChatPanel } from "./sidepanel/features/chat/ChatPanel";
 import { SummaryLibrary, SummaryPanel } from "./sidepanel/features/summary/SummaryPanels";
+import { ReviewPanel } from "./sidepanel/features/review/ReviewPanel";
 import {
   cloneSummary,
   getCitation,
@@ -30,13 +35,14 @@ import type {
   ConversationMemory,
   MemoryChange,
   PageSelection,
+  ReviewCard,
   SummaryReference,
   StreamEvent,
   SummaryDocument,
   SummaryItem,
 } from "./sidepanel/learning.types";
 
-type View = "chat" | "library" | "summary";
+type View = "chat" | "library" | "summary" | "review";
 // MongoDB 的 `_id` 仅存在于 API 响应的适配边界，不能进入客户端摘要模型。
 type RemoteSummaryDocument = Omit<Partial<SummaryDocument>, "id" | "serverId"> & {
   _id?: string;
@@ -77,6 +83,7 @@ function App() {
     EMPTY_CONVERSATION_MEMORY,
   );
   const [documents, setDocuments] = useState<SummaryDocument[]>([]);
+  const [reviewCards, setReviewCards] = useState<ReviewCard[]>([]);
   const [currentSummary, setCurrentSummary] = useState<SummaryDocument | null>(null);
   const [activeSummary, setActiveSummary] = useState<SummaryDocument | null>(null);
   const [activeItem, setActiveItem] = useState<SummaryItem | null>(null);
@@ -85,8 +92,9 @@ function App() {
   const [status, setStatus] = useState("就绪");
   // 防止重复提交。
   const [busy, setBusy] = useState(false);
-  const [updatingMemoryItemIds, setUpdatingMemoryItemIds] = useState<Set<string>>(new Set());
-  const updatingMemoryItemIdsRef = useRef(new Set<string>());
+  const [updatingMemoryUnitIds, setUpdatingMemoryUnitIds] = useState<Set<string>>(new Set());
+  const [memoryStates, setMemoryStates] = useState<Map<string, MemoryChange["state"]>>(new Map());
+  const updatingMemoryUnitIdsRef = useRef(new Set<string>());
   const messagesRef = useRef<HTMLElement>(null);
   const promptRef = useRef<HTMLTextAreaElement>(null);
 
@@ -157,6 +165,13 @@ function App() {
     setDocuments(localDocuments);
     setCurrentSummary(normalizeSummaryDocument(edulensCurrentSummary as Partial<SummaryDocument>));
     await restoreRemoteSummaries(localDocuments);
+    try {
+      const context = await loadLearningProfile();
+      setMemoryStates(new Map(context.memories.map((memory) => [memory.learningUnitId, memory.state])));
+    } catch (error) {
+      // 摘要本地功能仍可用；下次状态操作会再次走服务端鉴权和校验。
+      console.warn("学习状态加载失败", error);
+    }
   }
 
   async function restoreRemoteSummaries(localDocuments: SummaryDocument[]) {
@@ -250,12 +265,40 @@ function App() {
     setStatus(result?.error || (result?.located ? "已定位网页引用" : "未找到对应网页引用"));
   }
 
-  async function handleMemoryChange(messageId: string, change: MemoryChange) {
-    if (updatingMemoryItemIdsRef.current.has(change.summaryItemId)) return;
-    updatingMemoryItemIdsRef.current.add(change.summaryItemId);
-    setUpdatingMemoryItemIds(new Set(updatingMemoryItemIdsRef.current));
+  async function persistMemoryChanges(changes: MemoryChange[]) {
+    const uniqueChanges = [...new Map(changes.map((change) => [change.learningUnitId, change])).values()];
+    if (!uniqueChanges.length || uniqueChanges.some((change) =>
+      updatingMemoryUnitIdsRef.current.has(change.learningUnitId),
+    )) return false;
+    uniqueChanges.forEach((change) => updatingMemoryUnitIdsRef.current.add(change.learningUnitId));
+    setUpdatingMemoryUnitIds(new Set(updatingMemoryUnitIdsRef.current));
     try {
-      await updateLearningMemory(change.summaryItemId, change.state);
+      const state = uniqueChanges[0].state;
+      await updateLearningMemories(uniqueChanges.map((change) => change.learningUnitId), state);
+      setMemoryStates((current) => {
+        const next = new Map(current);
+        uniqueChanges.forEach((change) => next.set(change.learningUnitId, change.state));
+        return next;
+      });
+      setStatus("学习状态已更新");
+      return true;
+    } catch (error) {
+      setStatus(toError(error));
+      return false;
+    } finally {
+      uniqueChanges.forEach((change) => updatingMemoryUnitIdsRef.current.delete(change.learningUnitId));
+      setUpdatingMemoryUnitIds(new Set(updatingMemoryUnitIdsRef.current));
+    }
+  }
+
+  function persistMemoryChange(change: MemoryChange) {
+    return persistMemoryChanges([change]);
+  }
+
+  async function handleMemoryChange(messageId: string, change: MemoryChange) {
+    const updated = await persistMemoryChange(change);
+    if (!updated) return;
+    try {
       setMessages((current) => {
         const next = current.map((message) => {
           if (message.id !== messageId) return message;
@@ -263,7 +306,7 @@ function App() {
             ...message,
             memoryChanges: [
               ...(message.memoryChanges || []).filter(
-                (item) => item.summaryItemId !== change.summaryItemId,
+                (item) => item.learningUnitId !== change.learningUnitId,
               ),
               change,
             ],
@@ -275,9 +318,29 @@ function App() {
       setStatus("学习状态已更新");
     } catch (error) {
       setStatus(toError(error));
-    } finally {
-      updatingMemoryItemIdsRef.current.delete(change.summaryItemId);
-      setUpdatingMemoryItemIds(new Set(updatingMemoryItemIdsRef.current));
+    }
+  }
+
+  async function openReview() {
+    setStatus("正在加载今日复习...");
+    try {
+      setReviewCards(await loadLearningReviewQueue());
+      setView("review");
+      setStatus("就绪");
+    } catch (error) {
+      setStatus(toError(error));
+    }
+  }
+
+  async function handleReview(card: ReviewCard, remembered: boolean) {
+    try {
+      await submitLearningReview(card.learningUnitId, remembered);
+      setReviewCards((current) =>
+        current.filter((item) => item.learningUnitId !== card.learningUnitId),
+      );
+      setStatus(remembered ? "已安排下次复习" : "已安排明天复习");
+    } catch (error) {
+      setStatus(toError(error));
     }
   }
 
@@ -515,6 +578,19 @@ function App() {
           <button
             className="icon-button"
             type="button"
+            title={view === "review" ? "返回对话" : "今日复习"}
+            aria-label={view === "review" ? "返回对话" : "今日复习"}
+            onClick={() => (view === "review" ? setView("chat") : void openReview())}
+          >
+            {view === "review" ? (
+              <ArrowLeft className="action-icon" aria-hidden="true" />
+            ) : (
+              <RotateCcw className="action-icon" aria-hidden="true" />
+            )}
+          </button>
+          <button
+            className="icon-button"
+            type="button"
             title={view === "library" ? "返回对话" : "摘要库"}
             aria-label={view === "library" ? "返回对话" : "摘要库"}
             onClick={() => setView(view === "library" ? "chat" : "library")}
@@ -527,7 +603,13 @@ function App() {
           </button>
         </div>
       </header>
-      {view === "library" ? (
+      {view === "review" ? (
+        <ReviewPanel
+          cards={reviewCards}
+          onCitation={(citation) => void handleCitation(citation)}
+          onReview={(card, remembered) => handleReview(card, remembered)}
+        />
+      ) : view === "library" ? (
         <SummaryLibrary
           documents={documents}
           onOpen={(summary) => {
@@ -557,6 +639,9 @@ function App() {
             if (activeSummary?.id === summary.id) setActiveSummary(saved);
             setStatus("摘要已保存");
           }}
+          memoryStates={memoryStates}
+          updatingMemoryUnitIds={updatingMemoryUnitIds}
+          onMemoryChange={(changes) => void persistMemoryChanges(changes)}
           setStatus={setStatus}
         />
       ) : (
@@ -582,7 +667,7 @@ function App() {
           onCitation={handleOpenCitationSummary}
           onSupplement={(answer) => void supplementSummary(answer)}
           onMemoryChange={(messageId, change) => void handleMemoryChange(messageId, change)}
-          updatingMemoryItemIds={updatingMemoryItemIds}
+          updatingMemoryUnitIds={updatingMemoryUnitIds}
         />
       )}
     </main>

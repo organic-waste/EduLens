@@ -32,7 +32,7 @@ export function ChatPanel({
   onCitation,
   onSupplement,
   onMemoryChange,
-  updatingMemoryItemIds,
+  updatingMemoryUnitIds,
 }: {
   messages: ConversationMessage[];
   documents: SummaryDocument[];
@@ -52,7 +52,7 @@ export function ChatPanel({
   onCitation: (citation: Citation) => void;
   onSupplement: (answer: string) => void;
   onMemoryChange: (messageId: string, change: MemoryChange) => void;
-  updatingMemoryItemIds: Set<string>;
+  updatingMemoryUnitIds: Set<string>;
 }) {
   return (
     <>
@@ -87,7 +87,7 @@ export function ChatPanel({
               onCitation={onCitation}
               onSupplement={onSupplement}
               onMemoryChange={onMemoryChange}
-              updatingMemoryItemIds={updatingMemoryItemIds}
+              updatingMemoryUnitIds={updatingMemoryUnitIds}
               activeSummary={activeSummary}
             />
           ))
@@ -164,7 +164,7 @@ function Message({
   onCitation,
   onSupplement,
   onMemoryChange,
-  updatingMemoryItemIds,
+  updatingMemoryUnitIds,
   activeSummary,
 }: {
   message: ConversationMessage;
@@ -172,7 +172,7 @@ function Message({
   onCitation: (citation: Citation) => void;
   onSupplement: (answer: string) => void;
   onMemoryChange: (messageId: string, change: MemoryChange) => void;
-  updatingMemoryItemIds: Set<string>;
+  updatingMemoryUnitIds: Set<string>;
   activeSummary: SummaryDocument | null;
 }) {
   const canSupplement =
@@ -197,16 +197,16 @@ function Message({
     relatedSummaryMap.set(reference.serverId || reference.id, reference);
   }
   const relatedSummaries = [...relatedSummaryMap.values()];
-  const memoryTargets = new Map<string, { summaryItemId: string; topic?: string }>();
+  const memoryTargets = new Map<string, { learningUnitId: string; topic?: string }>();
   for (const citation of message.citations || []) {
-    if (!citation.summaryItemId) continue;
-    memoryTargets.set(citation.summaryItemId, {
-      summaryItemId: citation.summaryItemId,
+    if (!citation.learningUnitId) continue;
+    memoryTargets.set(citation.learningUnitId, {
+      learningUnitId: citation.learningUnitId,
       topic: citation.topic,
     });
   }
   const memoryStates = new Map(
-    (message.memoryChanges || []).map((change) => [change.summaryItemId, change.state]),
+    (message.memoryChanges || []).map((change) => [change.learningUnitId, change.state]),
   );
   return (
     <article className={`message ${message.role}`}>
@@ -251,8 +251,8 @@ function Message({
       {message.memoryChanges?.length ? (
         <div className="memory-changes">
           {message.memoryChanges.map((change) => (
-            <span key={change.summaryItemId}>
-              {change.topic || "知识点"}：
+            <span key={change.learningUnitId}>
+              {change.topic || "学习主题"}：
               {{ mastered: "已掌握", confusing: "未掌握", review: "待复习" }[change.state] ||
                 change.state}
             </span>
@@ -272,10 +272,10 @@ function Message({
         <div className="message-memory-actions">
           <span>标记学习状态</span>
           {[...memoryTargets.values()].map((target) => {
-            const currentState = memoryStates.get(target.summaryItemId);
+            const currentState = memoryStates.get(target.learningUnitId);
             return (
-              <div className="memory-action-row" key={target.summaryItemId}>
-                <strong>{target.topic || "知识点"}</strong>
+              <div className="memory-action-row" key={target.learningUnitId}>
+                <strong>{target.topic || "学习主题"}</strong>
                 {(
                   [
                     ["mastered", "已掌握"],
@@ -289,10 +289,10 @@ function Message({
                     }`}
                     type="button"
                     key={state}
-                    disabled={updatingMemoryItemIds.has(target.summaryItemId)}
+                    disabled={updatingMemoryUnitIds.has(target.learningUnitId)}
                     onClick={() =>
                       onMemoryChange(message.id, {
-                        summaryItemId: target.summaryItemId,
+                        learningUnitId: target.learningUnitId,
                         topic: target.topic,
                         state: state as LearningMemoryState,
                       })

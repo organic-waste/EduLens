@@ -101,7 +101,9 @@ h2 {
   align-items: start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+}
+.section-2 {
+  margin-bottom: 8px;
 }
 .section-heading span,
 .form-card label small,
@@ -125,7 +127,7 @@ h2 {
   width: 100%;
   border: 1px solid #d1e0e3;
   border-radius: 4px;
-  padding: 8px;
+  padding: 6px 4px;
   background: #fbfdfd;
   color: #1d2a33;
 }
@@ -169,15 +171,16 @@ h2 {
   justify-content: space-between;
   gap: 14px;
   border-top: 1px solid #e6eef0;
-  padding-top: 10px;
+  padding-top: 6px;
 }
 .memory-item:first-child {
   border-top: 0;
   padding-top: 0;
 }
 .memory-item strong {
-  color: #4275a4;
-  font-size: 12px;
+  font-weight: 600;
+  color: #4c8b97;
+  font-size: 14px;
 }
 .memory-item p {
   max-width: 450px;

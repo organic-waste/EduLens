@@ -10,7 +10,7 @@ const MIN_RELIABLE_SEMANTIC_SCORE = 0.55;
 
 function toMemoryMap(memories) {
   return new Map(
-    memories.map((memory) => [String(memory.summaryItemId), memory]),
+    memories.map((memory) => [String(memory.learningUnitId), memory]),
   );
 }
 
@@ -21,7 +21,7 @@ function rerankLearningNodes(results, { memories = [], activeSummaryId } = {}) {
   return results
     .map((result, index) => {
       const metadata = result.metadata || result;
-      const memory = memoryByItem.get(String(metadata.summaryItemId));
+      const memory = memoryByItem.get(String(metadata.learningUnitId));
       const semanticScore = Number(result.score) || 0;
       let score = semanticScore;
       score += STATE_BONUS[memory?.state] || 0;
@@ -35,6 +35,7 @@ function rerankLearningNodes(results, { memories = [], activeSummaryId } = {}) {
         metadata: {
           summaryId: metadata.summaryId,
           summaryTitle: metadata.summaryTitle,
+          learningUnitId: metadata.learningUnitId,
           summaryItemId: metadata.summaryItemId,
           topic: metadata.topic,
           pageUrl: metadata.pageUrl,

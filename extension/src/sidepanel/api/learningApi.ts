@@ -5,6 +5,7 @@ import type {
   ConversationMemory,
   MemoryChange,
   PageSelection,
+  ReviewCard,
   StreamEvent,
   SummaryDocument,
 } from "../learning.types";
@@ -33,8 +34,22 @@ async function requestLearning(endpoint: string, options: LearningRequestOptions
     throw new Error("登录后使用 AI 学习助手");
   }
   const response = await apiClient.request(`/learning${endpoint}`, options);
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.message || "学习数据请求失败");
+  const body = await response.text();
+  let result: Record<string, unknown> = {};
+  if (body) {
+    try {
+      result = JSON.parse(body);
+    } catch {
+      const detail = response.ok
+        ? "学习服务返回了非 JSON 成功响应"
+        : `学习服务返回了非 JSON 错误响应（HTTP ${response.status}）`;
+      throw new Error(`${detail}，请确认后端已重启并部署当前版本`);
+    }
+  }
+  if (!response.ok) {
+    const message = typeof result.message === "string" ? result.message : "学习数据请求失败";
+    throw new Error(message);
+  }
   return result;
 }
 
@@ -49,10 +64,31 @@ export function saveLearningProfile(profile: LearningProfile) {
   });
 }
 
-export function updateLearningMemory(summaryItemId: string, state: MemoryChange["state"]) {
-  return requestLearning(`/memory/${encodeURIComponent(summaryItemId)}`, {
+export function updateLearningMemory(learningUnitId: string, state: MemoryChange["state"]) {
+  return requestLearning(`/memory/${encodeURIComponent(learningUnitId)}`, {
     method: "PUT",
     body: JSON.stringify({ state }),
+  });
+}
+
+export function updateLearningMemories(
+  learningUnitIds: string[],
+  state: MemoryChange["state"],
+) {
+  return requestLearning("/memory", {
+    method: "PUT",
+    body: JSON.stringify({ learningUnitIds, state }),
+  });
+}
+
+export function loadLearningReviewQueue(): Promise<ReviewCard[]> {
+  return requestLearning("/review").then((result) => result.cards || []);
+}
+
+export function submitLearningReview(learningUnitId: string, remembered: boolean) {
+  return requestLearning(`/review/${encodeURIComponent(learningUnitId)}`, {
+    method: "POST",
+    body: JSON.stringify({ remembered }),
   });
 }
 

@@ -13,7 +13,7 @@ describe("learning persistence models", () => {
 
   it("uses a user-scoped unique compound index for learning memory", () => {
     expect(LearningMemory.schema.indexes()).toContainEqual([
-      { userId: 1, summaryItemId: 1 },
+      { userId: 1, learningUnitId: 1 },
       { unique: true, background: true },
     ]);
   });

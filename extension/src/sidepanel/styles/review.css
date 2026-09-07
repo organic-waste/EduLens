@@ -1,0 +1,125 @@
+.review-panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  padding: 3px 1px;
+}
+.review-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 2px 2px 0;
+  color: var(--panel-color);
+}
+.review-heading p,
+.review-heading h2 {
+  margin: 0;
+}
+.review-heading p,
+.review-label,
+.review-feedback span {
+  font-size: 11px;
+}
+.review-heading h2 {
+  margin-top: 4px;
+  color: var(--emphasis-color);
+  font-size: 18px;
+}
+.review-card {
+  border: 1px solid #c5dfe2;
+  border-radius: 6px;
+  padding: 17px;
+  background: white;
+}
+.review-label {
+  color: #357b8c;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+.review-card > p {
+  margin: 11px 0 16px;
+  color: #1d2a33;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+.review-reveal,
+.review-feedback button {
+  border: 0;
+  border-radius: 4px;
+  padding: 8px 11px;
+  font-size: 12px;
+}
+.review-reveal {
+  width: 100%;
+  background: var(--main-color);
+  color: white;
+}
+.review-reveal:hover,
+.review-feedback button:last-child:hover {
+  background: var(--hover-color);
+}
+.review-answer {
+  margin: 4px 0 10px;
+  border-left: 3px solid #8fc6cf;
+  padding: 8px 10px;
+  background: #f4fafb;
+  color: #36505a;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.review-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--emphasis-color);
+  font-size: 11px;
+}
+.review-generated-note {
+  margin: 4px 0 0;
+  color: #71838b;
+  font-size: 11px;
+}
+.review-feedback {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 15px;
+  border-top: 1px solid #e1ecee;
+  padding-top: 10px;
+}
+.review-feedback span {
+  grid-column: 1 / -1;
+  color: #71838b;
+}
+.review-feedback button:first-of-type {
+  border: 1px solid #b9d7dc;
+  background: #f4fafb;
+  color: #486b78;
+}
+.review-feedback button:last-child {
+  background: var(--main-color);
+  color: white;
+}
+.review-feedback button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.review-panel--complete {
+  align-items: center;
+  justify-content: center;
+  color: #617783;
+  text-align: center;
+}
+.review-panel--complete strong {
+  color: var(--emphasis-color);
+}
+.review-panel--complete span {
+  font-size: 13px;
+}

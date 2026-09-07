@@ -8,10 +8,11 @@ const {
 } = require("../retrieval/search");
 const { evaluateRecallAt3 } = require("../evals/retrieval");
 
-function node(id, topic, score, summaryId = "summary-1") {
+function node(id, topic, score, summaryId = "summary-1", learningUnitId = `topic-${topic}`) {
   return {
     summaryId,
     summaryTitle: `${topic} 学习笔记`,
+    learningUnitId,
     summaryItemId: id,
     topic,
     content: `${topic} knowledge ${id}`,
@@ -39,7 +40,7 @@ describe("learning search", () => {
     const result = rerankLearningNodes(
       [node("generic", "JavaScript", 0.9), node("focused", "RAG", 0.82)],
       {
-        memories: [{ summaryItemId: "focused", state: "confusing" }],
+        memories: [{ learningUnitId: "topic-RAG", state: "confusing" }],
       },
     );
 
@@ -85,7 +86,7 @@ describe("learning search", () => {
     const result = await searchLearningKnowledge({
       userId: "user-1",
       query: "RAG",
-      memories: [{ summaryItemId: "item-2", state: "confusing" }],
+      memories: [{ learningUnitId: "topic-RAG", state: "confusing" }],
     });
     expect(searchLearningVectors).toHaveBeenCalledWith({ userId: "user-1", query: "RAG", limit: 12 });
     expect(result).toHaveLength(4);
@@ -102,7 +103,7 @@ describe("learning search", () => {
     const result = await searchLearningKnowledge({
       userId: "user-1",
       query: "RAG",
-      memories: [{ summaryItemId: "weak", state: "confusing" }],
+      memories: [{ learningUnitId: "topic-RAG", state: "confusing" }],
       activeSummaryId: "summary-1",
     });
 

@@ -4,7 +4,7 @@
   "description": "__MSG_pluginDesc__", 
   "version": "1.0.4",
   "default_locale": "en",
-  "permissions": ["storage", "activeTab", "tabs", "scripting", "sidePanel"],
+  "permissions": ["storage", "activeTab", "tabs", "sidePanel"],
   "host_permissions": [
     "<all_urls>"
   ],

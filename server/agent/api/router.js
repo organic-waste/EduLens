@@ -10,7 +10,11 @@ const {
 } = require("../application/agent");
 const { generateLearningSummary } = require("../application/summary");
 const { generateLearningSupplement } = require("../application/supplement");
-const { updateLearningMemory } = require("../persistence/memory");
+const { generateLearningReviewQuestion } = require("../application/review");
+const {
+  updateLearningMemory,
+  recordLearningReview,
+} = require("../persistence/memory");
 const { logger } = require("../../utils/logger");
 
 const router = express.Router();
@@ -22,6 +26,9 @@ const PROFILE_FIELDS = [
   "preferInterviewView",
 ];
 const LEARNING_STATES = ["mastered", "confusing", "review"];
+const REVIEW_QUEUE_LIMIT = 10;
+const REVIEW_QUESTION_CONCURRENCY = 3;
+const MAX_MEMORY_ITEMS_PER_UPDATE = 30;
 
 function profilePayload(profile) {
   return PROFILE_FIELDS.reduce((result, field) => {
@@ -57,36 +64,107 @@ async function loadLearningProfile(userId) {
 async function loadLearningContext(userId) {
   const [profile, memories] = await Promise.all([
     loadLearningProfile(userId),
-    LearningMemory.find({ userId }).sort({ updatedAt: -1 }).lean(),
+    LearningMemory.find({ userId, learningUnitId: { $exists: true } }).sort({ updatedAt: -1 }).lean(),
   ]);
   return { profile: profilePayload(profile), memories };
 }
 
 async function decorateMemories(userId, memories) {
   const summaries = await SummaryDocument.find({ userId }).lean();
-  const itemContext = new Map();
+  const unitContext = new Map();
   summaries.forEach((summary) => {
     summary.groups.forEach((group) => {
-      group.items.forEach((item) =>
-        itemContext.set(item.id, {
-          summaryId: String(summary._id),
-          summaryTitle: summary.title,
-          topic: group.topic,
-          content: item.content,
-          citation: item.citation,
-        }),
-      );
+      unitContext.set(group.id, {
+        summaryId: String(summary._id),
+        summaryTitle: summary.title,
+        topic: group.topic,
+      });
     });
   });
   return memories.map((memory) => {
-    const context = itemContext.get(memory.summaryItemId);
+    const context = unitContext.get(memory.learningUnitId);
     return {
-      summaryItemId: memory.summaryItemId,
+      learningUnitId: memory.learningUnitId,
       state: memory.state,
       topic: context?.topic,
-      content: context?.content,
     };
   });
+}
+
+async function loadDueReviewCards(userId) {
+  const now = new Date();
+  const [memories, summaries, profile] = await Promise.all([
+    LearningMemory.find({
+      userId,
+      learningUnitId: { $exists: true },
+      $or: [{ nextReviewAt: { $lte: now } }, { nextReviewAt: { $exists: false } }],
+    })
+      .sort({ nextReviewAt: 1, updatedAt: 1 })
+      .limit(REVIEW_QUEUE_LIMIT)
+      .lean(),
+    SummaryDocument.find({ userId }).lean(),
+    loadLearningProfile(userId),
+  ]);
+  const units = new Map();
+  summaries.forEach((summary) => {
+    summary.groups.forEach((group) => {
+      const content = group.items
+        .filter((item) => item.content?.trim())
+        .map((item, index) => `${index + 1}. ${item.content}`)
+        .join("\n");
+      if (!group.id || !content) return;
+      units.set(group.id, {
+        learningUnitId: group.id,
+        topic: group.topic,
+        content,
+        citation: group.items.find((item) => item.citation?.pageUrl)?.citation,
+      });
+    });
+  });
+  const cards = memories.flatMap((memory) => {
+    const unit = units.get(memory.learningUnitId);
+    return unit ? [{ ...unit, memory, reviewCount: memory.reviewCount || 0 }] : [];
+  });
+  const results = new Array(cards.length);
+  let nextIndex = 0;
+  const createFallbackQuestion = (topic) => `请用自己的话解释“${topic}”的核心机制和应用场景。`;
+  const worker = async () => {
+    while (nextIndex < cards.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      const card = cards[index];
+      const cached =
+        card.memory.reviewQuestion && card.memory.reviewQuestionContent === card.content;
+      let question = cached ? card.memory.reviewQuestion : createFallbackQuestion(card.topic);
+      if (!cached) {
+        try {
+          question = await generateLearningReviewQuestion({
+            topic: card.topic,
+            content: card.content,
+            explanationLevel: profile.explanationLevel,
+          });
+        } catch (error) {
+          logger.warn("learning.review.question_fallback", { userId, error });
+        }
+        // 摘要被编辑后 content 不匹配，题目会自动重新生成。
+        try {
+          await LearningMemory.updateOne(
+            { _id: card.memory._id, userId },
+            { $set: { reviewQuestion: question, reviewQuestionContent: card.content } },
+          );
+        } catch (error) {
+          // 缓存失败不应阻止当天复习；下一次会再次尝试生成并缓存。
+          logger.warn("learning.review.question_cache_failed", { userId, error });
+        }
+      }
+      const { memory: _memory, ...reviewCard } = card;
+      results[index] = { ...reviewCard, question };
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(REVIEW_QUESTION_CONCURRENCY, cards.length) }, worker),
+  );
+  return results;
 }
 
 router.get("/profile", auth, async (req, res) => {
@@ -130,8 +208,45 @@ router.put("/profile", auth, async (req, res) => {
   }
 });
 
-router.put("/memory/:summaryItemId", auth, async (req, res) => {
-  const { summaryItemId } = req.params;
+router.put("/memory", auth, async (req, res) => {
+  const { learningUnitIds, state } = req.body;
+  if (
+    !Array.isArray(learningUnitIds) ||
+    !learningUnitIds.length ||
+    learningUnitIds.length > MAX_MEMORY_ITEMS_PER_UPDATE ||
+    learningUnitIds.some((unitId) => typeof unitId !== "string" || !unitId.trim()) ||
+    !LEARNING_STATES.includes(state)
+  ) {
+    return res.status(400).json({ status: "error", message: "学习状态更新参数无效" });
+  }
+  const unitIds = [...new Set(learningUnitIds)];
+  try {
+    const summaries = await SummaryDocument.find({ userId: req.userId }).lean();
+    const ownedUnitIds = new Set(
+      summaries.flatMap((summary) =>
+        (summary.groups || []).map((group) => group.id),
+      ),
+    );
+    if (unitIds.some((unitId) => !ownedUnitIds.has(unitId))) {
+      return res.status(404).json({ status: "error", message: "学习主题不存在" });
+    }
+    const memories = await Promise.all(
+      unitIds.map((learningUnitId) => updateLearningMemory({
+        userId: req.userId,
+        learningUnitId,
+        state,
+      })),
+    );
+    res.json({ status: "success", memories });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ status: "error", message: `学习状态保存失败：${error.message}` });
+  }
+});
+
+router.put("/memory/:learningUnitId", auth, async (req, res) => {
+  const { learningUnitId } = req.params;
   const { state } = req.body;
   if (!LEARNING_STATES.includes(state)) {
     return res.status(400).json({ status: "error", message: "学习状态无效" });
@@ -139,13 +254,13 @@ router.put("/memory/:summaryItemId", auth, async (req, res) => {
   try {
     const summary = await SummaryDocument.findOne({
       userId: req.userId,
-      "groups.items.id": summaryItemId,
+      "groups.id": learningUnitId,
     }).lean();
     if (!summary)
-      return res.status(404).json({ status: "error", message: "知识点不存在" });
+      return res.status(404).json({ status: "error", message: "学习主题不存在" });
     const change = await updateLearningMemory({
       userId: req.userId,
-      itemId: summaryItemId,
+      learningUnitId,
       state,
     });
     // 前端只需确认写入成功；避免暴露一个并不存在的 memory 嵌套字段。
@@ -154,6 +269,37 @@ router.put("/memory/:summaryItemId", auth, async (req, res) => {
     res
       .status(500)
       .json({ status: "error", message: `学习状态保存失败：${error.message}` });
+  }
+});
+
+router.get("/review", auth, async (req, res) => {
+  try {
+    res.json({ cards: await loadDueReviewCards(req.userId) });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: `复习队列加载失败：${error.message}` });
+  }
+});
+
+router.post("/review/:learningUnitId", auth, async (req, res) => {
+  const { learningUnitId } = req.params;
+  if (typeof req.body.remembered !== "boolean") {
+    return res.status(400).json({ status: "error", message: "复习结果无效" });
+  }
+  try {
+    const summary = await SummaryDocument.findOne({
+      userId: req.userId,
+      "groups.id": learningUnitId,
+    }).lean();
+    if (!summary)
+      return res.status(404).json({ status: "error", message: "学习主题不存在" });
+    const memory = await recordLearningReview({
+      userId: req.userId,
+      learningUnitId,
+      remembered: req.body.remembered,
+    });
+    res.json({ status: "success", memory });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: `复习结果保存失败：${error.message}` });
   }
 });
 

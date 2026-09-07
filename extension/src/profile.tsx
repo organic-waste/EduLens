@@ -20,10 +20,9 @@ interface LearningProfile {
 }
 
 interface LearningMemory {
-  summaryItemId: string;
+  learningUnitId: string;
   state: LearningState;
   topic?: string;
-  content?: string;
 }
 
 interface Account {
@@ -64,6 +63,19 @@ function ProfilePage() {
   useEffect(() => {
     void initialize();
   }, []);
+
+  useEffect(() => {
+    if (!account) return;
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [account]);
 
   async function initialize() {
     if (!globalThis.chrome?.runtime) {
@@ -113,9 +125,9 @@ function ProfilePage() {
   }
 
   async function updateMemory(memory: LearningMemory, state: LearningState) {
-    setUpdatingMemory(memory.summaryItemId);
+    setUpdatingMemory(memory.learningUnitId);
     try {
-      await updateLearningMemory(memory.summaryItemId, state);
+      await updateLearningMemory(memory.learningUnitId, state);
       await refresh();
     } catch (error) {
       setStatus(errorMessage(error));
@@ -222,22 +234,20 @@ function ProfilePage() {
         </div>
       </form>
       <section className="card memory-card">
-        <div className="section-heading">
-          <div>
-            <h2>学习记忆</h2>
-          </div>
+        <div className="section-heading section-2">
+          <h2>掌握情况</h2>
+          <span>影响检索排序与复习安排</span>
         </div>
         <div className="memory-list">
           {memories.length ? (
             memories.map((memory) => (
-              <article className="memory-item" key={memory.summaryItemId}>
+              <article className="memory-item" key={memory.learningUnitId}>
                 <div>
-                  <strong>{memory.topic || "知识点"}</strong>
-                  <p>{memory.content || memory.summaryItemId}</p>
+                  <strong>{memory.topic || "学习主题"}</strong>
                 </div>
                 <select
                   value={memory.state}
-                  disabled={updatingMemory === memory.summaryItemId}
+                  disabled={updatingMemory === memory.learningUnitId}
                   onChange={(event) =>
                     void updateMemory(memory, event.target.value as LearningState)
                   }
@@ -249,9 +259,7 @@ function ProfilePage() {
               </article>
             ))
           ) : (
-            <p className="empty-copy">
-              还没有学习状态。与 AI 对话或在摘要中学习后，记忆会显示在这里。
-            </p>
+            <p className="empty-copy">还没有掌握情况。在摘要主题中标记后会显示在这里。</p>
           )}
         </div>
       </section>

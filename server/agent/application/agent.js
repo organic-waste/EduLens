@@ -44,6 +44,7 @@ function toCitations(results) {
       .map((result) => ({
         summaryId: result.metadata.summaryId,
         summaryTitle: result.metadata.summaryTitle,
+        learningUnitId: result.metadata.learningUnitId,
         summaryItemId: result.metadata.summaryItemId,
         topic: result.metadata.topic,
         pageUrl: result.metadata.pageUrl,
@@ -56,8 +57,8 @@ function toCitations(results) {
   );
 }
 
-function findRetrievedItem(itemId, retrieved) {
-  return retrieved.find((item) => item.summaryItemId === itemId);
+function findRetrievedUnit(learningUnitId, retrieved) {
+  return retrieved.find((item) => item.metadata.learningUnitId === learningUnitId);
 }
 
 function normalizeConversationHistory(history) {
@@ -261,17 +262,17 @@ function createLearningTools({
   );
 
   const memoryTool = tool(
-    async ({ itemId, state: memoryState }) => {
+    async ({ learningUnitId, state: memoryState }) => {
       if (state.memoryUpdated)
         return JSON.stringify({ error: "本轮最多允许一次记忆更新" });
-      const target = findRetrievedItem(itemId, state.retrieved);
+      const target = findRetrievedUnit(learningUnitId, state.retrieved);
       if (!target)
         return JSON.stringify({ error: "只能更新本轮已检索的知识点" });
 
       state.memoryUpdated = true;
-      const change = await updateMemory({ userId, itemId, state: memoryState });
+      const change = await updateMemory({ userId, learningUnitId, state: memoryState });
       const memoryChange = {
-        summaryItemId: itemId,
+        learningUnitId,
         topic: target.metadata.topic,
         state: change.state,
       };
@@ -283,7 +284,7 @@ function createLearningTools({
       description:
         "仅在用户明确表达掌握、困惑或需要复习时更新本轮已检索知识点的学习状态。",
       schema: z.object({
-        itemId: z.string().min(1),
+        learningUnitId: z.string().min(1),
         state: z.enum(["mastered", "confusing", "review"]),
       }),
     },

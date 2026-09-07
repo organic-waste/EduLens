@@ -16,6 +16,7 @@ const searchedResult = [
     metadata: {
       summaryId: "summary-rag",
       summaryTitle: "RAG 学习笔记",
+      learningUnitId: "topic-rag",
       summaryItemId: "item-rag",
       topic: "RAG",
       pageUrl: "https://example.com/rag",
@@ -244,7 +245,7 @@ describe("learning agent", () => {
     expect(events.at(-1)).toMatchObject({ uncovered: false, citations: [] });
   });
 
-  it("only permits memory changes for this turn's retrieved item", async () => {
+  it("only permits memory changes for this turn's retrieved topic", async () => {
     const state = { searched: false, memoryUpdated: false, retrieved: [], memoryChanges: [] };
     const tools = createLearningTools({
       userId: "user-1",
@@ -255,14 +256,14 @@ describe("learning agent", () => {
     });
     const memoryTool = tools.find((item) => item.name === "update_learning_memory");
 
-    const result = await memoryTool.invoke({ itemId: "other", state: "review" });
+    const result = await memoryTool.invoke({ learningUnitId: "other", state: "review" });
 
     expect(JSON.parse(result)).toMatchObject({ error: "只能更新本轮已检索的知识点" });
     expect(state.memoryChanges).toEqual([]);
   });
 
   it("persists an allowed memory update after retrieval", async () => {
-    const updateMemory = vi.fn().mockResolvedValue({ summaryItemId: "item-rag", state: "review" });
+    const updateMemory = vi.fn().mockResolvedValue({ learningUnitId: "topic-rag", state: "review" });
     const state = { searched: false, memoryUpdated: false, retrieved: [], memoryChanges: [] };
     const tools = createLearningTools({
       userId: "user-1",
@@ -273,14 +274,14 @@ describe("learning agent", () => {
     });
     await tools.find((item) => item.name === "search_learning_knowledge").invoke({ query: "RAG" });
     const result = await tools.find((item) => item.name === "update_learning_memory").invoke({
-      itemId: "item-rag",
+      learningUnitId: "topic-rag",
       state: "review",
     });
 
-    expect(updateMemory).toHaveBeenCalledWith({ userId: "user-1", itemId: "item-rag", state: "review" });
+    expect(updateMemory).toHaveBeenCalledWith({ userId: "user-1", learningUnitId: "topic-rag", state: "review" });
     expect(JSON.parse(result)).toMatchObject({ accepted: true });
     expect(state.memoryChanges).toEqual([
-      { summaryItemId: "item-rag", topic: "RAG", state: "review" },
+      { learningUnitId: "topic-rag", topic: "RAG", state: "review" },
     ]);
   });
 

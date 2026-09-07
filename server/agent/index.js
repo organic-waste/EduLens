@@ -4,5 +4,6 @@ module.exports = {
   ...require("./application/agent"),
   ...require("./application/summary"),
   ...require("./application/supplement"),
+  ...require("./application/review"),
   ...require("./persistence/memory"),
 };

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { cloneSummary, formatTime } from "../../utils/summary";
-import type { SummaryDocument, SummaryItem } from "../../learning.types";
+import type { MemoryChange, SummaryDocument, SummaryItem } from "../../learning.types";
 import "../../styles/summary.css";
 
 function toError(error: unknown) {
@@ -57,12 +57,18 @@ export function SummaryPanel({
   onClose,
   onCitation,
   onSave,
+  memoryStates,
+  updatingMemoryUnitIds,
+  onMemoryChange,
   setStatus,
 }: {
   summary: SummaryDocument;
   onClose: () => void;
   onCitation: (item: SummaryItem) => void;
   onSave: (summary: SummaryDocument) => Promise<void>;
+  memoryStates: Map<string, MemoryChange["state"]>;
+  updatingMemoryUnitIds: Set<string>;
+  onMemoryChange: (changes: MemoryChange[]) => void;
   setStatus: (status: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -167,7 +173,37 @@ export function SummaryPanel({
       <div className="summary-items">
         {document.groups.map((group, groupIndex) => (
           <section className="summary-group" key={group.id || `${group.topic}-${groupIndex}`}>
-            <h3>{group.topic}</h3>
+            <div className="summary-group-heading">
+              <h3>{group.topic}</h3>
+              {!editing && group.items.length > 0 && (
+                <div className="summary-memory-actions" aria-label={`${group.topic} 学习状态`}>
+                  {(
+                    [
+                      ["mastered", "已掌握"],
+                      ["review", "待复习"],
+                      ["confusing", "未掌握"],
+                    ] as const
+                  ).map(([state, label]) => {
+                    const groupState = memoryStates.get(group.id || "") === state;
+                    return (
+                      <button
+                        key={state}
+                        type="button"
+                        className={`summary-memory-action${groupState ? " is-active" : ""}`}
+                        disabled={updatingMemoryUnitIds.has(group.id || "")}
+                        onClick={() => onMemoryChange([{
+                          learningUnitId: group.id || "",
+                          topic: group.topic,
+                          state,
+                        }])}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             {group.items.map((item, itemIndex) => (
               <article className="summary-item" key={item.id}>
                 {editing ? (
