@@ -1,5 +1,7 @@
 const { createDeepSeekChatCompletion } = require("../../services/modelClient");
 const { getLearningSkill } = require("../prompts/skills");
+const { tool } = require("langchain");
+const { z } = require("zod");
 
 const REVIEW_QUESTION_SYSTEM_PROMPT =
   getLearningSkill("generate_review_question").systemPrompt;
@@ -8,10 +10,15 @@ const REVIEW_ANSWER_SYSTEM_PROMPT =
 
 function parseReviewQuestion(content) {
   const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const result = JSON.parse(fenced ? fenced[1] : content);
-  const question = String(result?.question || "").trim();
-  if (!question) throw new Error("复习题目为空");
-  return question;
+  let raw;
+  try {
+    raw = JSON.parse(fenced ? fenced[1] : content);
+  } catch {
+    throw new Error("复习题目不是有效 JSON");
+  }
+  const parsed = z.object({ question: z.string().trim().min(1).max(1000) }).safeParse(raw);
+  if (!parsed.success) throw new Error("复习题目为空");
+  return parsed.data.question;
 }
 
 function createLearningReviewQuestionGenerator({
@@ -48,14 +55,18 @@ function createLearningReviewQuestionGenerator({
 
 function parseReviewEvaluation(content) {
   const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const result = JSON.parse(fenced ? fenced[1] : content);
-  const state = String(result?.state || "").trim();
-  if (!["mastered", "review", "confusing"].includes(state)) {
-    throw new Error("复习评估状态无效");
+  let raw;
+  try {
+    raw = JSON.parse(fenced ? fenced[1] : content);
+  } catch {
+    throw new Error("复习评估不是有效 JSON");
   }
-  const feedback = String(result?.feedback || "").trim();
-  if (!feedback) throw new Error("复习评估反馈为空");
-  return { state, feedback };
+  const parsed = z.object({
+    state: z.enum(["mastered", "review", "confusing"]),
+    feedback: z.string().trim().min(1).max(2000),
+  }).safeParse(raw);
+  if (!parsed.success) throw new Error("复习评估结果格式无效");
+  return parsed.data;
 }
 
 function createLearningReviewEvaluator({
@@ -87,6 +98,51 @@ function createLearningReviewEvaluator({
   };
 }
 
+function createReviewTools({
+  generateQuestion,
+  evaluateAnswer,
+} = {}) {
+  const questionTool = tool(
+    async ({ topic, content, explanationLevel }) =>
+      JSON.stringify({
+        question: await (generateQuestion || generateLearningReviewQuestion)({
+          topic,
+          content,
+          explanationLevel,
+        }),
+      }),
+    {
+      name: "generate_review_question",
+      description: "根据学习知识点生成一道开放式主动回忆题。",
+      schema: z.object({
+        topic: z.string().min(1),
+        content: z.string().min(1),
+        explanationLevel: z.enum(["beginner", "intermediate", "advanced"]).optional(),
+      }),
+    },
+  );
+  const evaluationTool = tool(
+    async ({ topic, content, question, answer }) =>
+      JSON.stringify(await (evaluateAnswer || evaluateLearningReview)({
+        topic,
+        content,
+        question,
+        answer,
+      })),
+    {
+      name: "evaluate_review_answer",
+      description: "根据知识点、复习题和用户回答判断掌握程度，并给出反馈。",
+      schema: z.object({
+        topic: z.string().min(1),
+        content: z.string().min(1),
+        question: z.string().min(1),
+        answer: z.string().min(1),
+      }),
+    },
+  );
+  return [questionTool, evaluationTool];
+}
+
 const generateLearningReviewQuestion = createLearningReviewQuestionGenerator();
 const evaluateLearningReview = createLearningReviewEvaluator();
 
@@ -98,5 +154,6 @@ module.exports = {
   createLearningReviewQuestionGenerator,
   generateLearningReviewQuestion,
   createLearningReviewEvaluator,
+  createReviewTools,
   evaluateLearningReview,
 };

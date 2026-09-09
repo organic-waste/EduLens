@@ -1,4 +1,5 @@
-import type { FormEvent, RefObject } from "react";
+import { useEffect, useState } from "react";
+import type { ChangeEvent, FormEvent, KeyboardEvent, RefObject } from "react";
 import { BookOpen, SendHorizontal, X } from "lucide-react";
 import { markdown } from "../../utils/markdown";
 import type {
@@ -12,6 +13,19 @@ import type {
 import "../../styles/chat.css";
 
 type LearningMemoryState = "mastered" | "confusing" | "review";
+
+type SummaryMention = { start: number; end: number; query: string };
+
+function findSummaryMention(value: string, cursor: number): SummaryMention | null {
+  const beforeCursor = value.slice(0, cursor);
+  const match = beforeCursor.match(/(?:^|\s)@([^\s@]*)$/);
+  if (!match) return null;
+  return {
+    start: cursor - match[1].length - 1,
+    end: cursor,
+    query: match[1],
+  };
+}
 
 export function ChatPanel({
   messages,
@@ -29,6 +43,7 @@ export function ChatPanel({
   onSummarize,
   onClearSelection,
   onClearSummary,
+  onSelectSummary,
   onCitation,
   onSupplement,
   onMemoryChange,
@@ -49,11 +64,71 @@ export function ChatPanel({
   onSummarize: () => void;
   onClearSelection: () => void;
   onClearSummary: () => void;
+  onSelectSummary: (summary: SummaryDocument) => void;
   onCitation: (citation: Citation) => void;
   onSupplement: (answer: string) => void;
   onMemoryChange: (messageId: string, change: MemoryChange) => void;
   updatingMemoryUnitIds: Set<string>;
 }) {
+  const [mention, setMention] = useState<SummaryMention | null>(null);
+  const [highlightedSummaryIndex, setHighlightedSummaryIndex] = useState(0);
+  const mentionCandidates = mention
+    ? documents
+        .filter((summary) => summary.title.toLocaleLowerCase().includes(mention.query.toLocaleLowerCase()))
+        .slice(0, 6)
+    : [];
+
+  useEffect(() => {
+    setHighlightedSummaryIndex(0);
+  }, [mention?.query]);
+
+  function updateMention(value: string, cursor: number) {
+    setMention(findSummaryMention(value, cursor));
+  }
+
+  function handlePromptChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    onPrompt(event.target.value);
+    updateMention(event.target.value, event.target.selectionStart);
+  }
+
+  function selectSummary(summary: SummaryDocument) {
+    if (!mention) return;
+    const nextPrompt = `${prompt.slice(0, mention.start)}${prompt.slice(mention.end)}`;
+    const cursor = mention.start;
+    onPrompt(nextPrompt);
+    onSelectSummary(summary);
+    setMention(null);
+    requestAnimationFrame(() => {
+      promptRef.current?.focus();
+      promptRef.current?.setSelectionRange(cursor, cursor);
+    });
+  }
+
+  function handlePromptKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (mention && mentionCandidates.length) {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        const direction = event.key === "ArrowDown" ? 1 : -1;
+        setHighlightedSummaryIndex((current) =>
+          (current + direction + mentionCandidates.length) % mentionCandidates.length,
+        );
+        return;
+      }
+      if ((event.key === "Enter" && !event.shiftKey) || event.key === "Tab") {
+        event.preventDefault();
+        selectSummary(mentionCandidates[highlightedSummaryIndex]);
+        return;
+      }
+    }
+    if (event.key === "Escape" && mention) {
+      setMention(null);
+      return;
+    }
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
+  }
+
   return (
     <>
       {activeSummary && (
@@ -119,15 +194,36 @@ export function ChatPanel({
           rows={3}
           value={prompt}
           disabled={busy}
-          onChange={(event) => onPrompt(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
-            event.preventDefault();
-            event.currentTarget.form?.requestSubmit();
-          }}
-          placeholder="输入你的问题..."
+          onChange={handlePromptChange}
+          onKeyDown={handlePromptKeyDown}
+          onBlur={() => window.setTimeout(() => setMention(null), 120)}
+          placeholder="输入 @ 引用摘要，或直接提问..."
           required
         />
+        {mention && (
+          <div className="summary-mention-menu" role="listbox" aria-label="引用摘要">
+            {mentionCandidates.length ? (
+              mentionCandidates.map((summary, index) => (
+                <button
+                  className={index === highlightedSummaryIndex ? "is-highlighted" : ""}
+                  type="button"
+                  role="option"
+                  aria-selected={index === highlightedSummaryIndex}
+                  key={summary.serverId || summary.id}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    selectSummary(summary);
+                  }}
+                >
+                  <BookOpen size={14} aria-hidden="true" />
+                  <span>{summary.title}</span>
+                </button>
+              ))
+            ) : (
+              <p>未找到匹配的摘要</p>
+            )}
+          </div>
+        )}
         <div className="composer-footer">
           <span className={`status${busy ? " loading" : ""}`}>{status}</span>
           <div className="composer-actions">
@@ -178,6 +274,7 @@ function Message({
   const canSupplement =
     message.role === "assistant" &&
     !message.streaming &&
+    !message.autoSupplemented &&
     Boolean(activeSummary && (message.uncovered || activeSummary));
   const relatedSummaryMap = new Map<string, SummaryReference>();
   for (const reference of message.summaryReferences || []) {
@@ -268,7 +365,10 @@ function Message({
           {message.uncovered ? "补充到当前摘要库" : "补充到当前摘要"}
         </button>
       )}
-      {message.role === "assistant" && !message.streaming && memoryTargets.size ? (
+      {message.role === "assistant" &&
+      !message.streaming &&
+      !message.agentMemoryUpdated &&
+      memoryTargets.size ? (
         <div className="message-memory-actions">
           <span>标记学习状态</span>
           {[...memoryTargets.values()].map((target) => {

@@ -1,6 +1,7 @@
 const LearningMemory = require("../../models/memory");
 
 const REVIEW_INTERVAL_DAYS = [3, 7, 14, 30];
+const LEARNING_STATES = ["mastered", "review", "confusing"];
 
 function addDays(date, days) {
   const next = new Date(date);
@@ -26,6 +27,9 @@ function createMemoryReviewSchedule({ state, reviewCount = 0, now = new Date() }
 }
 
 async function updateLearningMemory({ userId, learningUnitId, state, now = new Date() }) {
+  if (!LEARNING_STATES.includes(state)) {
+    throw new Error("学习状态无效");
+  }
   const existing = await LearningMemory.findOne({ userId, learningUnitId }).lean();
   const schedule = createMemoryReviewSchedule({
     state,
@@ -39,17 +43,21 @@ async function updateLearningMemory({ userId, learningUnitId, state, now = new D
   ).lean();
 }
 
-async function recordLearningReview({ userId, learningUnitId, remembered, state, now = new Date() }) {
+async function recordLearningReview({ userId, learningUnitId, state, now = new Date() }) {
+  if (!LEARNING_STATES.includes(state)) {
+    throw new Error("复习结果状态无效");
+  }
   return updateLearningMemory({
     userId,
     learningUnitId,
-    state: state || (remembered ? "mastered" : "confusing"),
+    state,
     now,
   });
 }
 
 module.exports = {
   REVIEW_INTERVAL_DAYS,
+  LEARNING_STATES,
   addDays,
   createMemoryReviewSchedule,
   updateLearningMemory,

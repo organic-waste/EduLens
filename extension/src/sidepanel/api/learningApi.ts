@@ -109,6 +109,7 @@ export async function streamLearningAgent({
   activeSummaryId?: string;
   history?: Array<Pick<ConversationMessage, "role" | "content">>;
   conversationSummary?: ConversationMemory["summary"];
+  activeSummaryTitle?: string;
   onEvent?: (event: StreamEvent) => void;
   signal?: AbortSignal;
 }): Promise<void> {
@@ -118,7 +119,7 @@ export async function streamLearningAgent({
   const response = await apiClient.request("/learning/chat", {
     method: "POST",
     headers: { Accept: "text/event-stream" },
-    body: JSON.stringify({ message, activeSummaryId, history, conversationSummary }),
+    body: JSON.stringify({ message, activeSummaryId, activeSummaryTitle, history, conversationSummary }),
     signal,
   });
   if (!response.ok) {

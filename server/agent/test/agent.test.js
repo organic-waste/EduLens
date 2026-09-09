@@ -302,7 +302,13 @@ describe("learning agent", () => {
     ).toEqual([{ role: "user", content: "保留这条" }]);
   });
 
-  it("exposes only the two LangChain tools used by the agent", () => {
-    expect(LEARNING_TOOL_NAMES).toEqual(["search_learning_knowledge", "update_learning_memory"]);
+  it("exposes the learning tools used by the agent", () => {
+    expect(LEARNING_TOOL_NAMES).toEqual([
+      "search_learning_knowledge",
+      "update_learning_memory",
+      "generate_review_question",
+      "evaluate_review_answer",
+      "generate_learning_supplement",
+    ]);
   });
 });

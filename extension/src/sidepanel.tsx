@@ -470,6 +470,7 @@ function App() {
       await streamLearningAgent({
         message: buildAgentMessage(question, selectedPage),
         activeSummaryId: activeSummary?.serverId,
+        activeSummaryTitle: activeSummary?.title,
         history: historicalMessages
           .slice(coveredMessageCount)
           .map((item) => ({ role: item.role, content: historyContent(item) })),
@@ -493,11 +494,29 @@ function App() {
         },
       });
       const completed: StreamEvent = result || { type: "done", answer };
+      let latestActiveSummary = activeSummary;
+      for (const supplement of completed.supplements || []) {
+        if (!latestActiveSummary || latestActiveSummary.serverId !== supplement.summaryId) continue;
+        const next = cloneSummary(latestActiveSummary);
+        let group = next.groups.find((item) => item.topic === supplement.topic);
+        if (!group) {
+          group = { id: crypto.randomUUID(), topic: supplement.topic, items: [] };
+          next.groups.push(group);
+        }
+        group.items.push(supplement.item);
+        next.updatedAt = new Date().toISOString();
+        latestActiveSummary = await persistSummary(next, true);
+      }
+      if (latestActiveSummary && latestActiveSummary !== activeSummary) {
+        setActiveSummary(latestActiveSummary);
+      }
       const assistantMessage: ConversationMessage = {
         id: streamingMessage.id,
         role: "assistant",
         content: completed.answer || answer,
         citations: completed.citations,
+        agentMemoryUpdated: Boolean(completed.memoryChanges?.length),
+        autoSupplemented: Boolean(completed.supplements?.length),
         summaryReferences: collectRelatedSummaries(providedSummaryReference, completed.citations),
         memoryChanges: completed.memoryChanges,
         uncovered: completed.uncovered,
@@ -671,6 +690,11 @@ function App() {
           onClearSummary={() => {
             setActiveSummary(null);
             setActiveItem(null);
+          }}
+          onSelectSummary={(summary) => {
+            setActiveSummary(summary);
+            setActiveItem(null);
+            setStatus(`已关联摘要：${summary.title}`);
           }}
           onCitation={handleOpenCitationSummary}
           onSupplement={(answer) => void supplementSummary(answer)}

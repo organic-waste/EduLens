@@ -1,6 +1,8 @@
 const {
   REVIEW_INTERVAL_DAYS,
+  LEARNING_STATES,
   createMemoryReviewSchedule,
+  recordLearningReview,
 } = require("../persistence/memory");
 
 describe("learning review schedule", () => {
@@ -20,5 +22,18 @@ describe("learning review schedule", () => {
       reviewCount: 2,
       nextReviewAt: new Date("2026-09-14T00:00:00.000Z"),
     });
+  });
+
+  it("rejects a missing or invalid review evaluation state before writing memory", async () => {
+    expect(LEARNING_STATES).toEqual(["mastered", "review", "confusing"]);
+    await expect(recordLearningReview({
+      userId: "user-1",
+      learningUnitId: "topic-rag",
+    })).rejects.toThrow("复习结果状态无效");
+    await expect(recordLearningReview({
+      userId: "user-1",
+      learningUnitId: "topic-rag",
+      state: "unknown",
+    })).rejects.toThrow("复习结果状态无效");
   });
 });

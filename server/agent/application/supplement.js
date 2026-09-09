@@ -1,15 +1,26 @@
 const { randomUUID } = require("crypto");
+const { z } = require("zod");
 const { createDeepSeekChatCompletion } = require("../../services/modelClient");
 const { getLearningSkill } = require("../prompts/skills");
 const { summaryDepthInstruction } = require("./summary");
 
 const SUPPLEMENT_SYSTEM_PROMPT =
   getLearningSkill("supplement_summary").systemPrompt;
+const SupplementOutputSchema = z.object({
+  content: z.string().trim().min(1).max(4000).nullable(),
+});
 
 function parseSupplement(content) {
   const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const supplement = JSON.parse(fenced ? fenced[1] : content);
-  const normalizedContent = String(supplement?.content || "").trim();
+  let raw;
+  try {
+    raw = JSON.parse(fenced ? fenced[1] : content);
+  } catch {
+    throw new Error("补充内容不是有效 JSON");
+  }
+  const parsed = SupplementOutputSchema.safeParse(raw);
+  if (!parsed.success) throw new Error("补充内容格式无效");
+  const normalizedContent = parsed.data.content || "";
   if (!normalizedContent) throw new Error("补充内容为空或与当前主题无关");
   return {
     id: randomUUID(),

@@ -45,14 +45,16 @@ export interface ConversationMessage {
   id: string;
   role: ChatRole;
   content: string;
-  // 只读网页引用：对话界面保持简洁，发送和后续历史中仍保留完整上下文。
+  // 只读网页引用
   pageSelection?: PageSelection;
-  // 用户在提问时主动关联的摘要。
+  // 用户在提问时主动关联的摘要
   summaryReference?: SummaryReference;
-  // 助手本轮回答的相关摘要，包含主动关联与检索命中的摘要。
+  // 助手本轮回答的相关摘要，包含主动关联与检索命中的
   summaryReferences?: SummaryReference[];
   citations?: Citation[];
   memoryChanges?: MemoryChange[];
+  agentMemoryUpdated?: boolean;
+  autoSupplemented?: boolean;
   uncovered?: boolean;
   streaming?: boolean;
 }
@@ -107,6 +109,7 @@ export interface StreamEvent {
   answer?: string;
   citations?: Citation[];
   memoryChanges?: MemoryChange[];
+  supplements?: Array<{ summaryId: string; topic: string; item: SummaryItem }>;
   uncovered?: boolean;
   conversationSummary?: string;
   compressedMessageCount?: number;

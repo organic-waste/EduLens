@@ -11,8 +11,7 @@ const {
 const { generateLearningSummary } = require("../application/summary");
 const { generateLearningSupplement } = require("../application/supplement");
 const {
-  generateLearningReviewQuestion,
-  evaluateLearningReview,
+  createReviewTools,
 } = require("../application/review");
 const {
   updateLearningMemory,
@@ -32,6 +31,7 @@ const LEARNING_STATES = ["mastered", "confusing", "review"];
 const REVIEW_QUEUE_LIMIT = 10;
 const REVIEW_QUESTION_CONCURRENCY = 3;
 const MAX_MEMORY_ITEMS_PER_UPDATE = 30;
+const [reviewQuestionTool, reviewEvaluationTool] = createReviewTools();
 
 function profilePayload(profile) {
   return PROFILE_FIELDS.reduce((result, field) => {
@@ -141,11 +141,12 @@ async function loadDueReviewCards(userId) {
       let question = cached ? card.memory.reviewQuestion : createFallbackQuestion(card.topic);
       if (!cached) {
         try {
-          question = await generateLearningReviewQuestion({
+          const output = await reviewQuestionTool.invoke({
             topic: card.topic,
             content: card.content,
             explanationLevel: profile.explanationLevel,
           });
+          question = JSON.parse(output).question;
         } catch (error) {
           logger.warn("learning.review.question_fallback", { userId, error });
         }
@@ -302,12 +303,12 @@ router.post("/review/:learningUnitId", auth, async (req, res) => {
       .filter((item) => item.content?.trim())
       .map((item, index) => `${index + 1}. ${item.content}`)
       .join("\n");
-    const evaluation = await evaluateLearningReview({
+    const evaluation = JSON.parse(await reviewEvaluationTool.invoke({
       topic: group.topic,
       content,
       question,
       answer,
-    });
+    }));
     const memory = await recordLearningReview({
       userId: req.userId,
       learningUnitId,
@@ -360,6 +361,7 @@ router.post("/chat", auth, async (req, res) => {
       userId: req.userId,
       message: req.body.message,
       activeSummaryId: req.body.activeSummaryId,
+      activeSummaryTitle: req.body.activeSummaryTitle,
       history: req.body.history,
       conversationSummary: req.body.conversationSummary,
       ...context,

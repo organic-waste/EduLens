@@ -8,8 +8,10 @@ const {
 const { searchLearningKnowledge } = require("../retrieval/search");
 const { updateLearningMemory } = require("../persistence/memory");
 const { getLearningSkill } = require("../prompts/skills");
+const { generateLearningSupplement } = require("./supplement");
+const { createReviewTools } = require("./review");
 
-const MAX_TOOL_ROUNDS = 3;
+const MAX_TOOL_ROUNDS = 5;
 const MAX_HISTORY_MESSAGES = 30;
 const MAX_HISTORY_CHARACTERS = 24000;
 const RECENT_HISTORY_MESSAGES = 4;
@@ -124,6 +126,7 @@ function createChatResult(answer, state) {
     answer: answer || "暂时无法生成回答，请换一种说法后重试。",
     citations: toCitations(state.retrieved),
     memoryChanges: state.memoryChanges,
+    supplements: state.supplements || [],
     uncovered: state.searched && state.retrieved.length === 0,
     conversationSummary: state.conversationSummary || undefined,
     compressedMessageCount: state.compressedMessageCount || undefined,
@@ -189,6 +192,9 @@ function parseToolOutput(output) {
 function toolStartMessage(name) {
   if (name === "search_learning_knowledge") return "正在检索学习知识库...";
   if (name === "update_learning_memory") return "正在更新学习状态...";
+  if (name === "generate_review_question") return "正在生成复习题...";
+  if (name === "evaluate_review_answer") return "正在评估复习回答...";
+  if (name === "generate_learning_supplement") return "正在判断是否补充摘要...";
   return "正在处理学习任务...";
 }
 
@@ -202,6 +208,11 @@ function toolCompletionMessage(name, status, output, error) {
   }
   if (name === "update_learning_memory") {
     return result.accepted ? "学习状态已更新" : "学习状态未发生变更";
+  }
+  if (name === "generate_review_question") return "复习题已生成";
+  if (name === "evaluate_review_answer") return "复习回答评估完成";
+  if (name === "generate_learning_supplement") {
+    return result.saved === false ? "回答与当前摘要关联度不足，未自动补充" : "已自动补充到当前摘要";
   }
   return "学习任务已完成";
 }
@@ -233,10 +244,13 @@ async function observeToolCalls(toolCalls, events) {
 function createLearningTools({
   userId,
   activeSummaryId,
+  activeSummaryTitle,
+  profile,
   memories,
   state,
   search,
   updateMemory,
+  generateSupplement = generateLearningSupplement,
 }) {
   const searchTool = tool(
     async ({ query }) => {
@@ -290,7 +304,68 @@ function createLearningTools({
     },
   );
 
-  return [searchTool, memoryTool];
+  const reviewTools = createReviewTools();
+  const [reviewQuestionTool, reviewEvaluationTool] = reviewTools;
+  const limitedReviewQuestionTool = tool(
+    async (input) => {
+      if (state.reviewQuestionGenerated)
+        return JSON.stringify({ error: "本轮最多生成一次复习题" });
+      state.reviewQuestionGenerated = true;
+      return reviewQuestionTool.invoke(input);
+    },
+    {
+      name: "generate_review_question",
+      description: reviewQuestionTool.description,
+      schema: reviewQuestionTool.schema,
+    },
+  );
+  const limitedReviewEvaluationTool = tool(
+    async (input) => {
+      if (state.reviewEvaluated)
+        return JSON.stringify({ error: "本轮最多评估一次复习回答" });
+      state.reviewEvaluated = true;
+      return reviewEvaluationTool.invoke(input);
+    },
+    {
+      name: "evaluate_review_answer",
+      description: reviewEvaluationTool.description,
+      schema: reviewEvaluationTool.schema,
+    },
+  );
+  const supplementTool = tool(
+    async ({ answer, topic }) => {
+      if (!activeSummaryId || !activeSummaryTitle)
+        return JSON.stringify({ saved: false, reason: "当前没有关联摘要" });
+      if (!state.searched)
+        return JSON.stringify({ saved: false, reason: "补充摘要前必须先检索学习知识库" });
+      if (state.supplemented)
+        return JSON.stringify({ saved: false, reason: "本轮最多自动补充一次" });
+      state.supplemented = true;
+      try {
+        const item = await generateSupplement({
+          answer,
+          summaryTitle: activeSummaryTitle,
+          topic,
+          summaryDepth: profile?.summaryDepth,
+        });
+        state.supplements.push({ summaryId: activeSummaryId, topic, item });
+        return JSON.stringify({ saved: true, topic, item });
+      } catch (error) {
+        return JSON.stringify({ saved: false, reason: error.message });
+      }
+    },
+    {
+      name: "generate_learning_supplement",
+      description:
+        "仅当当前回答与激活摘要高度相关且包含新的可复用知识时，生成一条 AI 补充。",
+      schema: z.object({
+        answer: z.string().min(1),
+        topic: z.string().min(1),
+      }),
+    },
+  );
+
+  return [searchTool, memoryTool, limitedReviewQuestionTool, limitedReviewEvaluationTool, supplementTool];
 }
 
 function createLearningModel() {
@@ -329,6 +404,7 @@ function createLearningAgent({
     userId,
     message,
     activeSummaryId,
+    activeSummaryTitle,
     profile,
     memories,
     history,
@@ -344,6 +420,10 @@ function createLearningAgent({
       memoryChanges: [],
       conversationSummary: normalizeConversationSummary(conversationSummary),
       compressedMessageCount: 0,
+      supplements: [],
+      supplemented: false,
+      reviewQuestionGenerated: false,
+      reviewEvaluated: false,
     };
     const normalizedHistory = normalizeConversationHistory(history);
     let recentHistory = normalizedHistory;
@@ -370,6 +450,8 @@ function createLearningAgent({
     const tools = createLearningTools({
       userId,
       activeSummaryId,
+      activeSummaryTitle,
+      profile,
       memories,
       state,
       search,

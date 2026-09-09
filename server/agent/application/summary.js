@@ -1,9 +1,21 @@
 const { randomUUID } = require("crypto");
+const { z } = require("zod");
 const { createDeepSeekChatCompletion } = require("../../services/modelClient");
 const { getLearningSkill } = require("../prompts/skills");
 
 const SUMMARY_SYSTEM_PROMPT = getLearningSkill("generate_summary").systemPrompt;
 const CITATION_CONTEXT_LENGTH = 80;
+
+const SummaryOutputSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  groups: z.array(z.object({
+    topic: z.string().trim().min(1).max(100),
+    items: z.array(z.object({
+      content: z.string().trim().min(1).max(4000),
+      quote: z.string().trim().min(1).max(4000),
+    })).min(1).max(100),
+  })).min(1).max(100),
+});
 
 function summaryDepthInstruction(summaryDepth = "balanced") {
   const instructions = {
@@ -60,7 +72,15 @@ function buildItemCitation(text, quote, sourceCitation = {}) {
 
 function parseSummary(content, { text, pageUrl, citation }) {
   const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const summary = JSON.parse(fenced ? fenced[1] : content);
+  let raw;
+  try {
+    raw = JSON.parse(fenced ? fenced[1] : content);
+  } catch {
+    throw new Error("摘要结果不是有效 JSON");
+  }
+  const parsed = SummaryOutputSchema.safeParse(raw);
+  if (!parsed.success) throw new Error("摘要结果格式无效");
+  const summary = parsed.data;
   const groups = summary.groups?.filter(
     (group) => group?.topic && Array.isArray(group.items) && group.items.length,
   );
