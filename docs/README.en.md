@@ -9,9 +9,9 @@
 
 ## 📖 Overview
 
-EduLens is an open-source Chrome extension focused on efficient web learning and real-time collaboration.
+EduLens is an open-source Chrome extension focused on web annotation and AI-assisted learning.
 
-You can take notes, capture screenshots, stay focused, and present right inside the page—no app switching.
+Without switching apps, you can annotate web pages, collaborate in real time, and use a personal AI assistant to understand, retain, and review what you learn.
 
 - **Website (intro)**: <https://edu-lens.netlify.app/>          <-- 👋 Check the latest highlights and videos here
 - **Chrome Web Store**: <https://chromewebstore.google.com/detail/jnncboomobahpjpkkhjoekacjogmphhc>
@@ -22,16 +22,19 @@ You can take notes, capture screenshots, stay focused, and present right inside 
 
 ## ✨ Key Features
 
-- 👥 **Real-time collaboration** – Multi-user rooms keep annotations in sync
-- 💾 **Local + cloud sync** – Data is saved both locally and in the cloud
-- 🎨 **Rich annotation tools** – Freehand, box notes, bookmarks, images, and more
-- 📸 **Powerful screenshots** – DOM capture, area capture, scrolling full-page capture
-- 🎯 **Focus helpers** – Spotlight (`Alt+S`), reading focus (`Alt+R`), cursor highlight (`Alt+H`), countdown timer
+- 🎨 **Web annotation tools** – Freehand drawing, box notes, bookmarks, images, and more
+- 👥 **Team collaboration** – Multi-user rooms keep annotations synchronized in real time
+- 🤖 **AI learning assistant** – Multi-turn Q&A grounded in web content and personal knowledge
+- 🔗 **Traceable summaries** – Verifiable citations with precise jumps back to the source page
+- 🧠 **Personal knowledge base** – RAG retrieval with learning-state-aware ranking
+- 🔁 **Spaced review** – Active-recall cards evaluate answers and update review intervals
+- 📸 **Screenshots and focus** – DOM, region, and scrolling captures plus reading aids
+- 💾 **Local + cloud sync** – Data is saved locally and synced to the cloud when signed in
 - 🌍 **Internationalization** – Simplified/Traditional Chinese, English, Japanese, German, Spanish
 
 ## 🎯 Use Cases
 
-- **Self-study** – Note-taking, highlighting, and focus while reading online
+- **Self-study** – Generate AI summaries, ask questions, and review knowledge while reading online
 - **Online teaching** – In-page, real-time annotation and interaction without screen sharing
 - **Video production** – Add visual callouts while recording tutorials
 
@@ -60,6 +63,9 @@ You can take notes, capture screenshots, stay focused, and present right inside 
   - `JWT_SECRET`: JWT secret
   - `JWT_EXPIRES_IN`: token TTL (e.g., `7d`)
   - `PORT` (optional, default 3000)
+  - `CHAT_API_KEY` / `CHAT_BASE_URL` / `CHAT_MODEL`: chat and summary model settings (OpenAI-compatible API)
+  - `EMBEDDING_API_KEY` / `EMBEDDING_BASE_URL` / `EMBEDDING_MODEL`: embedding model settings
+  - `ATLAS_VECTOR_COLLECTION` / `ATLAS_VECTOR_INDEX` / `ATLAS_VECTOR_DIMENSIONS`: MongoDB Atlas vector search settings
 
 ### Website (`website/`)
 

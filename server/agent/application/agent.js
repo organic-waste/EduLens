@@ -3,7 +3,7 @@ const { ChatOpenAI } = require("@langchain/openai");
 const { z } = require("zod");
 const {
   getModelConfig,
-  createDeepSeekChatCompletion,
+  createChatCompletion,
 } = require("../../services/modelClient");
 const { searchLearningKnowledge } = require("../retrieval/search");
 const { updateLearningMemory } = require("../persistence/memory");
@@ -369,9 +369,9 @@ function createLearningTools({
 }
 
 function createLearningModel() {
-  const config = getModelConfig().deepseek;
+  const config = getModelConfig().chat;
   if (!config.apiKey || config.apiKey.startsWith("YOUR_")) {
-    throw new Error("DeepSeek API Key 未配置");
+    throw new Error("Chat model API Key 未配置");
   }
   return new ChatOpenAI({
     apiKey: config.apiKey,
@@ -397,7 +397,7 @@ function createLearningAgent({
   search = searchLearningKnowledge,
   updateMemory = updateLearningMemory,
   summarize = summarizeConversation,
-  chatCompletion = createDeepSeekChatCompletion,
+  chatCompletion = createChatCompletion,
   agentFactory = createLangChainAgent,
 } = {}) {
   async function* streamChat({

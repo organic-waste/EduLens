@@ -3,8 +3,8 @@ import { createRoot } from "react-dom/client";
 import {
   ArrowLeft,
   BookOpen,
+  ClipboardCheck,
   CircleUserRound,
-  RotateCcw,
 } from "lucide-react";
 import { authManager } from "./services/authManager.js";
 import {
@@ -214,29 +214,36 @@ function App() {
   }
 
   async function persistSummary(summary: SummaryDocument, replace = false) {
+    // 新摘要默认追加到同来源文档；只有编辑、AI 补充等明确更新场景才替换原文档。
+    const existingSource = !replace && sourceKey(summary)
+      ? documents.find((item) => sourceKey(item) === sourceKey(summary))
+      : undefined;
+    const summaryToPersist = existingSource
+      ? mergeSummariesBySource([existingSource, summary])[0]
+      : summary;
     const next = replace
       ? documents.map((item) =>
-          item.id === summary.id ||
-          (Boolean(summary.serverId) && item.serverId === summary.serverId)
-            ? summary
+          item.id === summaryToPersist.id ||
+          (Boolean(summaryToPersist.serverId) && item.serverId === summaryToPersist.serverId)
+            ? summaryToPersist
             : item,
         )
-      : [summary, ...documents.filter((item) => sourceKey(item) !== sourceKey(summary))].slice(
-          0,
-          50,
-        );
+      : existingSource
+        ? documents.map((item) => (item.id === existingSource.id ? summaryToPersist : item))
+        : [summaryToPersist, ...documents].slice(0, 50);
     setDocuments(next);
-    setCurrentSummary(summary);
+    setCurrentSummary(summaryToPersist);
     await chrome.storage.local.set({
       edulensSummaryDocuments: next,
-      edulensCurrentSummary: summary,
+      edulensCurrentSummary: summaryToPersist,
     });
     try {
-      const remote = (await syncSummaryDocument(summary)) as SyncSummaryResponse | null;
-      if (!remote?._id) return summary;
-      const synced = { ...summary, serverId: remote._id };
+      const remote = (await syncSummaryDocument(summaryToPersist)) as SyncSummaryResponse | null;
+      if (!remote?._id) return summaryToPersist;
+      const synced = { ...summaryToPersist, serverId: remote._id };
       const syncedDocuments = next.map((item) =>
-        item.id === summary.id || (Boolean(summary.serverId) && item.serverId === summary.serverId)
+        item.id === summaryToPersist.id ||
+        (Boolean(summaryToPersist.serverId) && item.serverId === summaryToPersist.serverId)
           ? synced
           : item,
       );
@@ -249,7 +256,7 @@ function App() {
       return synced;
     } catch (error) {
       console.warn("摘要远程同步失败，已保留本地摘要", error);
-      return summary;
+      return summaryToPersist;
     }
   }
 
@@ -611,7 +618,7 @@ function App() {
             {view === "review" ? (
               <ArrowLeft className="action-icon" aria-hidden="true" />
             ) : (
-              <RotateCcw className="action-icon" aria-hidden="true" />
+              <ClipboardCheck className="action-icon" aria-hidden="true" />
             )}
           </button>
           <button
@@ -648,7 +655,7 @@ function App() {
             setActiveSummary(summary);
             setActiveItem(null);
             setView("chat");
-            setStatus("已关联摘要");
+            setStatus("已引用摘要");
           }}
         />
       ) : view === "summary" && currentSummary ? (
@@ -694,9 +701,8 @@ function App() {
           onSelectSummary={(summary) => {
             setActiveSummary(summary);
             setActiveItem(null);
-            setStatus(`已关联摘要：${summary.title}`);
+            setStatus("已引用摘要");
           }}
-          onCitation={handleOpenCitationSummary}
           onSupplement={(answer) => void supplementSummary(answer)}
           onMemoryChange={(messageId, change) => void handleMemoryChange(messageId, change)}
           updatingMemoryUnitIds={updatingMemoryUnitIds}

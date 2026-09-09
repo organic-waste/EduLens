@@ -4,7 +4,7 @@ import { PhStudent, PhChalkboardTeacher, PhVideoCamera } from '@phosphor-icons/v
 const cases = [
   {
     title: '个人学习',
-    desc: '在查阅文献或技术博客时，快速高亮重点、记录笔记。利用专注辅助模式，提升阅读专注度。',
+    desc: '查阅文献或技术博客时，生成 AI 摘要并继续提问，将重要知识沉淀到个人知识库，通过复习卡片巩固记忆。',
     icon: PhStudent
   },
   {
@@ -25,7 +25,7 @@ const cases = [
     <div class="container">
       <div class="header">
         <h2>多场景赋能</h2>
-        <p>从独自钻研到团队分享，EduLens 无缝融入你的工作流。</p>
+        <p>从个人理解到团队分享，EduLens 无缝融入你的学习工作流。</p>
       </div>
 
       <div class="grid">

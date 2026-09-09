@@ -54,7 +54,6 @@ export function ReviewPanel({
           <p>今日待复习 {cards.length} 条</p>
           <h2>{card.topic}</h2>
         </div>
-        <RotateCcw size={20} aria-hidden="true" />
       </header>
       <div className="review-card">
         <span className="review-label">主动回忆</span>
@@ -82,7 +81,11 @@ export function ReviewPanel({
           <>
             <div className={`review-evaluation review-evaluation--${evaluation.state}`}>
               <strong>
-                {{ mastered: "已掌握", review: "建议复习", confusing: "还需理解" }[evaluation.state]}
+                {
+                  { mastered: "已掌握", review: "建议复习", confusing: "还需理解" }[
+                    evaluation.state
+                  ]
+                }
               </strong>
               <span>{evaluation.feedback}</span>
             </div>

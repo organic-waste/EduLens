@@ -103,7 +103,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         await sendToContentScript(tab.id, { type: "CAPTURE_PAGE_SELECTION" });
         sendResponse({ ok: true });
       } catch {
-        sendResponse({ error: "网页选区功能尚未就绪，请刷新页面后重试" });
+        sendResponse({ error: "网页选区功能尚未就绪，请先刷新页面后再重试即可" });
       }
     });
     return true;

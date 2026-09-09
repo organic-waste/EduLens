@@ -1,4 +1,4 @@
-const { createDeepSeekChatCompletion } = require("../../services/modelClient");
+const { createChatCompletion } = require("../../services/modelClient");
 const { getLearningSkill } = require("../prompts/skills");
 const { tool } = require("langchain");
 const { z } = require("zod");
@@ -22,7 +22,7 @@ function parseReviewQuestion(content) {
 }
 
 function createLearningReviewQuestionGenerator({
-  chatCompletion = createDeepSeekChatCompletion,
+  chatCompletion = createChatCompletion,
 } = {}) {
   return async function generateLearningReviewQuestion({
     topic,
@@ -48,7 +48,7 @@ function createLearningReviewQuestionGenerator({
       ],
     });
     const generated = response.choices?.[0]?.message?.content;
-    if (!generated) throw new Error("DeepSeek 返回复习题目为空");
+    if (!generated) throw new Error("Chat model 返回复习题目为空");
     return parseReviewQuestion(generated);
   };
 }
@@ -70,7 +70,7 @@ function parseReviewEvaluation(content) {
 }
 
 function createLearningReviewEvaluator({
-  chatCompletion = createDeepSeekChatCompletion,
+  chatCompletion = createChatCompletion,
 } = {}) {
   return async function evaluateLearningReview({ topic, content, question, answer }) {
     if (!topic?.trim() || !content?.trim() || !question?.trim() || !answer?.trim()) {
@@ -93,7 +93,7 @@ function createLearningReviewEvaluator({
       ],
     });
     const generated = response.choices?.[0]?.message?.content;
-    if (!generated) throw new Error("DeepSeek 返回复习评估为空");
+    if (!generated) throw new Error("Chat model 返回复习评估为空");
     return parseReviewEvaluation(generated);
   };
 }

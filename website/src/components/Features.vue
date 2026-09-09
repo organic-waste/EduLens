@@ -9,9 +9,12 @@ import {
   PhPencilCircle, 
   PhCamera, 
   PhLightning,
+  PhArrowCounterClockwise,
   PhCaretLeft,
   PhCaretRight,
-  PhArrowCounterClockwise
+  PhRobot,
+  PhBrain,
+  PhCardsThree
 } from '@phosphor-icons/vue';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -19,12 +22,17 @@ gsap.registerPlugin(ScrollTrigger);
 const activeIndex = ref(0);
 const sectionHead = ref(null);
 const underlinePath = ref(null);
+const VIDEO_PLAYBACK_RATE = 1.5;
+
+function setPlaybackRate(event) {
+  event.currentTarget.playbackRate = VIDEO_PLAYBACK_RATE;
+}
 
 // 介绍文案
 const features = [
   { 
     id: 'workflow', 
-    title: '快捷启动与面板', 
+    title: '快捷工具栏',
     desc: '可拖拽气泡工具栏，保障无遮挡网页内容；可记忆显示/隐藏面板偏好。', 
     icon: PhTarget, 
     video: '/videos/panel.mp4',
@@ -40,7 +48,7 @@ const features = [
   },
   { 
     id: 'reading', 
-    title: '阅读进度与书签', 
+    title: '阅读与书签',
     desc: '左侧竖条实时显示阅读百分比，书签可命名、跳转并跨页面保存。', 
     icon: PhBookOpen, 
     video: '/videos/bookmark.mp4',
@@ -48,7 +56,7 @@ const features = [
   },
   { 
     id: 'annotation', 
-    title: '标注工具箱', 
+    title: '网页标注',
     desc: '涂鸦、直线、框选、图片等多种形式，适配课堂讲解与个人笔记。', 
     icon: PhPencilCircle, 
     video: '/videos/annotation.mp4',
@@ -56,7 +64,7 @@ const features = [
   },
   { 
     id: 'screenshot', 
-    title: '三种截图模式', 
+    title: '网页截图',
     desc: 'DOM 元素截图、区域截图、滚动长截图，长文档也能一键导出。', 
     icon: PhCamera, 
     video: '/videos/screenshot.mp4',
@@ -64,11 +72,35 @@ const features = [
   },
   { 
     id: 'collab', 
-    title: '多人实时协作', 
+    title: '团队协作',
     desc: '共享房间机制，即时同步标注数据；未连接服务器时自动切换本地模式。', 
     icon: PhUsersThree, 
     video: '/videos/collaboration.mp4',
     bullets: ['本地和云端双重存储，保障数据不丢失', '书签、涂鸦、批注、图片等操作实时同步']
+  },
+  {
+    id: 'agent',
+    title: 'AI 学习助手',
+    desc: '围绕当前网页内容和个人知识进行多轮问答，实时展示回答与工具执行状态。',
+    icon: PhRobot,
+    video: '/videos/agent.mp4',
+    bullets: ['支持网页选区上下文和连续对话', '流式呈现回答、检索和学习状态更新']
+  },
+  {
+    id: 'knowledge',
+    title: '知识沉淀',
+    desc: '将网页选区生成带可验证引用的 AI 摘要，支持精确回跳原文并沉淀至个人知识库。',
+    icon: PhBrain,
+    video: '/videos/knowledge.mp4',
+    bullets: ['知识点引用经过原文校验', '基于个人知识库进行检索增强问答']
+  },
+  {
+    id: 'review',
+    title: '智能复习',
+    desc: '根据学习状态生成主动回忆题，评估回答并更新掌握情况与复习间隔。',
+    icon: PhCardsThree,
+    video: '/videos/review.mp4',
+    bullets: ['按学习主题组织复习内容', '模型失败时降级为固定主动回忆题']
   },
 ];
 
@@ -178,6 +210,7 @@ onMounted(() => {
                        loop 
                        muted 
                        playsinline
+                       @loadedmetadata="setPlaybackRate"
                      ></video>
                      
                      <div v-else class="placeholder-info">

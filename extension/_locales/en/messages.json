@@ -3,7 +3,7 @@
     "message": "EduLens"
   },
   "pluginDesc": {
-    "message": "All-in-one Chrome extension for annotated learning, real-time collaboration, and reading focus tools."
+    "message": "Chrome extension for web annotation, team collaboration, and AI-assisted learning."
   },
   "browserActionTitle": {
     "message": "Open the EduLens panel"

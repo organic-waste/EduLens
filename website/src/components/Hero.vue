@@ -103,14 +103,16 @@ onUnmounted(() => {
       </div>
 
       <p class="hero-desc fade-up">
-        EduLens 是一款基于 Chrome 的沉浸式学习插件。<br>
-        无需切换应用，直接在网页上实现专注学习、笔记标注与团队协作。
+        EduLens 是一款面向网页标注与 AI 助学的 Chrome 插件。<br>
+        无需切换应用，即可在网页中完成“标注—协同—理解—沉淀—复习”的学习闭环。<br>
       </p>
 
       <div class="slogan-row fade-up">
         <span>开源免费</span>
         <span class="dot">•</span>
-        <span>隐私安全</span>
+        <span>团队协作</span>
+        <span class="dot">•</span>
+        <span>AI 助学</span>
         <span class="dot">•</span>
         <span>多语言支持</span>
       </div>

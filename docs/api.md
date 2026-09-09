@@ -1106,6 +1106,41 @@ if (loginResult.status === 'success') {
 
 ---
 
+## AI 学习 API
+
+以下接口挂载在 `/api/learning` 下，均需要在请求头中携带 `Authorization: Bearer <token>`。
+
+### 学习画像与记忆
+
+- `GET /profile`：获取当前用户的学习画像和主题掌握状态。
+- `PUT /profile`：更新 `targetDirection`、`explanationLevel`、`summaryDepth`、`preferExamples`、`preferInterviewView`。
+- `PUT /memory`：批量更新学习主题状态，`state` 可为 `mastered`、`confusing` 或 `review`。
+- `PUT /memory/:learningUnitId`：更新单个学习主题状态。
+
+### 摘要与知识沉淀
+
+- `POST /summarize`：根据网页选区生成结构化摘要和知识点引用。
+- `POST /supplement`：将 Agent 回答提炼为当前主题的 AI 补充知识点。
+
+摘要请求应包含原文选区、页面 URL 和定位信息；服务端会校验引用是否来自原始选区后再保存。
+
+### Agent 对话
+
+`POST /chat` 返回 `text/event-stream`，请求体包含 `message`，可选 `history`、`conversationSummary`、`activeSummaryId` 和 `activeSummaryTitle`。事件格式为：
+
+| 事件 | 说明 |
+| --- | --- |
+| `ready` | SSE 连接已建立 |
+| `status` | Agent 当前执行阶段，包括检索和学习状态工具的生命周期 |
+| `delta` | 增量文本 token |
+| `done` | 本轮回答、引用、记忆变更和压缩摘要 |
+| `error` | 本轮处理失败 |
+
+### 间隔复习
+
+- `GET /review`：获取当前用户已到期的复习主题，最多返回 10 张卡片。
+- `POST /review/:learningUnitId`：提交复习问题和回答，由 Agent 评估后更新掌握状态、复习次数和下次复习时间。
+
 ## 常见问题
 
 ### Q: WebSocket 断开后数据会丢失吗？

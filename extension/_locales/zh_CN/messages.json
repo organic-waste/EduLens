@@ -4,7 +4,7 @@
     "description": "扩展名称，显示在商店与工具栏。"
   },
   "pluginDesc": {
-    "message": "一体化网页标注、协作与专注辅助工具",
+    "message": "用于网页标注、团队协作与 AI 助学的 Chrome 扩展",
     "description": "在商店与扩展管理页的简短描述。"
   },
   "browserActionTitle": {

@@ -63,7 +63,7 @@ function setStepRef(el) {
     <div class="container">
       <div class="section-title">
         <h2>30 秒快速上手</h2>
-        <p>简单三步，开启你的网页标注之旅</p>
+        <p>简单三步，开启你的网页知识学习与沉淀</p>
       </div>
 
       <div class="steps-row">
@@ -131,7 +131,7 @@ function setStepRef(el) {
             </svg>
           </div>
           <h3>一键使用</h3>
-          <p>点击右下角气泡即可展开工具面板</p>
+          <p>点击右下角气泡即可展开工具面板，点击左上角图标即可开启侧边栏 Agent 对话</p>
         </div>
       </div>
 

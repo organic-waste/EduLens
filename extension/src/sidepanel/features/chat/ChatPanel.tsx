@@ -3,12 +3,10 @@ import type { ChangeEvent, FormEvent, KeyboardEvent, RefObject } from "react";
 import { BookOpen, SendHorizontal, X } from "lucide-react";
 import { markdown } from "../../utils/markdown";
 import type {
-  Citation,
   ConversationMessage,
   MemoryChange,
   PageSelection,
   SummaryDocument,
-  SummaryReference,
 } from "../../learning.types";
 import "../../styles/chat.css";
 
@@ -44,7 +42,6 @@ export function ChatPanel({
   onClearSelection,
   onClearSummary,
   onSelectSummary,
-  onCitation,
   onSupplement,
   onMemoryChange,
   updatingMemoryUnitIds,
@@ -65,7 +62,6 @@ export function ChatPanel({
   onClearSelection: () => void;
   onClearSummary: () => void;
   onSelectSummary: (summary: SummaryDocument) => void;
-  onCitation: (citation: Citation) => void;
   onSupplement: (answer: string) => void;
   onMemoryChange: (messageId: string, change: MemoryChange) => void;
   updatingMemoryUnitIds: Set<string>;
@@ -131,10 +127,28 @@ export function ChatPanel({
 
   return (
     <>
+      <section ref={messagesRef} className="messages" aria-live="polite">
+        {messages.length === 0 ? (
+          <div className="empty-state">
+            <strong>从一个问题开始</strong>
+            <span>让 AI 帮你理解当前学习内容。</span>
+          </div>
+        ) : (
+          messages.map((message) => (
+            <Message
+              key={message.id}
+              message={message}
+              onSupplement={onSupplement}
+              onMemoryChange={onMemoryChange}
+              updatingMemoryUnitIds={updatingMemoryUnitIds}
+              activeSummary={activeSummary}
+            />
+          ))
+        )}
+      </section>
       {activeSummary && (
         <div className="summary-context" aria-label="当前关联摘要">
           <BookOpen size={14} aria-hidden="true" />
-          <span>相关摘要</span>
           <strong>{activeSummary.title}</strong>
           <button
             className="summary-context-close"
@@ -147,27 +161,6 @@ export function ChatPanel({
           </button>
         </div>
       )}
-      <section ref={messagesRef} className="messages" aria-live="polite">
-        {messages.length === 0 ? (
-          <div className="empty-state">
-            <strong>从一个问题开始</strong>
-            <span>让 AI 帮你理解当前学习内容。</span>
-          </div>
-        ) : (
-          messages.map((message) => (
-            <Message
-              key={message.id}
-              message={message}
-              documents={documents}
-              onCitation={onCitation}
-              onSupplement={onSupplement}
-              onMemoryChange={onMemoryChange}
-              updatingMemoryUnitIds={updatingMemoryUnitIds}
-              activeSummary={activeSummary}
-            />
-          ))
-        )}
-      </section>
       <form className="composer" onSubmit={onSend}>
         {selectedPage?.text && (
           <div
@@ -256,16 +249,12 @@ export function ChatPanel({
 
 function Message({
   message,
-  documents,
-  onCitation,
   onSupplement,
   onMemoryChange,
   updatingMemoryUnitIds,
   activeSummary,
 }: {
   message: ConversationMessage;
-  documents: SummaryDocument[];
-  onCitation: (citation: Citation) => void;
   onSupplement: (answer: string) => void;
   onMemoryChange: (messageId: string, change: MemoryChange) => void;
   updatingMemoryUnitIds: Set<string>;
@@ -276,24 +265,6 @@ function Message({
     !message.streaming &&
     !message.autoSupplemented &&
     Boolean(activeSummary && (message.uncovered || activeSummary));
-  const relatedSummaryMap = new Map<string, SummaryReference>();
-  for (const reference of message.summaryReferences || []) {
-    relatedSummaryMap.set(reference.serverId || reference.id, reference);
-  }
-  // 兼容迁移前仅保存 citations 的历史对话。
-  for (const citation of message.citations || []) {
-    if (!citation.summaryId) continue;
-    const summary = documents.find(
-      (item) => item.serverId === citation.summaryId || item.id === citation.summaryId,
-    );
-    const reference: SummaryReference = {
-      id: summary?.id || citation.summaryId,
-      serverId: summary?.serverId || citation.summaryId,
-      title: summary?.title || citation.summaryTitle || "未命名摘要",
-    };
-    relatedSummaryMap.set(reference.serverId || reference.id, reference);
-  }
-  const relatedSummaries = [...relatedSummaryMap.values()];
   const memoryTargets = new Map<string, { learningUnitId: string; topic?: string }>();
   for (const citation of message.citations || []) {
     if (!citation.learningUnitId) continue;
@@ -316,35 +287,6 @@ function Message({
       ) : (
         <p>{message.content}</p>
       )}
-      {message.role === "user" && message.summaryReference && (
-        <button
-          className="message-summary-reference"
-          type="button"
-          onClick={() =>
-            onCitation({
-              summaryId: message.summaryReference?.serverId || message.summaryReference?.id,
-            })
-          }
-        >
-          <BookOpen size={14} aria-hidden="true" />
-          <span>关联摘要</span>
-          <strong>{message.summaryReference.title}</strong>
-        </button>
-      )}
-      {message.role === "assistant" && relatedSummaries.length ? (
-        <div className="message-summary-references">
-          <span>相关摘要</span>
-          {relatedSummaries.map((reference) => (
-            <button
-              type="button"
-              key={reference.serverId || reference.id}
-              onClick={() => onCitation({ summaryId: reference.serverId || reference.id })}
-            >
-              {reference.title}
-            </button>
-          ))}
-        </div>
-      ) : null}
       {message.memoryChanges?.length ? (
         <div className="memory-changes">
           {message.memoryChanges.map((change) => (

@@ -1,5 +1,5 @@
-const DEFAULT_DEEPSEEK_BASE_URL = "https://api.deepseek.com";
-const DEFAULT_SILICONFLOW_BASE_URL = "https://api.siliconflow.cn/v1";
+const DEFAULT_CHAT_BASE_URL = "https://api.deepseek.com";
+const DEFAULT_EMBEDDING_BASE_URL = "https://api.siliconflow.cn/v1";
 const DEFAULT_EMBEDDING_MODEL = "BAAI/bge-m3";
 
 function trimBaseUrl(value, fallback) {
@@ -8,21 +8,21 @@ function trimBaseUrl(value, fallback) {
 
 function getModelConfig() {
   return {
-    deepseek: {
-      apiKey: process.env.DEEPSEEK_API_KEY || "",
+    chat: {
+      apiKey: process.env.CHAT_API_KEY || "",
       baseUrl: trimBaseUrl(
-        process.env.DEEPSEEK_BASE_URL,
-        DEFAULT_DEEPSEEK_BASE_URL,
+        process.env.CHAT_BASE_URL,
+        DEFAULT_CHAT_BASE_URL,
       ),
-      model: process.env.DEEPSEEK_MODEL || "deepseek-chat",
+      model: process.env.CHAT_MODEL || "deepseek-chat",
     },
-    siliconflow: {
-      apiKey: process.env.SILICONFLOW_API_KEY || "",
+    embedding: {
+      apiKey: process.env.EMBEDDING_API_KEY || "",
       baseUrl: trimBaseUrl(
-        process.env.SILICONFLOW_BASE_URL,
-        DEFAULT_SILICONFLOW_BASE_URL,
+        process.env.EMBEDDING_BASE_URL,
+        DEFAULT_EMBEDDING_BASE_URL,
       ),
-      model: process.env.SILICONFLOW_EMBEDDING_MODEL || DEFAULT_EMBEDDING_MODEL,
+      model: process.env.EMBEDDING_MODEL || DEFAULT_EMBEDDING_MODEL,
     },
   };
 }
@@ -50,12 +50,12 @@ async function postOpenAICompatible({ baseUrl, apiKey, path, body, label }) {
   return response.json();
 }
 
-function createDeepSeekChatCompletion({ messages, tools, temperature = 0.3 }) {
-  const config = getModelConfig().deepseek;
+function createChatCompletion({ messages, tools, temperature = 0.3 }) {
+  const config = getModelConfig().chat;
   return postOpenAICompatible({
     ...config,
     path: "/chat/completions",
-    label: "DeepSeek",
+    label: "Chat model",
     body: {
       model: config.model,
       messages,
@@ -66,21 +66,21 @@ function createDeepSeekChatCompletion({ messages, tools, temperature = 0.3 }) {
   });
 }
 
-function createSiliconFlowEmbeddings(input) {
-  const config = getModelConfig().siliconflow;
+function createEmbeddings(input) {
+  const config = getModelConfig().embedding;
   return postOpenAICompatible({
     ...config,
     path: "/embeddings",
-    label: "SiliconFlow Embedding",
+    label: "Embedding model",
     body: { model: config.model, input },
   });
 }
 
 module.exports = {
-  DEFAULT_DEEPSEEK_BASE_URL,
-  DEFAULT_SILICONFLOW_BASE_URL,
+  DEFAULT_CHAT_BASE_URL,
+  DEFAULT_EMBEDDING_BASE_URL,
   DEFAULT_EMBEDDING_MODEL,
   getModelConfig,
-  createDeepSeekChatCompletion,
-  createSiliconFlowEmbeddings,
+  createChatCompletion,
+  createEmbeddings,
 };

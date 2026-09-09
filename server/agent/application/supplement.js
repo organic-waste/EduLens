@@ -1,6 +1,6 @@
 const { randomUUID } = require("crypto");
 const { z } = require("zod");
-const { createDeepSeekChatCompletion } = require("../../services/modelClient");
+const { createChatCompletion } = require("../../services/modelClient");
 const { getLearningSkill } = require("../prompts/skills");
 const { summaryDepthInstruction } = require("./summary");
 
@@ -31,7 +31,7 @@ function parseSupplement(content) {
 }
 
 function createLearningSupplementGenerator({
-  chatCompletion = createDeepSeekChatCompletion,
+  chatCompletion = createChatCompletion,
 } = {}) {
   return async function generateLearningSupplement({
     answer,
@@ -61,7 +61,7 @@ function createLearningSupplementGenerator({
       ],
     });
     const content = response.choices?.[0]?.message?.content;
-    if (!content) throw new Error("DeepSeek 返回内容为空");
+    if (!content) throw new Error("Chat model 返回内容为空");
     return parseSupplement(content);
   };
 }

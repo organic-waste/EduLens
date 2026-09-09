@@ -1,6 +1,6 @@
 const { randomUUID } = require("crypto");
 const mongoose = require("mongoose");
-const { createSiliconFlowEmbeddings } = require("../../services/modelClient");
+const { createEmbeddings } = require("../../services/modelClient");
 
 const VECTOR_COLLECTION = process.env.ATLAS_VECTOR_COLLECTION || "learning_vectors";
 const VECTOR_INDEX = process.env.ATLAS_VECTOR_INDEX || "learning_vector_index";
@@ -49,7 +49,7 @@ function toEmbeddingText({ topic, content }) {
 
 async function embedTexts(texts) {
   if (!texts.length) return [];
-  const response = await createSiliconFlowEmbeddings(texts);
+  const response = await createEmbeddings(texts);
   const vectors = (response.data || [])
     .slice()
     .sort((left, right) => (left.index || 0) - (right.index || 0))

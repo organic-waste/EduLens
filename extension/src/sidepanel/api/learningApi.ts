@@ -100,6 +100,7 @@ export function submitLearningReview(
 export async function streamLearningAgent({
   message,
   activeSummaryId,
+  activeSummaryTitle,
   history,
   conversationSummary,
   onEvent,
